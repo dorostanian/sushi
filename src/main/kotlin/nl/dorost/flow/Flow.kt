@@ -1,5 +1,7 @@
 package nl.dorost.flow
 
+import nl.dorost.flow.actions.elementaryBlocks
+
 
 abstract class Block(
     open val name: String,
@@ -10,13 +12,13 @@ abstract class Block(
 )
 
 data class Container(
-    val firstBlock: String,
-    val lastBlock: String,
+    var firstBlock: String? = null,
+    var lastBlock: String? = null,
     override  val name: String,
-    override val id: String,
+    override val id: String? = null,
     override val type: String,
-    override val params: MutableMap<String, String>,
-    override val nextBlocks: MutableList<String>
+    override val params: MutableMap<String, String> = mutableMapOf(),
+    override val nextBlocks: MutableList<String> = mutableListOf()
 ): Block(name, id, type, params, nextBlocks)
 
 data class Action(
@@ -31,7 +33,7 @@ data class Action(
 data class Branch(
     val mapping: HashMap<String, String>,
     override  val name: String,
-    override  val id: String,
+    override  val id: String? = null,
     override  val type: String,
     override  val params: MutableMap<String, String>,
     override  val nextBlocks: MutableList<String>
@@ -39,13 +41,18 @@ data class Branch(
 
 
 
-class FlowEngine(){
+class FlowEngine{
 
     var flows: MutableList<Block> = mutableListOf()
 
+    var registeredBlocks: MutableList<Block> = mutableListOf()
+
+    init {
+        registerBlocks(elementaryBlocks)
+    }
 
     fun registerBlocks(blocks: List<Block>){
-
+        registeredBlocks.addAll(blocks)
     }
 
     fun executeFlow(){
@@ -54,8 +61,16 @@ class FlowEngine(){
 
     private fun verify(flows: List<Block>) {
         // unique ids
-        if (flows.distinctBy { it.id }.size != flows.size)
-            throw NonUniqueIdException("All ids must be unique!")
+        val duplicates = flows.map{ it.id }.groupingBy { it }.eachCount().filter { it.value>1 }.map { it.key }
+        if (duplicates.size>0)
+            throw NonUniqueIdException("All ids must be unique! Duplicate id: ${duplicates.first()}.")
+
+        // Check if the type is already registered
+        flows.forEach {
+            if (it.type !in  registeredBlocks.map { it.type })
+                throw TypeNotRegisteredException("'${it.type}' type is not a registered Block!")
+        }
+
     }
 
     fun wire(flows: List<Block>) {
@@ -66,3 +81,4 @@ class FlowEngine(){
 
 
 class NonUniqueIdException(msg:String): RuntimeException(msg)
+class TypeNotRegisteredException(msg:String): RuntimeException(msg)
