@@ -1,0 +1,74 @@
+[flow]
+
+name = "Example Flow"
+author = "amin@dorost.nl"
+
+
+[[container]]
+    name = "container-block"
+    type = "normal"
+    id = "1"
+    first = "2"
+    last = "3"
+    next = ["4"]
+    [container.params]
+         "param-1" = "value-1"
+
+
+[[action]]
+    name = "action-1"
+    type = "log"
+    id = "2"
+    next = ["3"]
+    [action.params]
+     "param-2" = "value-2"
+
+
+
+
+[[action]]
+    name = "action-2"
+    type = "constant"
+    id = "3"
+    next = ["4"]
+    [action.params]
+        "const" = "branch-2"
+
+
+
+[[branch]]
+    name = "branch-1"
+    type = "normal"
+    id = "4"
+    [branch.params]
+        "param-3" = "value-3"
+    [branch.mapping]
+        "branch-1"="5"
+        "branch-2"="6"
+        "branch-3"="7"
+
+[[action]]
+    name = "action-3"
+    type = "log"
+    id = "5"
+    next = ["7"]
+    [action.params]
+        "param-4" = "value-4"
+
+
+
+[[action]]
+    name = "action-4"
+    type = "log"
+    id = "6"
+    [action.params]
+        "param-5" = "value-5"
+
+
+[[action]]
+    name = "action-5"
+    type = "log"
+    id = "7"
+    [action.params]
+        "param-6" = "value-6"
+

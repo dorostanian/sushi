@@ -1,31 +1,59 @@
 package nl.dorost.flow
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.moandjiezana.toml.Toml
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
-
-data class UniverseSizeDto(val maxGalaxies: Int, val maxSystems: Int, val maxPlanets: Int)
-
-data class ResourcesDto(val crystal: Int, val gas: Int, val energy: Int)
-
-data class StarterPlanetDto(val resources: ResourcesDto)
-
-data class ConfigDto(val universeSize: UniverseSizeDto, val starterPlanet: StarterPlanetDto, val roundTime: Int)
+import java.util.stream.Collectors
 
 
-fun loadFromFile(path: Path): ConfigDto {
-    val mapper = ObjectMapper(YAMLFactory()) // Enable YAML parsing
-    mapper.registerModule(KotlinModule()) // Enable Kotlin support
-
-    return Files.newBufferedReader(path).use {
-        mapper.readValue(it, ConfigDto::class.java)
-    }
-}
 
 fun main(args: Array<String>) {
-    val configDto = loadFromFile(Paths.get("ex.yml"))
-    println(configDto)
+
+
+    val flows = Files.walk(Paths.get("flows/")).filter { Files.isRegularFile(it) }.collect(Collectors.toList()).flatMap {
+        val toml = Toml().read(it.toFile())
+        val blocks = parseToBlocks(toml)
+        blocks
+    }
+
+    val flowEngine = FlowEngine()
+    flowEngine.wire(flows)
+
+
+}
+
+fun parseToBlocks(toml: Toml): MutableList<Block> {
+    val containers = (toml.toMap()["container"] as List<HashMap<String, Any>>).map {
+        Container(
+            name = it["name"]!! as String,
+            type = it["type"]!! as String,
+            id = it["id"]!! as String,
+            params = it["params"] as HashMap<String, String>,
+            firstBlock = it["first"] as String,
+            lastBlock = it["last"] as String,
+            nextBlocks = it["next"] as MutableList<String>
+        ) as Block
+    }
+
+    val actions = (toml.toMap()["action"] as List<HashMap<String, Any>>).map{
+        Action(
+            name = it["name"]!! as String,
+            type = it["type"]!! as String,
+            id = it["id"]!! as String,
+            params = it.getOrDefault("params", mapOf<String, String>())  as MutableMap<String, String>,
+            nextBlocks = it.getOrDefault("next", mutableListOf<String>()) as MutableList<String>
+        ) as Block
+    }
+
+    val branches = (toml.toMap()["branch"] as List<HashMap<String, Any>>).map {
+        Branch(
+            name = it["name"]!! as String,
+            type = it["type"]!! as String,
+            id = it["id"]!! as String,
+            params = it["params"] as HashMap<String, String>,
+            nextBlocks = mutableListOf(),
+            mapping = it["mapping"] as HashMap<String, String>
+        )
+    }
+    return containers.plus(actions).plus(branches).toMutableList()
 }

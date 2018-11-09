@@ -20,6 +20,8 @@ dependencies {
 
     compile(kotlin("stdlib-jdk8"))
 
+    compile("com.moandjiezana.toml:toml4j:0.7.2")
+
     compile("com.fasterxml.jackson.core:jackson-databind:2.7.1-1")
     compile("com.fasterxml.jackson.module:jackson-module-kotlin:2.7.1-2")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.1")
