@@ -28,8 +28,7 @@ fun parseToBlocks(toml: Toml): MutableList<Block> {
             id = it["id"]!! as String,
             params = it["params"] as HashMap<String, String>,
             firstBlock = it["first"] as String,
-            lastBlock = it["last"] as String,
-            nextBlocks = it["next"] as MutableList<String>
+            lastBlock = it["last"] as String
         ) as Block
     }
 
@@ -49,7 +48,6 @@ fun parseToBlocks(toml: Toml): MutableList<Block> {
             type = it["type"]!! as String,
             id = it["id"]!! as String,
             params = it["params"] as HashMap<String, String>,
-            nextBlocks = mutableListOf(),
             mapping = it["mapping"] as HashMap<String, String>
         )
     }

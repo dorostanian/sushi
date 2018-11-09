@@ -1,5 +1,6 @@
 package nl.dorost.flow
 
+import com.sun.corba.se.spi.activation.ActivatorOperations
 import nl.dorost.flow.actions.elementaryBlocks
 import org.slf4j.LoggerFactory
 
@@ -8,8 +9,7 @@ abstract class Block(
     open val name: String,
     open val id: String?,
     open val type: String,
-    open val params: MutableMap<String, String> = mutableMapOf(),
-    open val nextBlocks: MutableList<String> = mutableListOf()
+    open val params: MutableMap<String, String> = mutableMapOf()
 )
 
 data class Container(
@@ -18,27 +18,25 @@ data class Container(
     override  val name: String,
     override val id: String? = null,
     override val type: String,
-    override val params: MutableMap<String, String> = mutableMapOf(),
-    override val nextBlocks: MutableList<String> = mutableListOf()
-): Block(name, id, type, params, nextBlocks)
+    override val params: MutableMap<String, String> = mutableMapOf()
+): Block(name, id, type, params)
 
 data class Action(
     var act: ((input: Map<String, Any>) -> Map<String, Any>)? = null,
+    val nextBlocks: MutableList<String> = mutableListOf(),
     override  val name: String,
     override  val id: String? = null,
     override  val type: String,
-    override  val params: MutableMap<String, String> = mutableMapOf(),
-    override  val nextBlocks: MutableList<String> = mutableListOf()
-): Block(name, id, type, params, nextBlocks)
+    override  val params: MutableMap<String, String> = mutableMapOf()
+): Block(name, id, type, params)
 
 data class Branch(
     val mapping: HashMap<String, String>,
     override  val name: String,
     override  val id: String? = null,
     override  val type: String,
-    override  val params: MutableMap<String, String>,
-    override  val nextBlocks: MutableList<String>
-): Block(name, id, type, params, nextBlocks)
+    override  val params: MutableMap<String, String>
+): Block(name, id, type, params)
 
 
 
@@ -95,12 +93,13 @@ class FlowEngine{
 
     private fun findFirstLayer(flows: MutableList<Block>): List<Block> {
         val allIds = flows.map { it.id }
-        val secondLayerBlocks = flows.flatMap { it.nextBlocks }.
+        val secondLayerBlocks = flows.filter { it is Action }.map { it as Action }.flatMap { it.nextBlocks }.
             plus(
                 flows.filter { it is Branch }.map { it as Branch }.flatMap { it.mapping.values }
             )
             .distinct()
-        val fistLayerIds = allIds.subtract(secondLayerBlocks)
+        val firstOfContainers = flows.filter { it is Container }.map { (it as Container).firstBlock }
+        val fistLayerIds = allIds.subtract(secondLayerBlocks).subtract(firstOfContainers)
         return flows.filter { it.id in fistLayerIds }
     }
 }
