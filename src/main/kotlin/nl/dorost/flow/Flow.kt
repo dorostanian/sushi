@@ -1,6 +1,7 @@
 package nl.dorost.flow
 
 import nl.dorost.flow.actions.elementaryBlocks
+import org.slf4j.LoggerFactory
 
 
 abstract class Block(
@@ -43,6 +44,9 @@ data class Branch(
 
 class FlowEngine{
 
+    val LOG = LoggerFactory.getLogger("FlowEngine")
+
+
     var flows: MutableList<Block> = mutableListOf()
 
     var registeredBlocks: MutableList<Block> = mutableListOf()
@@ -56,6 +60,7 @@ class FlowEngine{
     }
 
     fun executeFlow(){
+
 
     }
 
@@ -71,11 +76,32 @@ class FlowEngine{
                 throw TypeNotRegisteredException("'${it.type}' type is not a registered Block!")
         }
 
+
+        // Check if nex block ids are valid
+//        flows.flatMap { it.nextBlocks }.
+
     }
 
     fun wire(flows: List<Block>) {
         this.flows = flows as MutableList<Block>
         verify(flows)
+
+        val firstLayerBlocks = findFirstLayer(flows)
+        firstLayerBlocks.forEach {
+            LOG.info(it.toString())
+        }
+
+    }
+
+    private fun findFirstLayer(flows: MutableList<Block>): List<Block> {
+        val allIds = flows.map { it.id }
+        val secondLayerBlocks = flows.flatMap { it.nextBlocks }.
+            plus(
+                flows.filter { it is Branch }.map { it as Branch }.flatMap { it.mapping.values }
+            )
+            .distinct()
+        val fistLayerIds = allIds.subtract(secondLayerBlocks)
+        return flows.filter { it.id in fistLayerIds }
     }
 }
 
