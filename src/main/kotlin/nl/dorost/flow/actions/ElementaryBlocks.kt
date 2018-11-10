@@ -1,7 +1,7 @@
 package nl.dorost.flow.actions
 
 import com.github.kittinunf.fuel.Fuel
-import nl.dorost.flow.Action
+import nl.dorost.flow.core.Action
 import org.slf4j.LoggerFactory
 import java.lang.RuntimeException
 
@@ -30,7 +30,6 @@ val elementaryActions = mapOf<String, (action: Action) -> Map<String, Any>>(
             .header("ContentType" to contentType, "Accept" to accept)
             .body(body as String)
             .responseString()
-//        val body = url.post()
         mapOf("response" to String(result.second.data))
     },
     "json-in" to { action: Action ->
