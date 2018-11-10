@@ -43,7 +43,7 @@ data class Action(
 
     override fun run(flows: List<Block>) {
         val output = this.act!!.invoke(this)
-        LOG.info("Executing Action id '$id', Type: '$type', Output was: $output")
+        LOG.info("Executed Action id '$id', Type: '$type', Output was: $output")
 
         nextBlocks.map { nextId ->
             flows.first { it.id == nextId }
@@ -63,7 +63,11 @@ data class Branch(
     override val params: MutableMap<String, String>
 ) : Block(name, id, type, input, params) {
     override fun run(flows: List<Block>) {
-        val valueToLook = mapping[input[params["var-name"]]]
+        val variableToLook =
+            params.get("var-name") ?: throw ExpectedParamNotPresentException("Parameter var-name is not specified!")
+        val valueToLook = mapping.get(input.get(variableToLook))
+            ?: throw MissingMappingValueException("No mapping specified for the value")
+
         LOG.info("Executing Branch id '$id', Inputs: ${this.input}, Params: ${this.params}, Branching to: $valueToLook")
         flows.first { it.id == valueToLook }.run(flows)
     }
@@ -93,8 +97,12 @@ class FlowEngine {
 
     private fun verify(flows: List<Block>) {
         // unique ids
-        val duplicates = flows.map { it.id }.groupingBy { it }.eachCount().filter { it.value > 1 }.map { it.key }
-        if (duplicates.size > 0)
+        val duplicates = flows.map { it.id }
+            .groupingBy { it }
+            .eachCount()
+            .filter { it.value > 1 }
+            .map { it.key }
+        if (duplicates.isNotEmpty())
             throw NonUniqueIdException("All ids must be unique! Duplicate id: ${duplicates.first()}.")
 
         // Check if the type is already registered
@@ -104,8 +112,13 @@ class FlowEngine {
         }
 
 
-        // Check if nex block ids are valid
-//        flows.flatMap { it.nextBlocks }.
+        // Check if next block ids are valid
+        flows.filter { it is Action }.map { it as Action }.flatMap {
+            it.nextBlocks
+        }.forEach {nextBlock ->
+            if (!flows.map { it.id }.contains(nextBlock))
+                throw InvalidNextIdException("Invalid next id: ${nextBlock}")
+        }
 
 
         // Wire registered blocks to flows
@@ -134,4 +147,7 @@ class FlowEngine {
 
 
 class NonUniqueIdException(msg: String) : RuntimeException(msg)
+class InvalidNextIdException(msg: String) : RuntimeException(msg)
 class TypeNotRegisteredException(msg: String) : RuntimeException(msg)
+class ExpectedParamNotPresentException(msg: String) : RuntimeException(msg)
+class MissingMappingValueException(msg: String) : RuntimeException(msg)

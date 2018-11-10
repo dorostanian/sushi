@@ -57,9 +57,10 @@ author = "amin@dorost.nl"
 
 
 [[action]]
-    name = "action-4"
+    name = "Branch eventually came here!"
     type = "log"
     id = "6"
+    next = ["8"]
     [action.params]
         "param-5" = "value-5"
 
@@ -71,3 +72,47 @@ author = "amin@dorost.nl"
     [action.params]
         "param-6" = "value-6"
 
+[[action]]
+    name = "Inputting the JSON"
+    type = "json-in"
+    id = "8"
+    next = ["9"]
+    [action.params]
+        value = """{
+                       "glossary": {
+                           "title": "example glossary",
+                   		"GlossDiv": {
+                               "title": "S",
+                   			"GlossList": {
+                                   "GlossEntry": {
+                                       "ID": "SGML",
+                   					"SortAs": "SGML",
+                   					"GlossTerm": "Standard Generalized Markup Language",
+                   					"Acronym": "SGML",
+                   					"Abbrev": "ISO 8879:1986",
+                   					"GlossDef": {
+                                           "para": "A meta-markup language, used to create markup languages such as DocBook.",
+                   						"GlossSeeAlso": ["GML", "XML"]
+                                       },
+                   					"GlossSee": "markup"
+                                   }
+                               }
+                           }
+                       }
+                   }"""
+
+[[action]]
+    name = "Make post Request"
+    type = "http-post"
+    id = "9"
+    next = ["11"]
+    [action.params]
+        url = "https://postman-echo.com/post"
+
+
+[[action]]
+    name = "Show the response!"
+    type = "log"
+    id = "11"
+    [action.params]
+        "url" = "https://postman-echo.com/post"

@@ -14,6 +14,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -23,6 +24,8 @@ dependencies {
     compile("com.moandjiezana.toml:toml4j:0.7.2")
     compile("io.github.microutils:kotlin-logging:1.6.20")
     compile(group = "com.walterjwhite.infrastructure.dependencies", name = "slf4j-api", version = "0.0.15")
+    compile(group = "com.github.kittinunf.fuel", name = "fuel", version = "1.15.0")
+
     compile(group = "org.slf4j", name = "slf4j-simple", version = "1.8.0-beta2")
 
     compile("com.fasterxml.jackson.core:jackson-databind:2.7.1-1")
