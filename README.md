@@ -10,7 +10,7 @@ The idea of building **Flow** born in my mind while trying to build a software t
 
 
 
-# Usage
+# How it works
 
 Flow is built on top of concept of `Block`s. Every unit is a block and we have three different kinds of blocks which enables
 you to build almost anything with a very explicit and simple data presentation.
@@ -23,10 +23,74 @@ making it easy to present your flow.
 To define your flows, there are two ways. You can define your flows in multiple files inside TOML files, and import them.
 The other ways is to use the UI to generate these TOML files for you.
 
-## Definition of a Block
+## `Action` block
+This block is the most essential unit in Flow. These blocks are supposed to fulfill a small unit of work and then
+point to another block. The field `type` specifies what this block is supposed to do.
 
-(WIP).
+```toml
+[[action]]
+    name = "action-1"
+    type = "log"
+    id = "2"
+    next = ["3"]
+    [action.params]
+     param-1 = "value-2"
+```
+For all the blocks we define `id`s must be unique to that block. `params` are basically parameters specific to the 
+mentioned type of action, there might be different parameters for one single action.
 
+Every action block looks like this:
 
+![Action Block](docs/action.png)
 
-You can also register custom action types. Keep in mind that types must be unique.
+Normally `input` is the previous block's `output` and `params` are configurations applied to make actions flexible and
+configurable.
+
+## `Branch` block
+This block is desgined intentionally simple to make it easy for controling the flow of your work.
+```toml
+[[branch]]
+    name = "branch-1"
+    id = "4"
+    [branch.params]
+        var-name = "value"
+    [branch.mapping]
+        branch-1 = "5"
+        branch-2 = "6"
+        branch-3 = "7"
+```
+Any branch block should contain `var-name` param that tells the engine to pick the data with this key from input
+and compare it with `mapping` values. For instance in this example if `input["value"]==branch-2` then next block
+will be the block with id of `6`. So `mapping` is like a switch statement over `value`.
+
+## `Container` block
+And the last block which enables re-using sub-flows that are already defined. `container`s hold multiple blocks and
+make it easy to build hierarchical flows.
+```toml
+
+[[container]]
+    name = "container-block"
+    type = "normal"
+    id = "1"
+    first = "2"
+    last = "3"
+```
+The most important fields of this block are `first` and `last` which tells the id of the blocks that should be executed
+first and last respectively.
+
+# Usage
+
+There are multiple ways of building flows.
+1. Reading `TOML` files from a directory.
+2. Building the flows programmatically. 
+3. Using the UI. (WIP)
+
+```kotlin
+val flowEngine = FlowEngine()
+val flows = flowEngine.readFlowsFromDir("flows/")
+
+flowEngine.wire(flows)
+flowEngine.executeFlow()
+```
+
+You can also register custom action types. Keep in mind that types must be unique for actions.

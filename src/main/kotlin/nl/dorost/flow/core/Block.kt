@@ -60,7 +60,7 @@ data class Branch(
     val mapping: HashMap<String, String>,
     override val name: String,
     override val id: String? = null,
-    override val type: String,
+    override val type: String = "normal",
     override var input: MutableMap<String, Any> = mutableMapOf(),
     override val params: MutableMap<String, String>
 ) : Block(name, id, type, input, params) {

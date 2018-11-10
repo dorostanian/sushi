@@ -86,7 +86,7 @@ class FlowEngine {
                 name = it["name"]!! as String,
                 type = it["type"]!! as String,
                 id = it["id"]!! as String,
-                params = it["params"] as HashMap<String, String>,
+                params = it.getOrDefault("params", mutableMapOf<String, String>()) as HashMap<String, String>,
                 firstBlock = it["first"] as String,
                 lastBlock = it["last"] as String
             ) as Block
@@ -105,7 +105,6 @@ class FlowEngine {
         val branches = (toml.toMap()["branch"] as List<HashMap<String, Any>>).map {
             Branch(
                 name = it["name"]!! as String,
-                type = it["type"]!! as String,
                 id = it["id"]!! as String,
                 params = it["params"] as HashMap<String, String>,
                 mapping = it["mapping"] as HashMap<String, String>

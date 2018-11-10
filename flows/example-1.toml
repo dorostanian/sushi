@@ -10,8 +10,6 @@ author = "amin@dorost.nl"
     id = "1"
     first = "2"
     last = "3"
-    [container.params]
-         param-1 = "value-1"
 
 
 [[action]]
@@ -37,7 +35,6 @@ author = "amin@dorost.nl"
 
 [[branch]]
     name = "branch-1"
-    type = "normal"
     id = "4"
     [branch.params]
         var-name = "value"

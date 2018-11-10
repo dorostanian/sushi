@@ -11,7 +11,7 @@ val LOG = LoggerFactory.getLogger("ElementaryBlocks")
 val elementaryActions = mapOf<String, (action: Action) -> Map<String, Any>>(
     "log" to { action: Action ->
         LOG.info("Action id '${action.id}': ${action.name}. Input Value: ${action.input}, Params: ${action.params}")
-        mapOf<String, Any>()
+        action.input
     },
     "constant" to { action: Action ->
 //        LOG.info("Action id '${action.id}': ${action.name}. Input Value: ${action.input}, Params: ${action.params}")
