@@ -97,7 +97,7 @@ class FlowEngine {
                 name = it["name"]!! as String,
                 type = it["type"]!! as String,
                 id = it["id"]!! as String,
-                params = it.getOrDefault("params", mapOf<String, String>()) as MutableMap<String, String>,
+                params = it.getOrDefault("params", mutableMapOf<String, String>()) as MutableMap<String, String>,
                 nextBlocks = it.getOrDefault("next", mutableListOf<String>()) as MutableList<String>
             ) as Block
         }

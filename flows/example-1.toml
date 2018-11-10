@@ -11,7 +11,7 @@ author = "amin@dorost.nl"
     first = "2"
     last = "3"
     [container.params]
-         "param-1" = "value-1"
+         param-1 = "value-1"
 
 
 [[action]]
@@ -20,7 +20,7 @@ author = "amin@dorost.nl"
     id = "2"
     next = ["3"]
     [action.params]
-     "param-2" = "value-2"
+     param-2 = "value-2"
 
 
 
@@ -52,7 +52,7 @@ author = "amin@dorost.nl"
     id = "5"
     next = ["7"]
     [action.params]
-        "param-4" = "value-4"
+        param-4 = "value-4"
 
 
 
@@ -70,7 +70,7 @@ author = "amin@dorost.nl"
     type = "log"
     id = "7"
     [action.params]
-        "param-6" = "value-6"
+        param-6 = "value-6"
 
 [[action]]
     name = "Inputting the JSON"
@@ -114,5 +114,3 @@ author = "amin@dorost.nl"
     name = "Show the response!"
     type = "log"
     id = "11"
-    [action.params]
-        "url" = "https://postman-echo.com/post"
