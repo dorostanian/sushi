@@ -1,5 +1,6 @@
 package nl.dorost.flow.actions
 
+import com.github.kittinunf.fuel.Fuel
 import nl.dorost.flow.Action
 import org.slf4j.LoggerFactory
 import java.lang.RuntimeException
