@@ -31,7 +31,7 @@ author = "amin@dorost.nl"
     id = "3"
     next = ["4"]
     [action.params]
-        "const" = "branch-2"
+        const = "branch-2"
 
 
 
@@ -40,11 +40,11 @@ author = "amin@dorost.nl"
     type = "normal"
     id = "4"
     [branch.params]
-        "param-3" = "value-3"
+        var-name = "value"
     [branch.mapping]
-        "branch-1"="5"
-        "branch-2"="6"
-        "branch-3"="7"
+        branch-1  = "5"
+        branch-2 = "6"
+        branch-3 = "7"
 
 [[action]]
     name = "action-3"

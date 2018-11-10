@@ -18,6 +18,7 @@ fun main(args: Array<String>) {
 
     val flowEngine = FlowEngine()
     flowEngine.wire(flows)
+    flowEngine.executeFlow()
 }
 
 fun parseToBlocks(toml: Toml): MutableList<Block> {

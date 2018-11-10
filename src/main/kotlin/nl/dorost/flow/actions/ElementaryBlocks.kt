@@ -1,35 +1,25 @@
 package nl.dorost.flow.actions
 
 import nl.dorost.flow.Action
-import nl.dorost.flow.Block
-import nl.dorost.flow.Branch
-import nl.dorost.flow.Container
 import org.slf4j.LoggerFactory
+import java.lang.RuntimeException
 
 val LOG = LoggerFactory.getLogger("ElementaryBlocks")
 
 
-val elementaryBlocks = mutableListOf<Block>(
-    Action(
-        name = "Print Some Logs",
-        type = "log"
-    ).apply {
-        act = { input: Map<String, Any> ->
-            LOG.info("Action: $name. Input Value: $input, Params: $params")
-            mapOf()
-        }
+val elementaryActions = mapOf<String, (action: Action) -> Map<String, Any>>(
+    "log" to { action: Action ->
+        LOG.info("Action id '${action.id}': ${action.name}. Input Value: ${action.input}, Params: ${action.params}")
+        mapOf<String, Any>()
     },
-    Action(
-        name = "Spits out constant value",
-        type = "constant"
-    ).apply {
-        act = { input: Map<String, Any> ->
-            LOG.info("Action: $name. Input Value: $input, Params: $params")
-            mapOf()
-        }
-    },
-    Container(
-        name = "A normal container.",
-        type = "normal"
-    )
+    "constant" to { action: Action ->
+//        LOG.info("Action id '${action.id}': ${action.name}. Input Value: ${action.input}, Params: ${action.params}")
+        val constValue = action.params["const"]
+        if (constValue==null)
+            throw UnsatisfiedParamsException("Parameter const not found!")
+        mapOf("value" to constValue)
+
+    }
 )
+
+class UnsatisfiedParamsException(msg: String): RuntimeException(msg)
