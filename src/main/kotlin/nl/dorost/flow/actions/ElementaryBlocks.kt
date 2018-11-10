@@ -14,9 +14,7 @@ val elementaryActions = mapOf<String, (action: Action) -> Map<String, Any>>(
     },
     "constant" to { action: Action ->
 //        LOG.info("Action id '${action.id}': ${action.name}. Input Value: ${action.input}, Params: ${action.params}")
-        val constValue = action.params["const"]
-        if (constValue==null)
-            throw UnsatisfiedParamsException("Parameter const not found!")
+        val constValue = action.params["const"] ?: throw UnsatisfiedParamsException("Parameter const not found!")
         mapOf("value" to constValue)
 
     }
