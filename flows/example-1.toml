@@ -111,3 +111,25 @@ author = "amin@dorost.nl"
     name = "Show the response!"
     type = "log"
     id = "11"
+    next = ["12"]
+
+[[action]]
+    name = "Make get Request"
+    type = "http-get"
+    id = "12"
+    next = ["13"]
+    [action.params]
+        url = "https://postman-echo.com/get?foo1=bar1&foo2=bar2"
+
+
+[[action]]
+    name = "Show the response!"
+    type = "log"
+    id = "13"
+    next = ["14"]
+
+[[action]]
+    name = "End the flow!"
+    type = "log"
+    id = "14"
+
