@@ -1,5 +1,5 @@
 [flow]
-
+id_prefix = "main_"
 name = "Example Flow"
 author = "amin@dorost.nl"
 

@@ -9,7 +9,7 @@ val LOG = LoggerFactory.getLogger("FlowEngine")
 
 abstract class Block(
     open val name: String,
-    open val id: String?,
+    open var id: String?,
     open val type: String,
     open val source: Boolean,
     open var input: MutableMap<String, Any> = mutableMapOf(),
@@ -22,7 +22,7 @@ data class Container(
     var firstBlock: String? = null,
     var lastBlock: String? = null,
     override val name: String,
-    override val id: String? = null,
+    override var id: String? = null,
     override val type: String,
     override var input: MutableMap<String, Any> = mutableMapOf(),
     override val params: MutableMap<String, String> = mutableMapOf(),
@@ -38,10 +38,10 @@ data class Container(
 
 data class Action(
     var act: ((action: Action) -> Map<String, Any>)? = null,
-    val nextBlocks: MutableList<String> = mutableListOf(),
+    var nextBlocks: MutableList<String> = mutableListOf(),
     val returnAfterExec: Boolean = false,
     override val name: String,
-    override val id: String? = null,
+    override var id: String? = null,
     override val type: String,
     override var input: MutableMap<String, Any> = mutableMapOf(),
     override val params: MutableMap<String, String> = mutableMapOf(),
@@ -70,7 +70,7 @@ data class Action(
 data class Branch(
     val mapping: HashMap<String, String>,
     override val name: String,
-    override val id: String? = null,
+    override var id: String? = null,
     override val type: String = BRANCH_TYPE.NORMAL.toString(),
     override var input: MutableMap<String, Any> = mutableMapOf(),
     override val params: MutableMap<String, String>,

@@ -16,6 +16,7 @@ class FlowEngine {
     var returnValue: MutableMap<String, Any> = mutableMapOf()
     var returnedBlockId: String? = null
     var registeredActions: Map<String, (action: Action) -> Map<String, Any>> = mapOf()
+    var prefixes: MutableSet<String> = mutableSetOf()
 
     init {
         registerActions(elementaryActions)
@@ -53,12 +54,64 @@ class FlowEngine {
 
 
         // Check if next block ids are valid
-        flows.filter { it is Action }.map { it as Action }.flatMap {
-            it.nextBlocks
-        }.forEach { nextBlock ->
-            if (!flows.map { it.id }.contains(nextBlock))
-                throw InvalidNextIdException("Invalid next id: ${nextBlock}")
+        val correctionsList: MutableMap<String, String> = mutableMapOf()
+        flows.filter { it is Action }.map { it as Action }.flatMap { action ->
+            action.nextBlocks.map { action.id to it }
+        }.forEach { parentAndChild ->
+            val parent = parentAndChild.first
+            val child = parentAndChild.second
+            if (!flows.map { it.id }.contains(child)) {
+                val pref = prefixes.firstOrNull { pref ->
+                    flows.map { it.id }.contains("$pref$child")
+                } ?: throw InvalidNextIdException("Invalid next id: $child")
+                correctionsList[parent!!] = pref
+            }
         }
+
+        // Corrections applied to next blocks
+        flows.filter { it.id in correctionsList.keys }.forEach { action ->
+            val updatedIds = (action as Action).nextBlocks.map {
+                val newID = "${correctionsList[action.id]}$it"
+                LOG.warn("Changing next id: $it to $newID for parent ${action.id}")
+                newID
+            }
+            action.nextBlocks = updatedIds.toMutableList()
+        }
+
+        // Check if container first and last blocks need corrections
+        flows.filter { it is Container }.map { it as Container }
+            .forEach { container ->
+                if (!flows.map { it.id }.contains(container.firstBlock)) {
+                    val pref = prefixes.firstOrNull { pref ->
+                        flows.map { it.id }.contains("$pref${container.firstBlock}")
+                    } ?: throw InvalidNextIdException("Invalid next id: ${container.firstBlock}")
+                    LOG.warn("Changing first block id to $pref${container.firstBlock} for ${container.id}")
+                    container.firstBlock = "$pref${container.firstBlock}"
+                }
+
+                if (!flows.map { it.id }.contains(container.lastBlock)) {
+                    val pref = prefixes.firstOrNull { pref ->
+                        flows.map { it.id }.contains("$pref${container.lastBlock}")
+                    } ?: throw InvalidNextIdException("Invalid next id: ${container.lastBlock}")
+                    LOG.warn("Changing last block id to $pref${container.lastBlock} for ${container.id}")
+                    container.lastBlock = "$pref${container.lastBlock}"
+                }
+            }
+
+        // Check for Branches
+        flows.filter { it is Branch }.map { it as Branch }
+            .forEach { branch ->
+                branch.mapping.entries.forEach { (nextMappingKey, nextMappingValue) ->
+                    if (!flows.map { it.id }.contains(nextMappingValue)) {
+                        val pref = prefixes.firstOrNull { pref ->
+                            flows.map { it.id }.contains("$pref${nextMappingValue}")
+                        } ?: throw InvalidNextIdException("Invalid next id: ${nextMappingValue}")
+                        LOG.warn("Changing mapping value to $pref${nextMappingValue} for ${branch.id}")
+                        branch.mapping[nextMappingKey] = "$pref${nextMappingValue}"
+                    }
+                }
+
+            }
 
 
         // Wire registered blocks to flows
@@ -141,7 +194,15 @@ class FlowEngine {
         Files.walk(Paths.get(path)).filter { Files.isRegularFile(it) }.collect(Collectors.toList()).flatMap {
             val toml = Toml().read(it.toFile())
             val blocks = this.parseToBlocks(toml)
+            val flowInfo = toml.toMap().getOrDefault("flow", mapOf("id_prefix" to "")) as HashMap<String, String>
+            val prefix = flowInfo.getOrDefault("id_prefix", "")
+            prefixes.add(prefix)
+            addPrefixToIds(blocks, prefix)
             blocks
         }
+
+    private fun addPrefixToIds(blocks: MutableList<Block>, prefix: String) {
+        blocks.forEach { it.id = "${prefix}${it.id}" }
+    }
 
 }
