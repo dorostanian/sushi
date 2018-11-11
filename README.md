@@ -108,3 +108,7 @@ flowEngine.executeFlow()
 
 You can also register custom action types. Keep in mind that types must be unique for actions.
 `flowEngine.registerActions(customActions)`
+
+### Flow Prefixes
+You can add `id_prefix` on top of each toml file, this helps you with assigning `id` for your blocks. The engine will append `id_prefix`
+if it can't find the mentiond ids in the current file.
