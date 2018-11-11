@@ -2,7 +2,6 @@
 
 name = "Example Flow"
 author = "amin@dorost.nl"
-start = "first-action"
 
 [[container]]
     name = "container-block"
