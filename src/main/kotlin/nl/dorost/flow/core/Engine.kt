@@ -100,7 +100,7 @@ class FlowEngine {
         ) as List<HashMap<String, Any>>).map {
             Container(
                 name = it["name"]!! as String,
-                type = it["type"]!! as String,
+                type = it.getOrDefault("type", "normal") as String,
                 id = it["id"]!! as String,
                 params = it.getOrDefault("params", mutableMapOf<String, String>()) as HashMap<String, String>,
                 firstBlock = it["first"] as String,

@@ -5,7 +5,6 @@ author = "amin@dorost.nl"
 
 [[container]]
     name = "container-block"
-    type = "normal"
     source = true
     id = "1"
     first = "2"
