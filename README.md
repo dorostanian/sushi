@@ -68,6 +68,11 @@ Any branch block should contain `var-name` param that tells the engine to pick t
 and compare it with `mapping` values. For instance in this example if `input["value"]==branch-2` then next block
 will be the block with id of `6`. So `mapping` is like a switch statement over `value`.
 
+**NOTE:**
+
+If the branch type is `ROUTER` then this branch will route the flow to the id specified in `value` field directly.
+This can be very useful for jumping to different blocks based on different sources. 
+
 ## `Container` block
 And the last block which enables re-using sub-flows that are already defined. `container`s hold multiple blocks and
 make it easy to build hierarchical flows.

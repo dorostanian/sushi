@@ -2,11 +2,12 @@
 
 name = "Example Flow"
 author = "amin@dorost.nl"
-
+start = "first-action"
 
 [[container]]
     name = "container-block"
     type = "normal"
+    source = true
     id = "1"
     first = "2"
     last = "3"

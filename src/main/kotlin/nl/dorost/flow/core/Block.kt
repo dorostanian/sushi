@@ -11,6 +11,7 @@ abstract class Block(
     open val name: String,
     open val id: String?,
     open val type: String,
+    open val source: Boolean,
     open var input: MutableMap<String, Any> = mutableMapOf(),
     open val params: MutableMap<String, String> = mutableMapOf()
 ) {
@@ -24,8 +25,9 @@ data class Container(
     override val id: String? = null,
     override val type: String,
     override var input: MutableMap<String, Any> = mutableMapOf(),
-    override val params: MutableMap<String, String> = mutableMapOf()
-) : Block(name, id, type, input, params) {
+    override val params: MutableMap<String, String> = mutableMapOf(),
+    override val source: Boolean
+) : Block(name, id, type, source, input, params) {
 
     override fun run(flowEngine: FlowEngine) {
         val flows = flowEngine.flows
@@ -42,13 +44,14 @@ data class Action(
     override val id: String? = null,
     override val type: String,
     override var input: MutableMap<String, Any> = mutableMapOf(),
-    override val params: MutableMap<String, String> = mutableMapOf()
-) : Block(name, id, type, input, params) {
+    override val params: MutableMap<String, String> = mutableMapOf(),
+    override val source: Boolean
+) : Block(name, id, type, source, input, params) {
 
     override fun run(flowEngine: FlowEngine) {
         val flows = flowEngine.flows
         val output = this.act!!.invoke(this)
-        LOG.debug("Executed Action id '$id', Name: '$name', Type: '$type', Output was: $output")
+        LOG.info("Executed Action id '$id', Name: '$name', Type: '$type', Output was: $output")
 
         if (this.returnAfterExec) {
             flowEngine.returnedBlockId = this.id
@@ -68,18 +71,30 @@ data class Branch(
     val mapping: HashMap<String, String>,
     override val name: String,
     override val id: String? = null,
-    override val type: String = "normal",
+    override val type: String = BRANCH_TYPE.NORMAL.toString(),
     override var input: MutableMap<String, Any> = mutableMapOf(),
-    override val params: MutableMap<String, String>
-) : Block(name, id, type, input, params) {
+    override val params: MutableMap<String, String>,
+    override val source: Boolean
+) : Block(name, id, type, source, input, params) {
+
     override fun run(flowEngine: FlowEngine) {
         val flows = flowEngine.flows
+
         val variableToLook =
             params.get("var-name") ?: throw ExpectedParamNotPresentException("Parameter var-name is not specified!")
+
+        if (type.equals(BRANCH_TYPE.ROUTER.toString(), true))
+            this.mapping.putAll(flowEngine.flows.map { Pair(it.id!!, it.id!!) }.toMap())
+
+
         val valueToLook = mapping.get(input.get(variableToLook))
-            ?: throw MissingMappingValueException("No mapping specified for the value")
+            ?: throw MissingMappingValueException("No mapping specified for the value ${input.get(variableToLook)}")
 
         LOG.debug("Executing Branch id '$id', Inputs: ${this.input}, Params: ${this.params}, Branching to: $valueToLook")
         flows.first { it.id == valueToLook }.run(flowEngine)
     }
+}
+
+enum class BRANCH_TYPE {
+    NORMAL, ROUTER
 }

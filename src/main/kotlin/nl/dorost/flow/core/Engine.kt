@@ -27,6 +27,8 @@ class FlowEngine {
 
     fun executeFlow(input: Map<String, Any> = mapOf()) {
         val firstLayerBlocks = findFirstLayer(flows)
+        if (firstLayerBlocks.isEmpty())
+            LOG.warn("There is no source block to start the execution, you need to mark at least one `source=true` block!")
         firstLayerBlocks.forEach { block ->
             block.run(this)
         }
@@ -70,49 +72,68 @@ class FlowEngine {
         verify(flows)
     }
 
-    private fun findFirstLayer(flows: MutableList<Block>): List<Block> {
-        val allIds = flows.map { it.id }
-        val secondLayerBlocks = flows.filter { it is Action }.map { it as Action }.flatMap { it.nextBlocks }.plus(
-            flows.filter { it is Branch }.map { it as Branch }.flatMap { it.mapping.values }
-        )
-            .distinct()
-        val firstOfContainers = flows.filter { it is Container }.map { (it as Container).firstBlock }
-        val fistLayerIds = allIds.subtract(secondLayerBlocks).subtract(firstOfContainers)
-        return flows.filter { it.id in fistLayerIds }
-    }
+//    private fun findFirstLayer(flows: MutableList<Block>): List<Block> {
+//        val allIds = flows.map { it.id }
+//        val secondLayerBlocks = flows.filter { it is Action }.map { it as Action }.flatMap { it.nextBlocks }.plus(
+//            flows.filter { it is Branch }.map { it as Branch }.flatMap { it.mapping.values }
+//        )
+//            .distinct()
+//        val firstOfContainers = flows.filter { it is Container }.map { (it as Container).firstBlock }
+//        val fistLayerIds = allIds.subtract(secondLayerBlocks).subtract(firstOfContainers)
+//        return flows.filter { it.id in fistLayerIds }
+//    }
+
+    private fun findFirstLayer(flows: MutableList<Block>): List<Block> = flows.filter { it.source }
 
     fun parseToBlocks(toml: Toml): MutableList<Block> {
-        val containers = (toml.toMap()["container"] as List<HashMap<String, Any>>).map {
+        val containers = parseContainers(toml)
+        val actions = parseActions(toml)
+        val branches = parseBranches(toml)
+        return containers.plus(actions).plus(branches).toMutableList()
+    }
+
+    private fun parseContainers(toml: Toml): List<Block> {
+        return (toml.toMap().getOrDefault(
+            "container",
+            listOf<HashMap<String, Any>>()
+        ) as List<HashMap<String, Any>>).map {
             Container(
                 name = it["name"]!! as String,
                 type = it["type"]!! as String,
                 id = it["id"]!! as String,
                 params = it.getOrDefault("params", mutableMapOf<String, String>()) as HashMap<String, String>,
                 firstBlock = it["first"] as String,
-                lastBlock = it["last"] as String
+                lastBlock = it["last"] as String,
+                source = it.getOrDefault("source", false) as Boolean
             ) as Block
         }
+    }
 
-        val actions = (toml.toMap()["action"] as List<HashMap<String, Any>>).map {
+    private fun parseBranches(toml: Toml): List<Branch> {
+        return (toml.toMap().getOrDefault("branch", listOf<HashMap<String, Any>>()) as List<HashMap<String, Any>>).map {
+            Branch(
+                name = it["name"]!! as String,
+                type = it.getOrDefault("type", BRANCH_TYPE.NORMAL.toString()) as String,
+                id = it["id"]!! as String,
+                params = it["params"] as HashMap<String, String>,
+                mapping = it.getOrDefault("mapping", mutableMapOf<String, String>()) as HashMap<String, String>,
+                source = it.getOrDefault("source", false) as Boolean
+            )
+        }
+    }
+
+    private fun parseActions(toml: Toml): List<Block> {
+        return (toml.toMap()["action"] as List<HashMap<String, Any>>).map {
             Action(
                 name = it["name"]!! as String,
                 type = it["type"]!! as String,
                 returnAfterExec = it.getOrDefault("returnAfter", false) as Boolean,
                 id = it["id"]!! as String,
                 params = it.getOrDefault("params", mutableMapOf<String, String>()) as MutableMap<String, String>,
-                nextBlocks = it.getOrDefault("next", mutableListOf<String>()) as MutableList<String>
+                nextBlocks = it.getOrDefault("next", mutableListOf<String>()) as MutableList<String>,
+                source = it.getOrDefault("source", false) as Boolean
             ) as Block
         }
-
-        val branches = (toml.toMap()["branch"] as List<HashMap<String, Any>>).map {
-            Branch(
-                name = it["name"]!! as String,
-                id = it["id"]!! as String,
-                params = it["params"] as HashMap<String, String>,
-                mapping = it["mapping"] as HashMap<String, String>
-            )
-        }
-        return containers.plus(actions).plus(branches).toMutableList()
     }
 
     fun readFlowsFromDir(path: String) =
