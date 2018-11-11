@@ -95,6 +95,9 @@ There are multiple ways of building flows.
 2. Building the flows programmatically. 
 3. Using the UI. (WIP)
 
+You need to make sure that you have at least one block that has `source = true`. This tells the engine where it 
+needs to start the execution. You can have multiple source blocks.
+
 ```kotlin
 val flowEngine = FlowEngine()
 val flows = flowEngine.readFlowsFromDir("flows/")
