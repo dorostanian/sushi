@@ -40,6 +40,7 @@ data class Action(
     var act: ((action: Action) -> Map<String, Any>)? = null,
     var nextBlocks: MutableList<String> = mutableListOf(),
     val returnAfterExec: Boolean = false,
+    val injectedObjects: MutableMap<String, Any> = mutableMapOf(),
     override val name: String,
     override var id: String? = null,
     override val type: String,
