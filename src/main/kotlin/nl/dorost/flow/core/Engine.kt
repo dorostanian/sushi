@@ -25,11 +25,12 @@ class FlowEngine {
         registeredActions = registeredActions.plus(blocks)
     }
 
-    fun executeFlow(input: Map<String, Any> = mapOf()) {
+    fun executeFlow(input: MutableMap<String, Any> = mutableMapOf()) {
         val firstLayerBlocks = findFirstLayer(flows)
         if (firstLayerBlocks.isEmpty())
             LOG.warn("There is no source block to start the execution, you need to mark at least one `source=true` block!")
         firstLayerBlocks.forEach { block ->
+            block.input = input
             block.run(this)
         }
     }
