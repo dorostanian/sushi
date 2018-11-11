@@ -46,6 +46,11 @@ Every action block looks like this:
 Normally `input` is the previous block's `output` and `params` are configurations applied to make actions flexible and
 configurable.
 
+if you need the flow engine to return the output of current action without continuing execution of 
+rest of the flow automatically you can put `returnAfter = true`. This tells the engine to hold the
+output of this block after execution and `id` of it to keep tracks of the flow. **This is mostly
+useful when you are expecting a user interaction e.g. Rest API.**
+
 ## `Branch` block
 This block is desgined intentionally simple to make it easy for controling the flow of your work.
 ```toml
@@ -94,3 +99,4 @@ flowEngine.executeFlow()
 ```
 
 You can also register custom action types. Keep in mind that types must be unique for actions.
+`flowEngine.registerActions(customActions)`

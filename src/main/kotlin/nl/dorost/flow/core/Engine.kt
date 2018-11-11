@@ -13,7 +13,8 @@ import java.util.stream.Collectors
 class FlowEngine {
 
     var flows: MutableList<Block> = mutableListOf()
-
+    var returnValue: MutableMap<String, Any> = mutableMapOf()
+    var returnedBlockId: String? = null
     var registeredActions: Map<String, (action: Action) -> Map<String, Any>> = mapOf()
 
     init {
@@ -27,7 +28,7 @@ class FlowEngine {
     fun executeFlow(input: Map<String, Any> = mapOf()) {
         val firstLayerBlocks = findFirstLayer(flows)
         firstLayerBlocks.forEach { block ->
-            block.run(flows)
+            block.run(this)
         }
     }
 
@@ -96,6 +97,7 @@ class FlowEngine {
             Action(
                 name = it["name"]!! as String,
                 type = it["type"]!! as String,
+                returnAfterExec = it.getOrDefault("returnAfter", false) as Boolean,
                 id = it["id"]!! as String,
                 params = it.getOrDefault("params", mutableMapOf<String, String>()) as MutableMap<String, String>,
                 nextBlocks = it.getOrDefault("next", mutableListOf<String>()) as MutableList<String>

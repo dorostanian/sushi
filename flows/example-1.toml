@@ -57,6 +57,7 @@ author = "amin@dorost.nl"
     name = "Branch eventually came here!"
     type = "log"
     id = "6"
+    returnAfter = false
     next = ["8"]
     [action.params]
         "param-5" = "value-5"
