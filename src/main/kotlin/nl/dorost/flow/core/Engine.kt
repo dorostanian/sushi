@@ -84,7 +84,7 @@ class FlowEngine {
                 if (!flows.map { it.id }.contains(container.firstBlock)) {
                     val pref = prefixes.firstOrNull { pref ->
                         flows.map { it.id }.contains("$pref${container.firstBlock}")
-                    } ?: throw InvalidNextIdException("Invalid next id: ${container.firstBlock}")
+                    } ?: throw InvalidNextIdException("Invalid first block id: ${container.firstBlock}")
                     LOG.warn("Changing first block id to $pref${container.firstBlock} for ${container.id}")
                     container.firstBlock = "$pref${container.firstBlock}"
                 }
@@ -92,7 +92,7 @@ class FlowEngine {
                 if (!flows.map { it.id }.contains(container.lastBlock)) {
                     val pref = prefixes.firstOrNull { pref ->
                         flows.map { it.id }.contains("$pref${container.lastBlock}")
-                    } ?: throw InvalidNextIdException("Invalid next id: ${container.lastBlock}")
+                    } ?: throw InvalidNextIdException("Invalid last block id: ${container.lastBlock}")
                     LOG.warn("Changing last block id to $pref${container.lastBlock} for ${container.id}")
                     container.lastBlock = "$pref${container.lastBlock}"
                 }
@@ -105,7 +105,7 @@ class FlowEngine {
                     if (!flows.map { it.id }.contains(nextMappingValue)) {
                         val pref = prefixes.firstOrNull { pref ->
                             flows.map { it.id }.contains("$pref${nextMappingValue}")
-                        } ?: throw InvalidNextIdException("Invalid next id: ${nextMappingValue}")
+                        } ?: throw InvalidNextIdException("Invalid mapping id: ${nextMappingValue}")
                         LOG.warn("Changing mapping value to $pref${nextMappingValue} for ${branch.id}")
                         branch.mapping[nextMappingKey] = "$pref${nextMappingValue}"
                     }
