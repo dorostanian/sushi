@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/dorost/flow.svg?style=svg)](https://circleci.com/gh/dorost/flow)
+
 # Introduction
 
 **Flow** is a simplistic flow design based on `TOML` config files offering also an UI (WIP) to make it easy to build
