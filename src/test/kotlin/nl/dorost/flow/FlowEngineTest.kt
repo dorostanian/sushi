@@ -12,7 +12,7 @@ class FlowEngineTest {
         val flows = flowEngine.readFlowsFromDir("flows/")
 
         flowEngine.wire(flows)
-        flowEngine.executeFlow()
+        flowEngine.executeFlow(input= mutableMapOf("bot-input" to "asd"))
     }
 
 }

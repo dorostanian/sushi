@@ -1,0 +1,29 @@
+[flow]
+name = "example for container definition"
+id_prefix = "container_"
+
+[[container]]
+    name = "container-block"
+    id = "my-container"
+    type = "my-container"
+    first = "2"
+    last = "3"
+
+
+[[action]]
+    name = "action-1"
+    type = "log"
+    id = "2"
+    next = ["3"]
+    [action.params]
+        param-2 = "value-2"
+
+
+
+
+[[action]]
+    name = "action-2"
+    type = "constant"
+    id = "3"
+    [action.params]
+        const = "branch-2"

@@ -8,7 +8,7 @@ import java.lang.RuntimeException
 val LOG = LoggerFactory.getLogger("ElementaryBlocks")
 
 
-val elementaryActions = mapOf<String, (action: Action) -> Map<String, Any>>(
+val elementaryActions = mutableMapOf<String, (action: Action) -> Map<String, Any>>(
     "log" to { action: Action ->
         LOG.info("Action id '${action.id}': ${action.name}. Input Value: ${action.input}, Params: ${action.params}")
         action.input
@@ -17,7 +17,6 @@ val elementaryActions = mapOf<String, (action: Action) -> Map<String, Any>>(
         LOG.debug("Action id '${action.id}': ${action.name}. Input Value: ${action.input}, Params: ${action.params}")
         val constValue = action.params["const"] ?: throw UnsatisfiedParamsException("Parameter const not found!")
         mapOf("value" to constValue)
-
     },
     "http-post" to { action: Action ->
         val url = action.params["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")

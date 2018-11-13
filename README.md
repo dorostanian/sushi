@@ -33,6 +33,7 @@ point to another block. The field `type` specifies what this block is supposed t
     type = "log"
     id = "2"
     next = ["3"]
+    output-names = ["some-variable-name"]
     [action.params]
      param-1 = "value-2"
 ```
@@ -75,18 +76,34 @@ This can be very useful for jumping to different blocks based on different sourc
 
 ## `Container` block
 And the last block which enables re-using sub-flows that are already defined. `container`s hold multiple blocks and
-make it easy to build hierarchical flows.
-```toml
+make it easy to build hierarchical flows. It will define you a new type of `action` which you can re-use anywhere you want.
 
+Container Definition:
+
+```toml
 [[container]]
     name = "container-block"
-    type = "normal"
+    type = "new-defined-action"
     id = "1"
     first = "2"
     last = "3"
 ```
+
+Container Usage:
+
+```toml
+[[action]]
+    name = "Using a defined container!"
+    type = "new-defined-action"
+    id = "some-id"
+```
+
+
 The most important fields of this block are `first` and `last` which tells the id of the blocks that should be executed
 first and last respectively.
+
+**NOTE:**
+You are not allowed to use `returnAfter=true` inside a container.
 
 # Usage
 

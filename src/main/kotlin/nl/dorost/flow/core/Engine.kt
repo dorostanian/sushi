@@ -15,15 +15,15 @@ class FlowEngine {
     var flows: MutableList<Block> = mutableListOf()
     var returnValue: MutableMap<String, Any> = mutableMapOf()
     var returnedBlockId: String? = null
-    var registeredActions: Map<String, (action: Action) -> Map<String, Any>> = mapOf()
+    var registeredActions: MutableMap<String, (action: Action) -> Map<String, Any>> = mutableMapOf()
     var prefixes: MutableSet<String> = mutableSetOf()
 
     init {
         registerActions(elementaryActions)
     }
 
-    fun registerActions(blocks: Map<String, (action: Action) -> Map<String, Any>>) {
-        registeredActions = registeredActions.plus(blocks)
+    fun registerActions(blocks: MutableMap<String, (action: Action) -> Map<String, Any>>) {
+        registeredActions.putAll(blocks)
     }
 
     fun executeFlow(input: MutableMap<String, Any> = mutableMapOf()) {
@@ -37,22 +37,20 @@ class FlowEngine {
     }
 
     private fun verify(flows: List<Block>) {
-        // unique ids
-        val duplicates = flows.map { it.id }
-            .groupingBy { it }
-            .eachCount()
-            .filter { it.value > 1 }
-            .map { it.key }
-        if (duplicates.isNotEmpty())
-            throw NonUniqueIdException("All ids must be unique! Duplicate id: ${duplicates.first()}.")
+        checkForIdUniqeness(flows)
+        registerContainers(flows)
+        checkIfTypesRegistered(flows)
+        checkIdPrefixes(flows)
+        wireProperActsToBlocks(flows)
+    }
 
-        // Check if the type is already registered
-        flows.filter { it is Action }.forEach {
-            if (it.type !in registeredActions.keys)
-                throw TypeNotRegisteredException("'${it.type}' type is not a registered Block!")
+    private fun wireProperActsToBlocks(flows: List<Block>) {
+        flows.filter { it is Action }.map { it as Action }.forEach { currentBlock ->
+            currentBlock.act = registeredActions[currentBlock.type]
         }
+    }
 
-
+    private fun checkIdPrefixes(flows: List<Block>) {
         // Check if next block ids are valid
         val correctionsList: MutableMap<String, String> = mutableMapOf()
         flows.filter { it is Action }.map { it as Action }.flatMap { action ->
@@ -112,11 +110,30 @@ class FlowEngine {
                 }
 
             }
+    }
 
+    private fun checkIfTypesRegistered(flows: List<Block>) {
+        flows.filter { it is Action }.forEach {
+            if (it.type !in registeredActions.keys)
+                throw TypeNotRegisteredException("'${it.type}' type is not a registered Block!")
+        }
+    }
 
-        // Wire registered blocks to flows
-        flows.filter { it is Action }.map { it as Action }.forEach { currentBlock ->
-            currentBlock.act = registeredActions[currentBlock.type]
+    private fun checkForIdUniqeness(flows: List<Block>) {
+        val duplicates = flows.map { it.id }
+            .groupingBy { it }
+            .eachCount()
+            .filter { it.value > 1 }
+            .map { it.key }
+        if (duplicates.isNotEmpty())
+            throw NonUniqueIdException("All ids must be unique! Duplicate id: ${duplicates.first()}.")
+    }
+
+    private fun registerContainers(containers: List<Block>) {
+        containers.filter { it is Container }.map { it as Container }.forEach { container ->
+            registeredActions[container.type] = { action: Action ->
+                container.run(this)
+            }
         }
 
     }
@@ -125,17 +142,6 @@ class FlowEngine {
         this.flows = flows as MutableList<Block>
         verify(flows)
     }
-
-//    private fun findFirstLayer(flows: MutableList<Block>): List<Block> {
-//        val allIds = flows.map { it.id }
-//        val secondLayerBlocks = flows.filter { it is Action }.map { it as Action }.flatMap { it.nextBlocks }.plus(
-//            flows.filter { it is Branch }.map { it as Branch }.flatMap { it.mapping.values }
-//        )
-//            .distinct()
-//        val firstOfContainers = flows.filter { it is Container }.map { (it as Container).firstBlock }
-//        val fistLayerIds = allIds.subtract(secondLayerBlocks).subtract(firstOfContainers)
-//        return flows.filter { it.id in fistLayerIds }
-//    }
 
     private fun findFirstLayer(flows: MutableList<Block>): List<Block> = flows.filter { it.source }
 
@@ -206,3 +212,4 @@ class FlowEngine {
     }
 
 }
+

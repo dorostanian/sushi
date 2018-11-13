@@ -3,33 +3,18 @@ id_prefix = "main_"
 name = "Example Flow"
 author = "amin@dorost.nl"
 
-[[container]]
-    name = "container-block"
+[[action]]
+    name = "intial action"
     source = true
-    id = "1"
-    first = "2"
-    last = "3"
-
-
-[[action]]
-    name = "action-1"
     type = "log"
-    id = "2"
-    next = ["3"]
-    [action.params]
-        param-2 = "value-2"
-
-
-
+    id = "initial-action"
+    next = ["new-defined-action"]
 
 [[action]]
-    name = "action-2"
-    type = "constant"
-    id = "3"
+    name = "new defined action"
+    type = "my-container"
+    id = "new-defined-action"
     next = ["4"]
-    [action.params]
-        const = "branch-2"
-
 
 
 [[branch]]
@@ -66,8 +51,12 @@ author = "amin@dorost.nl"
     name = "action-5"
     type = "log"
     id = "7"
+    output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
     [action.params]
         param-6 = "value-6"
+
+
+
 
 [[action]]
     name = "Inputting the JSON"
