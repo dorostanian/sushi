@@ -52,7 +52,7 @@ data class Action(
     override fun run(flowEngine: FlowEngine): MutableMap<String, Any> {
         val flows = flowEngine.flows
         val output = this.act!!.invoke(this)
-        LOG.info("Executed Action id '$id', Name: '$name', Type: '$type', Output was: $output")
+        LOG.debug("Executed Action id '$id', Name: '$name', Type: '$type', Output was: $output")
 
         if (this.returnAfterExec) {
             flowEngine.returnedBlockId = this.id
