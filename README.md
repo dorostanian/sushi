@@ -107,6 +107,9 @@ You are not allowed to use `returnAfter=true` inside a container.
 
 # Usage
 
+You can use **Flow** in two different ways: as a library to import in your project or launch
+it as service and get the benefits of graphical UI designer.
+
 There are multiple ways of building flows.
 1. Reading `TOML` files from a directory.
 2. Building the flows programmatically. 
@@ -123,8 +126,11 @@ flowEngine.wire(flows)
 flowEngine.executeFlow()
 ```
 
-You can also register custom action types. Keep in mind that types must be unique for actions.
+* You can also register custom action types. Keep in mind that types must be unique for actions.
 `flowEngine.registerActions(customActions)`
+
+* You can build any action based on the elementary actions (no need to further implementation),
+ but if you think you need more actions; you can implement and register your own types. 
 
 ### Flow Prefixes
 You can add `id_prefix` on top of each toml file, this helps you with assigning `id` for your blocks. The engine will append `id_prefix`

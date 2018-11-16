@@ -235,13 +235,13 @@ class FlowEngine {
         digraph += "edge [labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
 
         val actionInnerHtml = "<label style='color:rgb(0,0,0);'> Action: <b>%s</b>  </label>" +
-                "<button class='badge badge-info badge-pill'>edit</button>" +
-                "<button class='badge badge-danger badge-pill'>remove</button>"
+                "<button class='badge badge-info badge-pill' id='%s-edit'>edit</button>" +
+                "<button class='badge badge-danger badge-pill' id='%s-remove'>remove</button>"
 
         val branchInnerHtml = "<label style='color:rgb(0,0,0);'> Branch: <b>%s</b>  </label>" +
                 "<label style='color:rgb(0,0,0);'> on: <b>%s</b>  </label>" +
-                "<button class='badge badge-info badge-pill'>edit</button>" +
-                "<button class='badge badge-danger badge-pill'>remove</button>"
+                "<button class='badge badge-info badge-pill'  id='%s-edit'>edit</button>" +
+                "<button class='badge badge-danger badge-pill id='%s-remove''>remove</button>"
 
         val normalEdgeHtml =
             "\"%s\" -> \"%s\" [style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
@@ -253,14 +253,12 @@ class FlowEngine {
 
         // add nodes
         blocks.filter { it is Action }.forEach { block ->
-            val name = block.id
-            digraph += String.format(normalNode, name, String.format(actionInnerHtml, name))
+            digraph += String.format(normalNode, block.id, String.format(actionInnerHtml, block.name, block.id, block.id))
         }
 
         // add branches
         blocks.filter { it is Branch }.map { it as Branch }.forEach { block ->
-            val name = block.id
-            digraph += String.format(branchNode, name, String.format(branchInnerHtml, name, block.on))
+            digraph += String.format(branchNode, block.id, String.format(branchInnerHtml, block.name, block.on, block.id, block.id))
         }
 
 
