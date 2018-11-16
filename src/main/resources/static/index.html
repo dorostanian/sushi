@@ -278,10 +278,9 @@ svg {
           var logOutput = responseJson.responseLog;
           var action = responseJson.blockInfo;
           appendInfo(logOutput);
-          appendInfo('Action: ' + JSON.stringify(action));
 
-          $("#modal-action-id").html(action.id);
-          $("#modal-action-name").html(action.name);
+          $("#modal-action-id").html("ID: " + action.id);
+          $("#modal-action-name").val(action.name);
           // $("#modal-action-id").html(currentActionId);
 
         }
@@ -590,13 +589,16 @@ svg {
           </button>
         </div>
         <div class="modal-body" id="action-modal-body">
-          <h4>ID: </h4>
-          <h4 id="modal-action-id"> action-id</h4>
+          <small id="modal-action-id">Action ID here</small>
           <hr>
-          <h4 id="modal-action-name">Action Name</h4>
+
+          <small id="modal-action-type">Action Type Here</small>
+          <hr>
+
           <small id="modal-action-description">Action Description here...</small>
           <hr>
-          <input class="form-control form-control-sm" type="text" placeholder="current-name">
+          <b>Name: </b>
+          <input class="form-control form-control-sm" type="text" placeholder="current-name" id="modal-action-name">
           <hr>
           <h4>Action Params:</h4>
           <table class="table table-secondary" id="modal-action-params">
