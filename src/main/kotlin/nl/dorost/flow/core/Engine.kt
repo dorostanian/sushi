@@ -213,31 +213,42 @@ class FlowEngine {
     }
 
 
-    fun tomlToDigraph(tomlText: String){
-        val toml = Toml().read(tomlText)
-        val blocks = this.parseToBlocks(toml)
-        var digraph = "digraph {"
+    fun tomlToDigraph(tomlText: String): String {
+        val toml: Toml?
+        try {
+            toml = Toml().read(tomlText)
+        } catch (e: Exception) {
+            val errorMessage = "TOML could not be parsed correctly! ${e.localizedMessage}"
+            LOG.error(errorMessage)
+            return errorMessage
+        }
+        val blocks: MutableList<Block>
+        try {
+            blocks = this.parseToBlocks(toml)
+        } catch (e: Exception) {
+            val errorMessage = "Error on parising to blocks! ${e.localizedMessage}"
+            LOG.error(errorMessage)
+            return errorMessage
+        }
+        var digraph = "digraph {\n"
         digraph += "node [rx=5 ry=5 labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
         digraph += "edge [labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
-        val actionInnerHtml = """"
-            <label style='color:rgb(0,0,224);'> Action: <b>%s</b>  </label>
-            <br>
-            <button class="badge badge-danger badge-pill">edit</button>
-            <button class="badge badge-danger badge-pill">remove</button>
 
-"""
-        val branchInnerHtml = """"
-            <label style='color:rgb(0,0,224);'> Branch: <b>%s</b>  </label>
-            <br>
-            <button class="badge badge-danger badge-pill">edit</button>
-            <button class="badge badge-danger badge-pill">remove</button>
+        val actionInnerHtml = "<label style='color:rgb(0,0,0);'> Action: <b>%s</b>  </label>" +
+                "<br><button class='badge badge-danger badge-pill'>edit</button>" +
+                "<button class='badge badge-danger badge-pill'>remove</button>"
 
-"""
-        val normalEdgeHtml = "%s -> %s [style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
-        val branchEdgeHtml = "%s -> %s [label=\"%s\" labelStyle=\"fill: #55f; font-weight: bold;\" style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
+        val branchInnerHtml = "<label style='color:rgb(0,0,0);'> Branch: <b>%s</b>  </label>" +
+                "<br><button class='badge badge-danger badge-pill'>edit</button>" +
+                "<button class='badge badge-danger badge-pill'>remove</button>"
 
-        val normalNode = "%s [labelType=\"html\" label=\"%s\"];\n"
-        val branchNode = "%s [labelType=\"html\" label=\"%s\" style=\"fill: #f77;\"];\n"
+        val normalEdgeHtml =
+            "\"%s\" -> \"%s\" [style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
+        val branchEdgeHtml =
+            "\"%s\" -> \"%s\" [label=\"%s\" labelStyle=\"fill: #55f; font-weight: bold;\" style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
+
+        val normalNode = "\"%s\" [labelType=\"html\" label=\"%s\" style=\"fill: #E0E0E0;\"];\n"
+        val branchNode = "\"%s\" [labelType=\"html\" label=\"%s\" style=\"fill: #FFCCCC;\"];\n"
 
         // add nodes
         blocks.filter { it is Action }.forEach { block ->
@@ -256,18 +267,18 @@ class FlowEngine {
         blocks.filter { it is Action }.map { it as Action }.flatMap { block ->
             block.nextBlocks.map { Pair(block.id, it) }
         }.forEach { edge ->
-            digraph+= String.format(normalEdgeHtml, edge.first, edge.second)
+            digraph += String.format(normalEdgeHtml, edge.first, edge.second)
         }
 
         // add branch edges
-        blocks.filter { it is Branch }.map { it as Branch }.flatMap {branch ->
+        blocks.filter { it is Branch }.map { it as Branch }.flatMap { branch ->
             branch.mapping.map { Pair(branch.id, it) }
         }.forEach { mapping ->
-            digraph = String.format(branchEdgeHtml, mapping.first, mapping.second.value, mapping.second.key)
+            digraph += String.format(branchEdgeHtml, mapping.first, mapping.second.value, mapping.second.key)
         }
 
         digraph += "}"
-
+        return digraph
     }
 
 }

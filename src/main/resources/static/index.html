@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<!-- saved from url=(0076)https://dagrejs.github.io/project/dagre-d3/latest/demo/interactive-demo.html -->
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Spaghetti Flow Design Tool</title>
+
+  <script src="./flow-visualization_files/d3.v4.js"></script>
+  <script src="./flow-visualization_files/graphlib-dot.js"></script>
+  <script src="./flow-visualization_files/dagre-d3.js"></script>
+
+  <link rel="stylesheet" href="./bootstrap.min.css">
+
+  <link href="./bootstrap-social-gh-pages/assets/css/font-awesome.css" rel="stylesheet">
+  <link href="./bootstrap-social-gh-pages/assets/css/docs.css" rel="stylesheet">
+
+  <link href="./bootstrap-social-gh-pages/bootstrap-social.css" rel="stylesheet">
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
+  <script src="./dagre.js"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+    crossorigin="anonymous"></script>
+
+
+
+  <style>
+    svg {
+      border: 1px solid #999;
+      overflow: hidden;
+    }
+
+    .node {
+      white-space: nowrap;
+    }
+
+    .node rect,
+    .node circle,
+    .node ellipse {
+      stroke: #333;
+      fill: #fff;
+      stroke-width: 1.5px;
+    }
+
+    .cluster rect {
+      stroke: #333;
+      fill: #000;
+      fill-opacity: 0.1;
+      stroke-width: 1.5px;
+    }
+
+    .edgePath path.path {
+      stroke: #333;
+      stroke-width: 1.5px;
+      fill: none;
+    }
+  </style>
+
+  <style>
+    h1,
+    h2 {
+      color: #333;
+    }
+
+    textarea {
+      width: 800px;
+    }
+
+    label {
+      margin-top: 1em;
+      display: block;
+    }
+
+    .error {
+      color: red;
+    }
+
+    #editor {
+    width: auto;
+    display: block;
+    height: 600px;
+  }
+
+
+svg {
+    width: 100%;
+    display: block;
+    height: 600px;
+    background-color: white;
+  }
+
+
+.scroll-area{
+  width:100%;
+  max-height: 600px;
+  overflow-y:scroll;
+}
+
+  </style>
+
+</head>
+
+<body onload="tryDraw();">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">Spaghetti Flow Design Tool</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01"
+      aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarColor01">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="#">About</a>
+        </li>
+      </ul>
+
+      <ul class="navbar-nav mr-sm-2">
+        <a class="btn btn-social-icon btn-github btn-lg">
+          <span class="fa fa-github"></span>
+        </a>
+      </ul>
+
+
+    </div>
+  </nav>
+
+
+
+  <table width="100%" class="table table-bordered">
+    <colgroup>
+      <col width="15%">
+      <col width="30%">
+      <col width="5%">
+      <col width="35%">
+      <col width="15%">
+    </colgroup>
+
+    <tr class="table-dark">
+      <td>
+        <h3>List of blocks</h3>
+
+        <div class="scroll-area" style="max-height: 450px; height: 450px;">
+
+          <div class="list-group">
+            <div class="list-group-item list-group-item-action flex-column align-items-start active" id="mainFlow">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Main Flow</h5>
+              </div>
+              <p class="mb-1">This describes the main flow that will be executed.</p>
+              <small>You need to have at least one starting block.</small>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">A container example</h5>
+              </div>
+              <p class="mb-1">Container description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <br>
+              <button class="badge badge-danger badge-pill">remove</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">A container example</h5>
+              </div>
+              <p class="mb-1">Container description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <br>
+              <button class="badge badge-danger badge-pill">remove</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">A container example</h5>
+              </div>
+              <p class="mb-1">Container description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <br>
+              <button class="badge badge-danger badge-pill">remove</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">A container example</h5>
+              </div>
+              <p class="mb-1">Container description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <br>
+              <button class="badge badge-danger badge-pill">remove</button>
+            </div>
+          </div>
+        </div>
+        <br>
+        <button type="button" class="btn btn-info btn-block">Add container</button>
+        <button type="button" class="btn btn-info btn-block">Register/Update Container as Action</button>
+
+
+      </td>
+      <td>
+        <div id="editor">
+          [flow]
+          id_prefix = "main_"
+          name = "Example Flow"
+          author = "amin@dorost.nl"
+
+          [[action]]
+          name = "intial action"
+          source = true
+          type = "log"
+          id = "initial-action"
+          next = ["new-defined-action"]
+
+          [[action]]
+          name = "new defined action"
+          type = "my-container"
+          id = "new-defined-action"
+          next = ["4"]
+
+
+          [[branch]]
+          name = "branch-1"
+          id = "4"
+          [branch.params]
+          var-name = "value"
+          [branch.mapping]
+          branch-1 = "5"
+          branch-2 = "6"
+          branch-3 = "7"
+
+          [[action]]
+          name = "action-3"
+          type = "log"
+          id = "5"
+          next = ["7"]
+          [action.params]
+          param-4 = "value-4"
+
+
+
+          [[action]]
+          name = "Branch eventually came here!"
+          type = "log"
+          id = "6"
+          returnAfter = false
+          next = ["8"]
+          [action.params]
+          "param-5" = "value-5"
+
+
+          [[action]]
+          name = "action-5"
+          type = "log"
+          id = "7"
+          output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
+          [action.params]
+          param-6 = "value-6"
+
+
+
+
+          [[action]]
+          name = "Inputting the JSON"
+          type = "json-in"
+          id = "8"
+          next = ["9"]
+          [action.params]
+          value = """{
+          "glossary": {
+          "title": "example glossary",
+          "GlossDiv": {
+          "title": "S",
+          "GlossList": {
+          "GlossEntry": {
+          "ID": "SGML",
+          "SortAs": "SGML",
+          "GlossTerm": "Standard Generalized Markup Language",
+          "Acronym": "SGML",
+          "Abbrev": "ISO 8879:1986",
+          "GlossDef": {
+          "para": "A meta-markup language, used to create markup languages such as DocBook.",
+          "GlossSeeAlso": ["GML", "XML"]
+          },
+          "GlossSee": "markup"
+          }
+          }
+          }
+          }
+          }"""
+
+          [[action]]
+          name = "Make post Request"
+          type = "http-post"
+          id = "9"
+          next = ["11"]
+          [action.params]
+          url = "https://postman-echo.com/post"
+
+
+          [[action]]
+          name = "Show the response!"
+          type = "log"
+          id = "11"
+          next = ["12"]
+
+          [[action]]
+          name = "Make get Request"
+          type = "http-get"
+          id = "12"
+          next = ["13"]
+          [action.params]
+          url = "https://postman-echo.com/get?foo1=bar1&foo2=bar2"
+
+
+          [[action]]
+          name = "Show the response!"
+          type = "log"
+          id = "13"
+          next = ["14"]
+
+          [[action]]
+          name = "End the flow!"
+          type = "log"
+          id = "14"
+        </div>
+      </td>
+      <td>
+        <button type="button" class="btn btn-info btn-block" id="convertToDigraph">
+          <h3>&#8250;</h3>
+        </button>
+        <br>
+        <button type="button" class="btn btn-danger btn-block">
+          <h3>&#8249;</h3>
+        </button>
+
+
+      </td>
+      <td>
+        <svg>
+          <g />
+        </svg>
+      </td>
+
+      <td>
+
+        <h3>Actions Library:</h3>
+
+        <div class="scroll-area" style="max-height:560px;">
+          <div class="list-group">
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Action Type here</h5>
+              </div>
+              <p class="mb-1">Action description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <button class="badge badge-info badge-pill">add this action</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Action Type here</h5>
+              </div>
+              <p class="mb-1">Action description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <button class="badge badge-info badge-pill">add this action</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Action Type here</h5>
+              </div>
+              <p class="mb-1">Action description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <button class="badge badge-info badge-pill">add this action</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Action Type here</h5>
+              </div>
+              <p class="mb-1">Action description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <button class="badge badge-info badge-pill">add this action</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Action Type here</h5>
+              </div>
+              <p class="mb-1">Action description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <button class="badge badge-info badge-pill">add this action</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Action Type here</h5>
+              </div>
+              <p class="mb-1">Action description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <button class="badge badge-info badge-pill">add this action</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Action Type here</h5>
+              </div>
+              <p class="mb-1">Action description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <button class="badge badge-info badge-pill">add this action</button>
+            </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Action Type here</h5>
+              </div>
+              <p class="mb-1">Action description here.</p>
+              <small>Input/Output docs.</small>
+              <br>
+              <button class="badge badge-info badge-pill">add this action</button>
+            </div>
+          </div>
+        </div>
+      </td>
+
+
+
+    </tr>
+
+    <tr>
+      <td>
+        <button hidden=true type="button" class="btn btn-warning btn-block">
+          <h5>Save Flow</h5>
+        </button>
+        <button type="button" class="btn btn-success btn-block" id="executeFlow">
+          <h5>Execute Flow</h5>
+        </button>
+
+      </td>
+    </tr>
+
+  </table>
+
+
+  <script>
+
+     var editor;
+
+    $(document).ready(function () {
+      editor = ace.edit("editor");
+      editor.setTheme("ace/theme/monokai");
+      editor.getSession().setMode("ace/mode/javascript");
+      editor.session.setMode("ace/mode/toml");
+
+
+    });
+
+    $("#convertToDigraph").click(tryDraw);
+
+
+    // Set up zoom support
+    var svg = d3.select("svg"),
+      inner = d3.select("svg g"),
+      zoom = d3.zoom().on("zoom", function () {
+        inner.attr("transform", d3.event.transform);
+      });
+    svg.call(zoom);
+
+    // Create and configure the renderer
+    var render = dagreD3.render();
+
+    var g;
+
+
+    function tryDraw() {
+      console.log("Making post request to server!");
+      $.ajax({
+        type: "POST",
+        url: "http://localhost:8080/tomlToDigraph",
+        data: editor.getValue(),
+        crossDomain: true,
+
+      })
+        .done(function (data) {
+          console.log("Got the respond: " + data);
+          g = graphlibDot.read(data);
+
+          // Set margins, if not present
+          if (!g.graph().hasOwnProperty("marginx") &&
+            !g.graph().hasOwnProperty("marginy")) {
+            g.graph().marginx = 20;
+            g.graph().marginy = 20;
+          }
+
+          g.graph().transition = function (selection) {
+            return selection.transition().duration(500);
+          };
+
+          // Render the graph into svg g
+          d3.select("svg g").call(render, g);
+        }).fail(function (xhr, textStatus, errorThrown) {
+          console.log(xhr.responseText);
+          console.log(textStatus);
+        });
+
+
+    }
+
+  </script>
+</body>
+
+</html>
