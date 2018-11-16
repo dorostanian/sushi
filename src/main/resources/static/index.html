@@ -9,7 +9,7 @@
     crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
     crossorigin="anonymous"></script>
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
 
 
   <script src="./flow-visualization_files/d3.v4.js"></script>
@@ -26,87 +26,87 @@
   <script>
 
 
-      var editor;
-      var svg;
-      var render;
-      var g;
-  
-  
-      $(document).ready(function () {
-        $('#action-modal').modal('show');
-  
-        editor = ace.edit("editor");
-        editor.setTheme("ace/theme/monokai");
-        editor.getSession().setMode("ace/mode/javascript");
-        editor.session.setMode("ace/mode/toml");
-  
-        svg = d3.select("svg");
-        render = dagreD3.render();
-        inner = d3.select("svg g"),
-          zoom = d3.zoom().on("zoom", function () {
-            inner.attr("transform", d3.event.transform);
-          });
-        svg.call(zoom);
-  
-  
-      });
-  
-      $("#convertToDigraph").click(tryDraw);
-  
-      function tryDraw() {
-        appendInfo("Requesting TOML to Digraph conversion!");
-        $.ajax({
-          type: "POST",
-          url: "http://localhost:8080/tomlToDigraph",
-          data: editor.getValue(),
-          crossDomain: true,
-  
-        })
-          .done(function (data) {
-            var responseJson = JSON.parse(data);
-            var logOutput = responseJson.responseLog;
-            var data = responseJson.data;
-            appendInfo(logOutput);
-  
-            g = graphlibDot.read(data);
-  
-            // Set margins, if not present
-            if (!g.graph().hasOwnProperty("marginx") &&
-              !g.graph().hasOwnProperty("marginy")) {
-              g.graph().marginx = 20;
-              g.graph().marginy = 20;
+    var editor;
+    var svg;
+    var render;
+    var g;
+
+
+    $(document).ready(function () {
+      $('#action-modal').modal('show');
+
+      editor = ace.edit("editor");
+      editor.setTheme("ace/theme/monokai");
+      editor.getSession().setMode("ace/mode/javascript");
+      editor.session.setMode("ace/mode/toml");
+
+      svg = d3.select("svg");
+      render = dagreD3.render();
+      inner = d3.select("svg g"),
+        zoom = d3.zoom().on("zoom", function () {
+          inner.attr("transform", d3.event.transform);
+        });
+      svg.call(zoom);
+
+
+    });
+
+    $("#convertToDigraph").click(tryDraw);
+
+    function tryDraw() {
+      appendInfo("Requesting TOML to Digraph conversion!");
+      $.ajax({
+        type: "POST",
+        url: "http://localhost:8080/tomlToDigraph",
+        data: editor.getValue(),
+        crossDomain: true,
+
+      })
+        .done(function (data) {
+          var responseJson = JSON.parse(data);
+          var logOutput = responseJson.responseLog;
+          var data = responseJson.data;
+          appendInfo(logOutput);
+
+          g = graphlibDot.read(data);
+
+          // Set margins, if not present
+          if (!g.graph().hasOwnProperty("marginx") &&
+            !g.graph().hasOwnProperty("marginy")) {
+            g.graph().marginx = 20;
+            g.graph().marginy = 20;
+          }
+
+          g.graph().transition = function (selection) {
+            return selection.transition().duration(500);
+          };
+
+          // Render the graph into svg g
+          d3.select("svg g").call(render, g);
+
+          $("[id$='-remove']").click(
+            function () {
+              alert('Removing ' + $(this).attr('id'));
             }
-  
-            g.graph().transition = function (selection) {
-              return selection.transition().duration(500);
-            };
-  
-            // Render the graph into svg g
-            d3.select("svg g").call(render, g);
-  
-            $("[id$='-remove']").click(
-              function () {
-                alert('Removing ' + $(this).attr('id'));
-              }
-            );
-            $("[id$='-edit']").click(
-              function () {
-                alert('Editing ' + $(this).attr('id'));
-              }
-            );
-  
-          }).fail(function (xhr, textStatus, errorThrown) {
-            console.log(xhr.responseText);
-            console.log(textStatus);
-          });
-  
-      }
-  
-      function appendInfo(text) {
-        $("#shell-emulator").append("<li>" + text + "</li>");
-      }
-  
-    </script>
+          );
+          $("[id$='-edit']").click(
+            function () {
+              alert('Editing ' + $(this).attr('id'));
+            }
+          );
+
+        }).fail(function (xhr, textStatus, errorThrown) {
+          console.log(xhr.responseText);
+          console.log(textStatus);
+        });
+
+    }
+
+    function appendInfo(text) {
+      $("#shell-emulator").append("<li>" + text + "</li>");
+    }
+
+  </script>
 
   <style>
     svg {
@@ -609,20 +609,63 @@ svg {
           </button>
         </div>
         <div class="modal-body" id="action-modal-body">
-          Action Name:  <input class="form-control form-control-sm" type="text" placeholder=".form-control-sm">
-          <br>
-          Action Params: 
-          <br>
-          <label class="col-form-label col-form-label-sm">Param Name</label>
-          <input class="form-control form-control-sm" type="text" placeholder=".form-control-sm">
-          
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary">Save changes</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <h4>ID: action-id</h4>
+          <hr>
+          <h4>Action Name</h4>
+          <small>Action Description here...</small>
+          <hr>
+          <input class="form-control form-control-sm" type="text" placeholder="current-name">
+          <hr>
+          <h4>Action Params:</h4>
+          <table class="table table-secondary">
+            <tr>
+              <td>
+                Param Name
+              </td>
+              <td>
+                <input class="form-control form-control-sm" type="text" placeholder="current-param">
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Param Name
+              </td>
+              <td>
+                <input class="form-control form-control-sm" type="text" placeholder="current-param">
+              </td>
+            </tr>
+          </table>
 
           <button class="badge badge-info badge-pill">add param</button>
+          <hr>
+          <h4>Action Output Keys:</h4>
+          <table class="table table-secondary">
+            <tr>
+              <td>
+                Key Name
+              </td>
+            </tr>
+          </table>
+          <hr>
+          <h4>Flow Related Config:</h4>
+          <div class="form-check">
+            <div class="radio">
+              <label><input class="form-check-input" type="radio" name="optionsRadios" value="First Action"> First
+                Action</label>
+            </div>
+            <div class="radio">
+              <label><input class="form-check-input" type="radio" name="optionsRadios" value="Return After"> Return
+                After</label>
+            </div>
+            <div class="radio">
+              <label><input class="form-check-input" type="radio" name="optionsRadios" value="None"> None</label>
+            </div>
+          </div>
 
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success">Save changes</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
         </div>
       </div>
     </div>
