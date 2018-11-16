@@ -1,5 +1,6 @@
 package nl.dorost.flow
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.default
@@ -15,7 +16,7 @@ import nl.dorost.flow.core.FlowEngine
 
 fun main(args: Array<String>) {
     val flowEngine = FlowEngine()
-
+    val objectMapper = ObjectMapper()
 
     val server = embeddedServer(Netty, port = 8080) {
         routing {
@@ -27,8 +28,10 @@ fun main(args: Array<String>) {
 
             post("/tomlToDigraph") {
                 val tomlString = call.receiveText()
-                val digraphConversion = flowEngine.tomlToDigraph(tomlString)
-                call.respond(HttpStatusCode.OK, digraphConversion)
+                val responseMessage = flowEngine.tomlToDigraph(tomlString)
+                call.respond(
+                    responseMessage.httpCode, objectMapper.writeValueAsString(responseMessage)
+                )
             }
         }
     }

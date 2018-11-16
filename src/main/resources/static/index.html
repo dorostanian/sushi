@@ -507,7 +507,6 @@ svg {
           <div class="shell-wrap">
               <p class="shell-top-bar">Execution Output From Server</p>
               <ul class="shell-body" id="shell-emulator">
-                <li>cd&nbsp;/Users/pjlangley/Documents/websites/codechewing.com/git/css-shell/demo/</li>
               </ul>
             </div>
 
@@ -516,6 +515,26 @@ svg {
 
   </table>
 
+
+  <div class="modal" id="myModal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Modal title</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Modal body text goes here.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary">Save changes</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   <script>
 
@@ -527,6 +546,8 @@ svg {
 
 
     $(document).ready(function () {
+      // $('#myModal').modal('show');
+
       editor = ace.edit("editor");
       editor.setTheme("ace/theme/monokai");
       editor.getSession().setMode("ace/mode/javascript");
@@ -546,7 +567,7 @@ svg {
     $("#convertToDigraph").click(tryDraw);
 
     function tryDraw() {
-      console.log("Making post request to server!");
+      appendInfo("Requesting TOML to Digraph conversion!");
       $.ajax({
         type: "POST",
         url: "http://localhost:8080/tomlToDigraph",
@@ -555,9 +576,10 @@ svg {
 
       })
         .done(function (data) {
-
-            $("#shell-emulator").append("<li>" + data +"</li>");
-
+          var responseJson = JSON.parse(data);
+          var logOutput = responseJson.responseLog;
+          var data = responseJson.data;
+          appendInfo(logOutput);
 
           g = graphlibDot.read(data);
 
@@ -591,7 +613,10 @@ svg {
           console.log(textStatus);
         });
 
+    }
 
+    function appendInfo(text){
+        $("#shell-emulator").append("<li>" + text +"</li>");
     }
 
   </script>

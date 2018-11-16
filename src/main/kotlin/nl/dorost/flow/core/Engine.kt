@@ -1,10 +1,12 @@
 package nl.dorost.flow.core
 
 import com.moandjiezana.toml.Toml
+import io.ktor.http.HttpStatusCode
 import nl.dorost.flow.InvalidNextIdException
 import nl.dorost.flow.NonUniqueIdException
 import nl.dorost.flow.TypeNotRegisteredException
 import nl.dorost.flow.actions.elementaryActions
+import nl.dorost.flow.utils.ResponseMessage
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.stream.Collectors
@@ -213,14 +215,17 @@ class FlowEngine {
     }
 
 
-    fun tomlToDigraph(tomlText: String): String {
+    fun tomlToDigraph(tomlText: String): ResponseMessage {
         val toml: Toml?
         try {
             toml = Toml().read(tomlText)
         } catch (e: Exception) {
             val errorMessage = "TOML could not be parsed correctly! ${e.localizedMessage}"
             LOG.error(errorMessage)
-            return errorMessage
+            return ResponseMessage(
+                responseLog = errorMessage,
+                httpCode = HttpStatusCode.BadRequest
+            )
         }
         val blocks: MutableList<Block>
         try {
@@ -228,7 +233,10 @@ class FlowEngine {
         } catch (e: Exception) {
             val errorMessage = "Error on parising to blocks! ${e.localizedMessage}"
             LOG.error(errorMessage)
-            return errorMessage
+            return ResponseMessage(
+                responseLog = errorMessage,
+                httpCode = HttpStatusCode.BadRequest
+            )
         }
         var digraph = "digraph {\n"
         digraph += "node [rx=5 ry=5 labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
@@ -253,12 +261,20 @@ class FlowEngine {
 
         // add nodes
         blocks.filter { it is Action }.forEach { block ->
-            digraph += String.format(normalNode, block.id, String.format(actionInnerHtml, block.name, block.id, block.id))
+            digraph += String.format(
+                normalNode,
+                block.id,
+                String.format(actionInnerHtml, block.name, block.id, block.id)
+            )
         }
 
         // add branches
         blocks.filter { it is Branch }.map { it as Branch }.forEach { block ->
-            digraph += String.format(branchNode, block.id, String.format(branchInnerHtml, block.name, block.on, block.id, block.id))
+            digraph += String.format(
+                branchNode,
+                block.id,
+                String.format(branchInnerHtml, block.name, block.on, block.id, block.id)
+            )
         }
 
 
@@ -277,7 +293,11 @@ class FlowEngine {
         }
 
         digraph += "}"
-        return digraph
+        return ResponseMessage(
+            responseLog = "Succesfully converted the TOML to Digraph!",
+            httpCode = HttpStatusCode.OK,
+            data = digraph
+        )
     }
 
 }
