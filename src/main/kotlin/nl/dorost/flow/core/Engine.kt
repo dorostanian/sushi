@@ -176,9 +176,9 @@ class FlowEngine {
                 name = it["name"]!! as String,
                 type = it.getOrDefault("type", BRANCH_TYPE.NORMAL.toString()) as String,
                 id = it["id"]!! as String,
-                params = it["params"] as HashMap<String, String>,
                 mapping = it.getOrDefault("mapping", mutableMapOf<String, String>()) as HashMap<String, String>,
-                source = it.getOrDefault("source", false) as Boolean
+                source = it.getOrDefault("source", false) as Boolean,
+                on = it["on"]!! as String
             )
         }
     }
@@ -235,11 +235,12 @@ class FlowEngine {
         digraph += "edge [labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
 
         val actionInnerHtml = "<label style='color:rgb(0,0,0);'> Action: <b>%s</b>  </label>" +
-                "<br><button class='badge badge-danger badge-pill'>edit</button>" +
+                "<button class='badge badge-info badge-pill'>edit</button>" +
                 "<button class='badge badge-danger badge-pill'>remove</button>"
 
         val branchInnerHtml = "<label style='color:rgb(0,0,0);'> Branch: <b>%s</b>  </label>" +
-                "<br><button class='badge badge-danger badge-pill'>edit</button>" +
+                "<label style='color:rgb(0,0,0);'> on: <b>%s</b>  </label>" +
+                "<button class='badge badge-info badge-pill'>edit</button>" +
                 "<button class='badge badge-danger badge-pill'>remove</button>"
 
         val normalEdgeHtml =
@@ -257,9 +258,9 @@ class FlowEngine {
         }
 
         // add branches
-        blocks.filter { it is Branch }.forEach { block ->
+        blocks.filter { it is Branch }.map { it as Branch }.forEach { block ->
             val name = block.id
-            digraph += String.format(branchNode, name, String.format(branchInnerHtml, name))
+            digraph += String.format(branchNode, name, String.format(branchInnerHtml, name, block.on))
         }
 
 

@@ -26,7 +26,6 @@ fun main(args: Array<String>) {
             }
 
             post("/tomlToDigraph") {
-                println("headers: " + call.request.headers)
                 val tomlString = call.receiveText()
                 val digraphConversion = flowEngine.tomlToDigraph(tomlString)
                 call.respond(HttpStatusCode.OK, (digraphConversion))

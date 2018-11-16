@@ -72,11 +72,12 @@ data class Action(
 
 data class Branch(
     val mapping: HashMap<String, String>,
+    val on: String,
     override val name: String,
     override var id: String? = null,
     override val type: String = BRANCH_TYPE.NORMAL.toString(),
     override var input: MutableMap<String, Any> = mutableMapOf(),
-    override val params: MutableMap<String, String>,
+    override val params: MutableMap<String, String> = hashMapOf(),
     override val source: Boolean
 ) : Block(name, id, type, source, input, params) {
 
