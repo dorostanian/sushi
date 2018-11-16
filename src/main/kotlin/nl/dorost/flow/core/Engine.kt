@@ -212,5 +212,63 @@ class FlowEngine {
         blocks.forEach { it.id = "${prefix}${it.id}" }
     }
 
+
+    fun tomlToDigraph(tomlText: String){
+        val toml = Toml().read(tomlText)
+        val blocks = this.parseToBlocks(toml)
+        var digraph = "digraph {"
+        digraph += "node [rx=5 ry=5 labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
+        digraph += "edge [labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
+        val actionInnerHtml = """"
+            <label style='color:rgb(0,0,224);'> Action: <b>%s</b>  </label>
+            <br>
+            <button class="badge badge-danger badge-pill">edit</button>
+            <button class="badge badge-danger badge-pill">remove</button>
+
+"""
+        val branchInnerHtml = """"
+            <label style='color:rgb(0,0,224);'> Branch: <b>%s</b>  </label>
+            <br>
+            <button class="badge badge-danger badge-pill">edit</button>
+            <button class="badge badge-danger badge-pill">remove</button>
+
+"""
+        val normalEdgeHtml = "%s -> %s [style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
+        val branchEdgeHtml = "%s -> %s [label=\"%s\" labelStyle=\"fill: #55f; font-weight: bold;\" style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
+
+        val normalNode = "%s [labelType=\"html\" label=\"%s\"];\n"
+        val branchNode = "%s [labelType=\"html\" label=\"%s\" style=\"fill: #f77;\"];\n"
+
+        // add nodes
+        blocks.filter { it is Action }.forEach { block ->
+            val name = block.id
+            digraph += String.format(normalNode, name, String.format(actionInnerHtml, name))
+        }
+
+        // add branches
+        blocks.filter { it is Branch }.forEach { block ->
+            val name = block.id
+            digraph += String.format(branchNode, name, String.format(branchInnerHtml, name))
+        }
+
+
+        // add edges
+        blocks.filter { it is Action }.map { it as Action }.flatMap { block ->
+            block.nextBlocks.map { Pair(block.id, it) }
+        }.forEach { edge ->
+            digraph+= String.format(normalEdgeHtml, edge.first, edge.second)
+        }
+
+        // add branch edges
+        blocks.filter { it is Branch }.map { it as Branch }.flatMap {branch ->
+            branch.mapping.map { Pair(branch.id, it) }
+        }.forEach { mapping ->
+            digraph = String.format(branchEdgeHtml, mapping.first, mapping.second.value, mapping.second.key)
+        }
+
+        digraph += "}"
+
+    }
+
 }
 
