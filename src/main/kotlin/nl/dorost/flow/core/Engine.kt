@@ -1,12 +1,10 @@
 package nl.dorost.flow.core
 
 import com.moandjiezana.toml.Toml
-import io.ktor.http.HttpStatusCode
 import nl.dorost.flow.InvalidNextIdException
 import nl.dorost.flow.NonUniqueIdException
 import nl.dorost.flow.TypeNotRegisteredException
 import nl.dorost.flow.actions.elementaryActions
-import nl.dorost.flow.utils.ResponseMessage
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.stream.Collectors
@@ -215,17 +213,14 @@ class FlowEngine {
     }
 
 
-    fun tomlToDigraph(tomlText: String): ResponseMessage {
+    fun tomlToBlocks(tomlText: String): MutableList<Block> {
         val toml: Toml?
         try {
             toml = Toml().read(tomlText)
         } catch (e: Exception) {
             val errorMessage = "TOML could not be parsed correctly! ${e.localizedMessage}"
             LOG.error(errorMessage)
-            return ResponseMessage(
-                responseLog = errorMessage,
-                httpCode = HttpStatusCode.BadRequest
-            )
+            throw RuntimeException(errorMessage)
         }
         val blocks: MutableList<Block>
         try {
@@ -233,11 +228,12 @@ class FlowEngine {
         } catch (e: Exception) {
             val errorMessage = "Error on parising to blocks! ${e.localizedMessage}"
             LOG.error(errorMessage)
-            return ResponseMessage(
-                responseLog = errorMessage,
-                httpCode = HttpStatusCode.BadRequest
-            )
+            throw RuntimeException(errorMessage)
         }
+        return blocks
+    }
+
+    fun blocksToDigraph(blocks: MutableList<Block>): String {
         var digraph = "digraph {\n"
         digraph += "node [rx=5 ry=5 labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
         digraph += "edge [labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
@@ -293,11 +289,7 @@ class FlowEngine {
         }
 
         digraph += "}"
-        return ResponseMessage(
-            responseLog = "Succesfully converted the TOML to Digraph!",
-            httpCode = HttpStatusCode.OK,
-            data = digraph
-        )
+        return digraph
     }
 
 }

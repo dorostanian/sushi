@@ -1,9 +1,10 @@
 package nl.dorost.flow.utils
 
-import io.ktor.http.HttpStatusCode
+import nl.dorost.flow.core.Block
 
 data class ResponseMessage(
     val responseLog: String,
-    val data: String? = null,
-    val httpCode: HttpStatusCode
+    val digraphData: String? = null,
+    val blockInfo: Block? = null,
+    val tomlData: String? = null
 )

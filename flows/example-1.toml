@@ -51,7 +51,6 @@ author = "amin@dorost.nl"
     name = "action-5"
     type = "log"
     id = "7"
-    output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
     [action.params]
         param-6 = "value-6"
 
