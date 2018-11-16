@@ -5,6 +5,12 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>Spaghetti Flow Design Tool</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+    crossorigin="anonymous"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
+
 
   <script src="./flow-visualization_files/d3.v4.js"></script>
   <script src="./flow-visualization_files/graphlib-dot.js"></script>
@@ -17,13 +23,90 @@
 
   <link href="./bootstrap-social-gh-pages/bootstrap-social.css" rel="stylesheet">
 
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
-  <script src="./dagre.js"></script>
-  <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
-    crossorigin="anonymous"></script>
+  <script>
 
 
+      var editor;
+      var svg;
+      var render;
+      var g;
+  
+  
+      $(document).ready(function () {
+        $('#action-modal').modal('show');
+  
+        editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.getSession().setMode("ace/mode/javascript");
+        editor.session.setMode("ace/mode/toml");
+  
+        svg = d3.select("svg");
+        render = dagreD3.render();
+        inner = d3.select("svg g"),
+          zoom = d3.zoom().on("zoom", function () {
+            inner.attr("transform", d3.event.transform);
+          });
+        svg.call(zoom);
+  
+  
+      });
+  
+      $("#convertToDigraph").click(tryDraw);
+  
+      function tryDraw() {
+        appendInfo("Requesting TOML to Digraph conversion!");
+        $.ajax({
+          type: "POST",
+          url: "http://localhost:8080/tomlToDigraph",
+          data: editor.getValue(),
+          crossDomain: true,
+  
+        })
+          .done(function (data) {
+            var responseJson = JSON.parse(data);
+            var logOutput = responseJson.responseLog;
+            var data = responseJson.data;
+            appendInfo(logOutput);
+  
+            g = graphlibDot.read(data);
+  
+            // Set margins, if not present
+            if (!g.graph().hasOwnProperty("marginx") &&
+              !g.graph().hasOwnProperty("marginy")) {
+              g.graph().marginx = 20;
+              g.graph().marginy = 20;
+            }
+  
+            g.graph().transition = function (selection) {
+              return selection.transition().duration(500);
+            };
+  
+            // Render the graph into svg g
+            d3.select("svg g").call(render, g);
+  
+            $("[id$='-remove']").click(
+              function () {
+                alert('Removing ' + $(this).attr('id'));
+              }
+            );
+            $("[id$='-edit']").click(
+              function () {
+                alert('Editing ' + $(this).attr('id'));
+              }
+            );
+  
+          }).fail(function (xhr, textStatus, errorThrown) {
+            console.log(xhr.responseText);
+            console.log(textStatus);
+          });
+  
+      }
+  
+      function appendInfo(text) {
+        $("#shell-emulator").append("<li>" + text + "</li>");
+      }
+  
+    </script>
 
   <style>
     svg {
@@ -504,11 +587,11 @@ svg {
       </td>
       <td colspan="5">
 
-          <div class="shell-wrap">
-              <p class="shell-top-bar">Execution Output From Server</p>
-              <ul class="shell-body" id="shell-emulator">
-              </ul>
-            </div>
+        <div class="shell-wrap">
+          <p class="shell-top-bar">Execution Output From Server</p>
+          <ul class="shell-body" id="shell-emulator">
+          </ul>
+        </div>
 
       </td>
     </tr>
@@ -516,110 +599,36 @@ svg {
   </table>
 
 
-  <div class="modal" id="myModal">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Modal title</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p>Modal body text goes here.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary">Save changes</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
+  <div class="modal" id="action-modal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="model-title">Edit Block</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="action-modal-body">
+          Action Name:  <input class="form-control form-control-sm" type="text" placeholder=".form-control-sm">
+          <br>
+          Action Params: 
+          <br>
+          <label class="col-form-label col-form-label-sm">Param Name</label>
+          <input class="form-control form-control-sm" type="text" placeholder=".form-control-sm">
+          
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary">Save changes</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+          <button class="badge badge-info badge-pill">add param</button>
+
         </div>
       </div>
     </div>
-
-  <script>
-
-
-    var editor;
-    var svg;
-    var render;
-    var g;
+  </div>
 
 
-    $(document).ready(function () {
-      // $('#myModal').modal('show');
-
-      editor = ace.edit("editor");
-      editor.setTheme("ace/theme/monokai");
-      editor.getSession().setMode("ace/mode/javascript");
-      editor.session.setMode("ace/mode/toml");
-
-      svg = d3.select("svg");
-      render = dagreD3.render();
-      inner = d3.select("svg g"),
-        zoom = d3.zoom().on("zoom", function () {
-          inner.attr("transform", d3.event.transform);
-        });
-      svg.call(zoom);
-
-
-    });
-
-    $("#convertToDigraph").click(tryDraw);
-
-    function tryDraw() {
-      appendInfo("Requesting TOML to Digraph conversion!");
-      $.ajax({
-        type: "POST",
-        url: "http://localhost:8080/tomlToDigraph",
-        data: editor.getValue(),
-        crossDomain: true,
-
-      })
-        .done(function (data) {
-          var responseJson = JSON.parse(data);
-          var logOutput = responseJson.responseLog;
-          var data = responseJson.data;
-          appendInfo(logOutput);
-
-          g = graphlibDot.read(data);
-
-          // Set margins, if not present
-          if (!g.graph().hasOwnProperty("marginx") &&
-            !g.graph().hasOwnProperty("marginy")) {
-            g.graph().marginx = 20;
-            g.graph().marginy = 20;
-          }
-
-          g.graph().transition = function (selection) {
-            return selection.transition().duration(500);
-          };
-
-          // Render the graph into svg g
-          d3.select("svg g").call(render, g);
-
-          $("[id$='-remove']").click(
-            function () {
-              alert('Removing ' + $(this).attr('id'));
-            }
-          );
-          $("[id$='-edit']").click(
-            function () {
-              alert('Editing ' + $(this).attr('id'));
-            }
-          );
-
-        }).fail(function (xhr, textStatus, errorThrown) {
-          console.log(xhr.responseText);
-          console.log(textStatus);
-        });
-
-    }
-
-    function appendInfo(text){
-        $("#shell-emulator").append("<li>" + text +"</li>");
-    }
-
-  </script>
 </body>
 
 </html>
