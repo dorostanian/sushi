@@ -31,8 +31,9 @@ fun main(args: Array<String>) {
 
             post("/tomlToDigraph") {
                 val tomlString = call.receiveText()
-                var digraph: String? = null
+                val digraph: String?
                 try {
+                    flowEngine.flows.clear()
                     val blocks = flowEngine.tomlToBlocks(tomlString)
                     flowEngine.wire(blocks)
                     digraph = flowEngine.blocksToDigraph(blocks)
