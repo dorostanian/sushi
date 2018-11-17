@@ -12,7 +12,7 @@ val elementaryActions = mutableListOf<Action>(
     Action(
         name = "Constant Producer",
         type = "constant",
-        description = "Spits out the constant value passed as parameter <code>const</code>.",
+        description = "Passes the constant value passed as parameter <code>const</code>.",
         act = { action: Action ->
             LOG.debug("Action id '${action.id}': ${action.name}. Input Value: ${action.input}, Params: ${action.params}")
             val constValue =
@@ -21,7 +21,7 @@ val elementaryActions = mutableListOf<Action>(
         }),
     Action(
         name = "Makes http POST call",
-        description = "Make the post call based on the parameters given. Spits out the <code>response</code>.",
+        description = "Make the post call based on the parameters given. Passes the <code>response</code>.",
         type = "http-post",
         act = { action: Action ->
             val url = action.params["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
@@ -38,7 +38,7 @@ val elementaryActions = mutableListOf<Action>(
         }),
     Action(
         name = "Makes http GET call",
-        description = "Make the get call based on the parameters given. Spits out the <code>response</code>",
+        description = "Make the get call based on the parameters given. Passes the <code>response</code>",
         type = "http-get",
         act = { action: Action ->
             val url = action.params["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
@@ -48,7 +48,9 @@ val elementaryActions = mutableListOf<Action>(
                 .header("ContentType" to contentType, "Accept" to accept)
                 .responseString()
             mapOf("response" to String(result.second.data))
-        }),
+        },
+        params = mutableMapOf("url" to "", "Accept" to "application/json", "ContentType" to "", "body" to "")
+    ),
     Action(
         name = "Get JSON as input from the parameter <code>value<code> and pass it along.",
         description = "Used when we want to pass an static JSON.",

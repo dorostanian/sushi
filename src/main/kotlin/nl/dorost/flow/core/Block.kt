@@ -47,7 +47,7 @@ data class Action(
     override var id: String? = null,
     override var type: String,
     override var input: MutableMap<String, Any> = mutableMapOf(),
-    override val params: MutableMap<String, String> = mutableMapOf(),
+    override var params: MutableMap<String, String> = mutableMapOf(),
     override val source: Boolean = false,
     override var description: String? = null
 ) : Block(name, description, id, type, source, input, params) {

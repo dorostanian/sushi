@@ -50,11 +50,12 @@ class FlowEngine {
     private fun wireProperActsToBlocks(flows: List<Block>) {
         flows.filter { it is Action }.map { it as Action }.forEach { currentBlock ->
             val registeredAction = registeredActions.firstOrNull { it.type == currentBlock.type }
-            registeredAction?.let { registeredAction ->
+            registeredAction?.let { action ->
                 currentBlock.apply {
-                    act = registeredAction.act
-                    type = registeredAction.type
-                    description = registeredAction.description
+                    act = action.act
+                    type = action.type
+                    description = action.description
+                    params = params.plus(action.params).toMutableMap()
                 }
             } ?: throw TypeNotRegisteredException("Type ${currentBlock.type} is not a registered action!")
         }
@@ -151,7 +152,8 @@ class FlowEngine {
                     description = container.description,
                     act = { action: Action -> // TODO: test this
                         container.run(this)
-                    }
+                    },
+                    params = container.params
                 )
             )
         }
