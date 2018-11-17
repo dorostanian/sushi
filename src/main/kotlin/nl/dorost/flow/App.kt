@@ -91,6 +91,18 @@ fun main(args: Array<String>) {
 
             }
 
+            get ("/getLibrary"){
+                call.respond(
+                    HttpStatusCode.OK,
+                    objectMapper.writeValueAsString(
+                        ResponseMessage(
+                            responseLog = "Fetched library of registered actions!",
+                            library = flowEngine.registeredActions
+                        )
+                    )
+                )
+            }
+
             get("/deleteAction/{actionId}") { pipelineContext ->
                 val actionId = call.parameters["actionId"]
 

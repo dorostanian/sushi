@@ -194,7 +194,30 @@
 
             setupDagre();
 
+            populateActionsList();
+
         });
+
+        function populateActionsList() {
+            $.ajax({
+                type: "GET",
+                url: "http://localhost:8080/getLibrary/",
+                crossDomain: true,
+
+            }).done(function (data) {
+                var responseJson = JSON.parse(data);
+                var logOutput = responseJson.responseLog;
+                var action, actions = responseJson.library;
+
+                appendInfo(logOutput);
+
+                $("#actions-list div").remove();
+                for (action of actions){
+                    addActionToList(action);
+                }
+
+            });
+        }
 
         function setupDagre() {
             svg = d3.select("svg");
@@ -348,6 +371,19 @@
             );
         }
 
+
+        function addActionToList(action) {
+            var toAppend = "<div class=\"list-group-item list-group-item-action flex-column align-items-start active\">\n" +
+                "                        <div class=\"d-flex w-100 justify-content-between\">\n" +
+                "                            <h5 class=\"mb-1\">" + action.type + "</h5>\n" +
+                "                        </div>\n" +
+                "                        <p class=\"mb-1\">" + action.description + "</p>\n" +
+                "                        <br>\n" +
+                "           <button class=\"badge badge-info badge-pill\" id='" + action.type + "' >add this action</button>\n" +
+                "</div>"
+
+            $("#actions-list").append(toAppend);
+        }
 
     </script>
 
@@ -540,7 +576,7 @@
             <h3>Actions Library:</h3>
 
             <div class="scroll-area" style="max-height:500px;">
-                <div class="list-group">
+                <div class="list-group" id="actions-list">
                     <div class="list-group-item list-group-item-action flex-column align-items-start active">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">Action Type here</h5>
