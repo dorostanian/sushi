@@ -13,6 +13,8 @@ import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import nl.dorost.flow.core.Action
+import nl.dorost.flow.core.Branch
 import nl.dorost.flow.core.FlowEngine
 import nl.dorost.flow.utils.ResponseMessage
 import java.lang.Exception
@@ -61,6 +63,7 @@ fun main(args: Array<String>) {
 
             }
 
+
             get("/getAction/{actionId}") { pipelineContext ->
                 val actionId = call.parameters["actionId"]
                 val action = flowEngine.flows.firstOrNull { it.id == actionId }
@@ -85,6 +88,38 @@ fun main(args: Array<String>) {
                         )
                     )
                 }
+
+            }
+
+            get("/deleteAction/{actionId}") { pipelineContext ->
+                val actionId = call.parameters["actionId"]
+
+                flowEngine.flows.removeIf { it.id == actionId }
+                flowEngine.flows.forEach { block ->
+                    when(block){
+                        is Action -> {
+                            block.nextBlocks.removeIf { it == actionId }
+                        }
+                        is Branch -> {
+                            block.mapping.entries.removeIf { it.value == actionId }
+                        }
+                    }
+                }
+                // Rebuild graph and send back the response
+
+                val digraph = flowEngine.blocksToDigraph(flowEngine.flows)
+                val tomlText: String = flowEngine.blocksToToml(flowEngine.flows)
+                call.respond(
+                    HttpStatusCode.OK,
+                    objectMapper.writeValueAsString(
+                        ResponseMessage(
+                            responseLog = "Action Removed successfully!",
+                            digraphData = digraph,
+                            tomlData = tomlText
+                        )
+                    )
+                )
+
 
             }
         }

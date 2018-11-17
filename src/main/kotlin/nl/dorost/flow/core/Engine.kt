@@ -319,5 +319,41 @@ class FlowEngine {
         return digraph
     }
 
+    fun blocksToToml(blocks: MutableList<Block>): String {
+        var toml = "[flow]\n"+
+                "name = \"Generated Flow\"\n"
+
+        blocks.forEach { block ->
+            when(block){
+                is Action -> {
+                    toml += "[[action]]\n" +
+                            "   name = \"${block.name}\"\n" +
+                            "   id = \"${block.id}\"\n" +
+                            "   type = \"${block.type}\"\n"
+                    if (block.source)
+                        toml += "   source = true\n"
+
+                    if (block.nextBlocks.size>0)
+                        toml += block.nextBlocks.map { "\"$it\"" }.joinToString(separator = ",", prefix = "   next = [", postfix = "]\n")
+
+                    if (block.params.size>0)
+                        toml += block.params.map { "        ${it.key} = \"${it.value}\"" }.joinToString(separator = "\n", postfix = "\n", prefix = "   [action.params]\n")
+                }
+                is Branch -> {
+                    toml += "[[branch]]\n" +
+                            "   name = \"${block.name}\"\n" +
+                            "   id = \"${block.id}\"\n" +
+                            "   on = \"${block.on}\"\n"
+                    if (block.mapping.size>0)
+                        toml += block.mapping.entries.map { "        ${it.key} = \"${it.value}\""  }.joinToString(separator = "\n", postfix = "\n", prefix = "   [branch.mapping]\n")
+
+                }
+            }
+        }
+
+        return toml
+
+    }
+
 }
 
