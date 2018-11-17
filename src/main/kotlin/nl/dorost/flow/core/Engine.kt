@@ -3,9 +3,11 @@ package nl.dorost.flow.core
 import com.moandjiezana.toml.Toml
 import nl.dorost.flow.InvalidNextIdException
 import nl.dorost.flow.NonUniqueIdException
+import nl.dorost.flow.NonUniqueTypeException
 import nl.dorost.flow.TypeNotRegisteredException
 import nl.dorost.flow.actions.elementaryActions
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Collectors
 
@@ -15,15 +17,15 @@ class FlowEngine {
     var flows: MutableList<Block> = mutableListOf()
     var returnValue: MutableMap<String, Any> = mutableMapOf()
     var returnedBlockId: String? = null
-    var registeredActions: MutableMap<String, (action: Action) -> Map<String, Any>> = mutableMapOf()
+    var registeredActions: MutableList<Action> = mutableListOf()
     var prefixes: MutableSet<String> = mutableSetOf()
 
     init {
         registerActions(elementaryActions)
     }
 
-    fun registerActions(blocks: MutableMap<String, (action: Action) -> Map<String, Any>>) {
-        registeredActions.putAll(blocks)
+    fun registerActions(blocks: MutableList<Action>) {
+        registeredActions.addAll(blocks)
     }
 
     fun executeFlow(input: MutableMap<String, Any> = mutableMapOf()) {
@@ -39,7 +41,7 @@ class FlowEngine {
 
     private fun verify(flows: List<Block>) {
         checkForIdUniqeness(flows)
-        registerContainers(flows)
+        registerNewContainersAsAction(flows)
         checkIfTypesRegistered(flows)
         checkIdPrefixes(flows)
         wireProperActsToBlocks(flows)
@@ -47,7 +49,14 @@ class FlowEngine {
 
     private fun wireProperActsToBlocks(flows: List<Block>) {
         flows.filter { it is Action }.map { it as Action }.forEach { currentBlock ->
-            currentBlock.act = registeredActions[currentBlock.type]
+            val registeredAction = registeredActions.firstOrNull { it.type == currentBlock.type }
+            registeredAction?.let { registeredAction ->
+                currentBlock.apply {
+                    act = registeredAction.act
+                    type = registeredAction.type
+                    description = registeredAction.description
+                }
+            } ?: throw TypeNotRegisteredException("Type ${currentBlock.type} is not a registered action!")
         }
     }
 
@@ -114,9 +123,9 @@ class FlowEngine {
     }
 
     private fun checkIfTypesRegistered(flows: List<Block>) {
-        flows.filter { it is Action }.forEach {
-            if (it.type !in registeredActions.keys)
-                throw TypeNotRegisteredException("'${it.type}' type is not a registered Block!")
+        flows.filter { it is Action }.forEach { block ->
+            if (block.type !in registeredActions.map { it.type })
+                throw TypeNotRegisteredException("'${block.type}' type is not a registered Action!")
         }
     }
 
@@ -130,11 +139,21 @@ class FlowEngine {
             throw NonUniqueIdException("All ids must be unique! Duplicate id: ${duplicates.first()}.")
     }
 
-    private fun registerContainers(containers: List<Block>) {
+    private fun registerNewContainersAsAction(containers: List<Block>) {
         containers.filter { it is Container }.map { it as Container }.forEach { container ->
-            registeredActions[container.type] = { action: Action ->
-                container.run(this)
-            }
+            if (container.type in registeredActions.map { it.type })
+                throw NonUniqueTypeException("${container.type} already exists! Can't register new action with this type.")
+
+            registeredActions.add(
+                Action(
+                    name = container.name,
+                    type = container.type,
+                    description = container.description,
+                    act = { action: Action -> // TODO: test this
+                        container.run(this)
+                    }
+                )
+            )
         }
 
     }
@@ -165,41 +184,47 @@ class FlowEngine {
                 params = it.getOrDefault("params", mutableMapOf<String, String>()) as HashMap<String, String>,
                 firstBlock = it["first"] as String,
                 lastBlock = it["last"] as String,
-                source = it.getOrDefault("source", false) as Boolean
+                source = it.getOrDefault("source", false) as Boolean,
+                description = it["description"]?.let { it as String }
             ) as Block
         }
     }
 
     private fun parseBranches(toml: Toml): List<Branch> {
-        return (toml.toMap().getOrDefault("branch", listOf<HashMap<String, Any>>()) as List<HashMap<String, Any>>).map {
+        return (toml.toMap().getOrDefault(
+            "branch",
+            listOf<HashMap<String, Any>>()
+        ) as List<HashMap<String, Any>>).map { block: HashMap<String, Any> ->
             Branch(
-                name = it["name"]!! as String,
-                type = it.getOrDefault("type", BRANCH_TYPE.NORMAL.toString()) as String,
-                id = it["id"]!! as String,
-                mapping = it.getOrDefault("mapping", mutableMapOf<String, String>()) as HashMap<String, String>,
-                source = it.getOrDefault("source", false) as Boolean,
-                on = it["on"]!! as String
+                name = block["name"]!! as String,
+                type = block.getOrDefault("type", BRANCH_TYPE.NORMAL.toString()) as String,
+                id = block["id"]!! as String,
+                mapping = block.getOrDefault("mapping", mutableMapOf<String, String>()) as HashMap<String, String>,
+                source = block.getOrDefault("source", false) as Boolean,
+                on = block["on"]!! as String,
+                description = block["description"]?.let { it as String }
             )
         }
     }
 
     private fun parseActions(toml: Toml): List<Block> {
-        return (toml.toMap()["action"] as List<HashMap<String, Any>>).map {
+        return (toml.toMap()["action"] as List<HashMap<String, Any>>).map { block: HashMap<String, Any> ->
             Action(
-                name = it["name"]!! as String,
-                type = it["type"]!! as String,
-                returnAfterExec = it.getOrDefault("returnAfter", false) as Boolean,
-                id = it["id"]!! as String,
-                params = it.getOrDefault("params", mutableMapOf<String, String>()) as MutableMap<String, String>,
-                nextBlocks = it.getOrDefault("next", mutableListOf<String>()) as MutableList<String>,
-                source = it.getOrDefault("source", false) as Boolean
+                name = block["name"]!! as String,
+                type = block["type"]!! as String,
+                returnAfterExec = block.getOrDefault("returnAfter", false) as Boolean,
+                id = block["id"]!! as String,
+                params = block.getOrDefault("params", mutableMapOf<String, String>()) as MutableMap<String, String>,
+                nextBlocks = block.getOrDefault("next", mutableListOf<String>()) as MutableList<String>,
+                source = block.getOrDefault("source", false) as Boolean,
+                description = block["description"]?.let { it as String }
             ) as Block
         }
     }
 
     fun readFlowsFromDir(path: String) =
-        Files.walk(Paths.get(path)).filter { Files.isRegularFile(it) }.collect(Collectors.toList()).flatMap {
-            val toml = Toml().read(it.toFile())
+        Files.walk(Paths.get(path)).filter { Files.isRegularFile(it) }.collect(Collectors.toList()).flatMap { path: Path ->
+            val toml = Toml().read(path.toFile())
             val blocks = this.parseToBlocks(toml)
             val flowInfo = toml.toMap().getOrDefault("flow", mapOf("id_prefix" to "")) as HashMap<String, String>
             val prefix = flowInfo.getOrDefault("id_prefix", "")

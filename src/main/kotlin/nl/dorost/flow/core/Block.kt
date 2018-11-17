@@ -9,6 +9,7 @@ val LOG = LoggerFactory.getLogger("FlowEngine")
 
 abstract class Block(
     open val name: String,
+    open val description: String?,
     open var id: String?,
     open val type: String,
     open val source: Boolean,
@@ -26,8 +27,9 @@ data class Container(
     override val type: String,
     override var input: MutableMap<String, Any> = mutableMapOf(),
     override val params: MutableMap<String, String> = mutableMapOf(),
-    override val source: Boolean
-) : Block(name, id, type, source, input, params) {
+    override val source: Boolean,
+    override val description: String? = null
+) : Block(name, description, id, type, source, input, params) {
 
     override fun run(flowEngine: FlowEngine): MutableMap<String, Any> {
         val flows = flowEngine.flows
@@ -43,11 +45,12 @@ data class Action(
     val returnAfterExec: Boolean = false,
     override val name: String,
     override var id: String? = null,
-    override val type: String,
+    override var type: String,
     override var input: MutableMap<String, Any> = mutableMapOf(),
     override val params: MutableMap<String, String> = mutableMapOf(),
-    override val source: Boolean
-) : Block(name, id, type, source, input, params) {
+    override val source: Boolean = false,
+    override var description: String? = null
+) : Block(name, description, id, type, source, input, params) {
 
     override fun run(flowEngine: FlowEngine): MutableMap<String, Any> {
         val flows = flowEngine.flows
@@ -78,8 +81,9 @@ data class Branch(
     override val type: String = BRANCH_TYPE.NORMAL.toString(),
     override var input: MutableMap<String, Any> = mutableMapOf(),
     override val params: MutableMap<String, String> = hashMapOf(),
-    override val source: Boolean
-) : Block(name, id, type, source, input, params) {
+    override val source: Boolean,
+    override val description: String? = null
+) : Block(name, description, id, type, source, input, params) {
 
     override fun run(flowEngine: FlowEngine): MutableMap<String, Any> {
         val flows = flowEngine.flows

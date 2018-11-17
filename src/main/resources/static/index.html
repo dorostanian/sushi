@@ -192,6 +192,11 @@ svg {
       editor.getSession().setMode("ace/mode/javascript");
       editor.session.setMode("ace/mode/toml");
 
+      setupDagre();
+
+    });
+
+    function setupDagre() {
       svg = d3.select("svg");
       render = dagreD3.render();
       inner = d3.select("svg g"),
@@ -199,13 +204,12 @@ svg {
           inner.attr("transform", d3.event.transform);
         });
       svg.call(zoom);
-
-    });
-
+    }
 
 
     function drawGraph() {
       appendInfo("Requesting TOML to Digraph conversion!");
+      setupDagre();
       $.ajax({
         type: "POST",
         url: "http://localhost:8080/tomlToDigraph",
@@ -213,9 +217,11 @@ svg {
         crossDomain: true,
 
       }).done(function (data) {
+
         var responseJson = JSON.parse(data);
         var logOutput = responseJson.responseLog;
         var digraphData = responseJson.digraphData;
+
         appendInfo(logOutput);
         g = graphlibDot.read(digraphData);
 
@@ -251,8 +257,7 @@ svg {
         );
 
       }).fail(function (xhr, textStatus, errorThrown) {
-        console.log(xhr.responseText);
-        console.log(textStatus);
+        appendError(JSON.parse(xhr.responseText).responseLog);
       });
 
     }
@@ -281,6 +286,9 @@ svg {
 
           $("#modal-action-id").html("ID: " + action.id);
           $("#modal-action-name").val(action.name);
+          $("#modal-action-type").val("Type: " + action.type);
+          $("#modal-action-description").val(action.description);
+
           // $("#modal-action-id").html(currentActionId);
 
         }
@@ -405,13 +413,13 @@ svg {
           [[action]]
           name = "intial action"
           source = true
-          type = "log"
+          type = "constant"
           id = "initial-action"
           next = ["new-defined-action"]
 
           [[action]]
           name = "new defined action"
-          type = "log"
+          type = "constant"
           id = "new-defined-action"
           next = ["4"]
 
@@ -426,7 +434,7 @@ svg {
 
           [[action]]
           name = "action-3"
-          type = "log"
+          type = "constant"
           id = "5"
           next = ["7"]
           [action.params]
@@ -435,7 +443,7 @@ svg {
 
           [[action]]
           name = "Branch eventually came here!"
-          type = "log"
+          type = "constant"
           id = "6"
           returnAfter = false
           [action.params]
@@ -444,7 +452,7 @@ svg {
 
           [[action]]
           name = "action-5"
-          type = "log"
+          type = "constant"
           id = "7"
           output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
           [action.params]

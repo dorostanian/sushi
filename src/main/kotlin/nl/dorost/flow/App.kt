@@ -38,18 +38,22 @@ fun main(args: Array<String>) {
                     digraph = flowEngine.blocksToDigraph(blocks)
                     flowEngine.wire(blocks)
                     call.respond(
-                        HttpStatusCode.OK, objectMapper.writeValueAsString(
+                        HttpStatusCode.OK,
+                        objectMapper.writeValueAsString(
                             ResponseMessage(
                                 responseLog = "Successfully converted TOML to Digraph.",
                                 digraphData = digraph
                             )
                         )
                     )
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        ResponseMessage(
-                            responseLog = e.message?: "Something went wrong in the server side! ${e.localizedMessage}"
+                        objectMapper.writeValueAsString(
+                            ResponseMessage(
+                                responseLog = e.message
+                                    ?: "Something went wrong in the server side! ${e.localizedMessage}"
+                            )
                         )
                     )
                 }
