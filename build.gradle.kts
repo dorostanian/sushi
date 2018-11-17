@@ -32,6 +32,8 @@ dependencies {
     compile("com.github.kittinunf.fuel:fuel:1.15.0")
     compile("com.moandjiezana.toml:toml4j:0.7.2")
     compile("io.ktor:ktor-server-netty:$ktor_version")
+    compile("io.ktor:ktor-websockets:$ktor_version")
+
     compile("org.apache.commons:commons-text:1.6")
     compile("io.github.microutils:kotlin-logging:1.6.20")
     compile("org.slf4j:slf4j-api:1.8.0-beta2")

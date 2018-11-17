@@ -286,8 +286,8 @@ svg {
 
           $("#modal-action-id").html("ID: " + action.id);
           $("#modal-action-name").val(action.name);
-          $("#modal-action-type").val("Type: " + action.type);
-          $("#modal-action-description").val(action.description);
+          $("#modal-action-type").html("Type: " + action.type);
+          $("#modal-action-description").html(action.description);
 
           // $("#modal-action-id").html(currentActionId);
 
@@ -598,11 +598,7 @@ svg {
         </div>
         <div class="modal-body" id="action-modal-body">
           <small id="modal-action-id">Action ID here</small>
-          <hr>
-
           <small id="modal-action-type">Action Type Here</small>
-          <hr>
-
           <small id="modal-action-description">Action Description here...</small>
           <hr>
           <b>Name: </b>
