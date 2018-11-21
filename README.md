@@ -58,6 +58,9 @@ rest of the flow automatically you can put `returnAfter = true`. This tells the 
 output of this block after execution and `id` of it to keep tracks of the flow. **This is mostly
 useful when you are expecting a user interaction e.g. Rest API.**
 
+You can register listeners for actions to have a callback mechanism after executing each action.
+This helps communicate easily while the engine takes care of running the actions.
+
 ## `Branch` block
 This block is desgined intentionally simple to make it easy for controling the flow of your work.
 ```toml

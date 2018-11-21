@@ -93,71 +93,68 @@
                         </div>
                         <p class="mb-1">Write your containers Here.</p>
                         <br>
-                        <button class="badge badge-danger badge-pill">Register container as action</button>
+                        <button class="badge badge-danger badge-pill">Register containers as action</button>
                     </div>
 
 
                 </div>
             </div>
-            <br>
-            <button type="button" class="btn btn-info btn-block">Register/Update Container as Action</button>
-
 
         </td>
         <td>
             <div id="editor">
-[flow]
-# id_prefix = "main_"
-name = "Example Flow"
-author = "amin@dorost.nl"
+                [flow]
+                # id_prefix = "main_"
+                name = "Example Flow"
+                author = "amin@dorost.nl"
 
-[[action]]
-name = "intial action"
-source = true
-type = "http-get"
-id = "initial-action"
-next = ["new-defined-action"]
+                [[action]]
+                name = "intial action"
+                source = true
+                type = "http-get"
+                id = "initial-action"
+                next = ["new-defined-action"]
 
-[[action]]
-name = "new defined action"
-type = "constant"
-id = "new-defined-action"
-next = ["4"]
+                [[action]]
+                name = "new defined action"
+                type = "constant"
+                id = "new-defined-action"
+                next = ["4"]
 
-[[branch]]
-name = "branch-1"
-id = "4"
-on = "value"
-[branch.mapping]
-branch-1 = "5"
-branch-2 = "6"
-branch-3 = "7"
+                [[branch]]
+                name = "branch-1"
+                id = "4"
+                on = "value"
+                [branch.mapping]
+                branch-1 = "5"
+                branch-2 = "6"
+                branch-3 = "7"
 
-[[action]]
-name = "action-3"
-type = "constant"
-id = "5"
-next = ["7"]
-[action.params]
-param-4 = "value-4"
-
-
-[[action]]
-name = "Branch eventually came here!"
-type = "constant"
-id = "6"
-returnAfter = false
-[action.params]
-"param-5" = "value-5"
+                [[action]]
+                name = "action-3"
+                type = "constant"
+                id = "5"
+                next = ["7"]
+                [action.params]
+                param-4 = "value-4"
 
 
-[[action]]
-name = "action-5"
-type = "constant"
-id = "7"
-output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
-[action.params]
-param-6 = "value-6"
+                [[action]]
+                name = "Branch eventually came here!"
+                type = "constant"
+                id = "6"
+                returnAfter = false
+                [action.params]
+                "param-5" = "value-5"
+
+
+                [[action]]
+                name = "action-5"
+                type = "constant"
+                id = "7"
+                output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
+                [action.params]
+                param-6 = "value-6"
             </div>
         </td>
         <td class="table-dark">
@@ -176,7 +173,7 @@ param-6 = "value-6"
 
         <td class="table-dark">
             <div class="text-center">
-                <button type="button" class="btn btn-warning btn-sm text-center" id="executeFlow">
+                <button type="button" class="btn btn-warning btn-sm text-center">
                     Add Branch
                 </button>
             </div>

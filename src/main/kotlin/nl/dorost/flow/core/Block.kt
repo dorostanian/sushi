@@ -43,6 +43,7 @@ data class Action(
     var act: ((action: Action) -> Map<String, Any>)? = null,
     var nextBlocks: MutableList<String> = mutableListOf(),
     val returnAfterExec: Boolean = false,
+    val listener: ActionListener? = null,
     override val name: String,
     override var id: String? = null,
     override var type: String,
