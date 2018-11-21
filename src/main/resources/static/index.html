@@ -5,34 +5,58 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Spaghetti Flow Design Tool</title>
 
-
+    <!--Bootstrap CSS-->
     <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.3/slate/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-ywjdn7N8uoxzIfGl7jlEBlqw2BNicOSzZDgo7A2ffvbM24Ct9plRp7KwtaIqZ33j" crossorigin="anonymous">
 
-
+    <!--Social Icons-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/5.1.1/bootstrap-social.css"/>
 
+    <!--Font Awesome-->
     <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
           integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
 
-    <link rel="stylesheet" type="text/css" href="./app.css">
 
+
+    <!--Jquery-->
     <script src="https://code.jquery.com/jquery-3.3.1.js"
             integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
             crossorigin="anonymous"></script>
+
+    <!--Bootstrap JS-->
+
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
             crossorigin="anonymous"></script>
+
+
+    <!--Ace editor-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
+
+    <!--D3.js-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.js"></script>
+
+    <!--Dagre-->
     <script src="./graphlib-dot.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.js"></script>
+
+    <!--Autocomlete-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.3/awesomplete.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.3/awesomplete.js"></script>
+
+    <!--Vue.js-->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+
+
+    <!--override all styles-->
+    <link rel="stylesheet" type="text/css" href="./app.css">
 
 
 </head>
 
 <body>
+
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="#">Spaghetti Flow Design Tool</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
@@ -43,12 +67,8 @@
 
     <div class="collapse navbar-collapse" id="navbarColor01">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
-                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-            </li>
-
             <li class="nav-item">
-                <a class="nav-link" href="#">About</a>
+                <a class="nav-link" href="http://dorost.nl">About</a>
             </li>
         </ul>
 
@@ -57,7 +77,6 @@
                 <span class="fa fa-github"></span>
             </a>
         </ul>
-
 
     </div>
 </nav>
@@ -173,89 +192,28 @@
 
         <td class="table-dark">
             <div class="text-center">
-                <button type="button" class="btn btn-warning btn-sm text-center">
+                <button type="button" class="btn btn-warning btn-block text-center">
                     Add Branch
                 </button>
             </div>
             <hr>
-            <h3>Actions Library:</h3>
 
-            <div class="scroll-area" style="max-height:500px;">
-                <div class="list-group" id="actions-list">
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Action Type here</h5>
-                        </div>
-                        <p class="mb-1">Action description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <button class="badge badge-info badge-pill">add this action</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Action Type here</h5>
-                        </div>
-                        <p class="mb-1">Action description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <button class="badge badge-info badge-pill">add this action</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Action Type here</h5>
-                        </div>
-                        <p class="mb-1">Action description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <button class="badge badge-info badge-pill">add this action</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Action Type here</h5>
-                        </div>
-                        <p class="mb-1">Action description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <button class="badge badge-info badge-pill">add this action</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Action Type here</h5>
-                        </div>
-                        <p class="mb-1">Action description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <button class="badge badge-info badge-pill">add this action</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Action Type here</h5>
-                        </div>
-                        <p class="mb-1">Action description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <button class="badge badge-info badge-pill">add this action</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Action Type here</h5>
-                        </div>
-                        <p class="mb-1">Action description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <button class="badge badge-info badge-pill">add this action</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Action Type here</h5>
-                        </div>
-                        <p class="mb-1">Action description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <button class="badge badge-info badge-pill">add this action</button>
-                    </div>
+            <div class="list-group-item list-group-item-action flex-column align-items-start active" id="added-action-container" v-if="action.type">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1" id="added-action-type">{{action.type}}</h5>
                 </div>
+                <p class="mb-1" id="added-action-description">{{action.name}}</p>
+                <small id="added-action-outputs">{{action.docs}}</small>
+                <br>
+                <button class="badge badge-info badge-pill" v-bind:id="action.type" onclick="addActionToGraph(this.id)">add this action</button>
             </div>
+
+            <div class="form-group" id="addActions">
+                <label>Add Action</label>
+                <input id="actionsDir" class="form-control" onkeyup="clearAction(this.value)"/>
+            </div>
+
+
         </td>
 
 

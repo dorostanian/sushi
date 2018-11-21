@@ -20,6 +20,7 @@ import nl.dorost.flow.core.FlowEngine
 import nl.dorost.flow.utils.ResponseMessage
 import java.io.File
 import java.lang.Exception
+import java.util.*
 
 fun main(args: Array<String>) {
     val flowEngine = FlowEngine()
@@ -29,7 +30,7 @@ fun main(args: Array<String>) {
         routing {
 
 
-            get("/"){
+            get("/") {
                 call.respondFile(File(Thread.currentThread().contextClassLoader.getResource("static/index.html").path))
             }
 
@@ -96,7 +97,34 @@ fun main(args: Array<String>) {
 
             }
 
-            get ("/getLibrary"){
+
+            get("/addAction/{actionType}") {
+                val actionType = call.parameters["actionType"]
+                val registeredBlock = flowEngine.registeredActions.firstOrNull { it.type == actionType }
+
+                registeredBlock?.let { action ->
+                    flowEngine.flows.add(
+                        action.copy(id = UUID.randomUUID().toString())
+                    )
+                    flowEngine.wire(flowEngine.flows)
+                    val toml = flowEngine.blocksToToml(flowEngine.flows)
+                    val digraph = flowEngine.blocksToDigraph(flowEngine.flows)
+                    call.respond(
+                        HttpStatusCode.OK,
+                        objectMapper.writeValueAsString(
+                            ResponseMessage(
+                                responseLog = "Successfully added new action to flow!",
+                                tomlData = toml,
+                                digraphData = digraph
+                            )
+                        )
+                    )
+                }
+
+
+            }
+
+            get("/getLibrary") {
                 call.respond(
                     HttpStatusCode.OK,
                     objectMapper.writeValueAsString(
@@ -113,7 +141,7 @@ fun main(args: Array<String>) {
 
                 flowEngine.flows.removeIf { it.id == actionId }
                 flowEngine.flows.forEach { block ->
-                    when(block){
+                    when (block) {
                         is Action -> {
                             block.nextBlocks.removeIf { it == actionId }
                         }

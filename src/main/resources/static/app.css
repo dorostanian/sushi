@@ -131,3 +131,6 @@ svg {
     padding: 0 0 0 15px;
 }
 
+.awesomplete > ul {
+    background: black;
+}

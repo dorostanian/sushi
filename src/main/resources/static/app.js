@@ -3,6 +3,30 @@ var svg;
 var render;
 var g;
 
+var awesomplete;
+var actions;
+
+var addedActionContainer = new Vue({
+        el: '#added-action-container',
+        data: {
+            action: {
+                type: "",
+                name: "",
+                docs: ""
+            }
+        }
+    })
+;
+
+var input = document.getElementById("actionsDir");
+awesomplete = new Awesomplete(input);
+
+input.addEventListener("awesomplete-select", function (selection) {
+    console.log("Selected " + selection.text);
+    var action = actions.find(obj => obj.type == selection.text);
+    addedActionContainer.action = action;
+    console.log(addedActionContainer.action);
+});
 
 $(document).ready(function () {
     console.log("Starting up!");
@@ -17,6 +41,21 @@ $(document).ready(function () {
 
 });
 
+
+function clearAction(val) {
+    console.log("Value is " + val);
+    var action = actions.find(obj => obj.type == val);
+    if (action)
+        addedActionContainer.action = action;
+    else {
+        addedActionContainer.action = {
+            type: "",
+            name: "",
+            docs: ""
+        };
+    }
+}
+
 function populateActionsList() {
     $.ajax({
         type: "GET",
@@ -26,25 +65,22 @@ function populateActionsList() {
     }).done(function (data) {
         var responseJson = JSON.parse(data);
         var logOutput = responseJson.responseLog;
-        var action, actions = responseJson.library;
-
+        actions = responseJson.library;
         appendInfo(logOutput);
-
-        $("#actions-list div").remove();
-        for (action of actions) {
-            addActionToList(action);
-        }
-
+        awesomplete.list = actions.map(x => x.type);
     });
 }
 
 function setupDagre() {
+
+
     svg = d3.select("svg");
     render = dagreD3.render();
     inner = d3.select("svg g"),
         zoom = d3.zoom().on("zoom", function () {
             inner.attr("transform", d3.event.transform);
         });
+    zoom.transform(svg, d3.zoomIdentity);
     svg.call(zoom);
 }
 
@@ -54,7 +90,7 @@ function drawGraph() {
     setupDagre();
     $.ajax({
         type: "POST",
-        url: "http://localhost:8080/tomlToDigraph",
+        url: "/tomlToDigraph",
         data: editor.getValue(),
         crossDomain: true,
 
@@ -65,21 +101,8 @@ function drawGraph() {
         var digraphData = responseJson.digraphData;
 
         appendInfo(logOutput);
-        setupDagre();
-        g = graphlibDot.read(digraphData);
-        d3.select("svg g").call(render, g);
-        // Set margins, if not present
-        if (!g.graph().hasOwnProperty("marginx") &&
-            !g.graph().hasOwnProperty("marginy")) {
-            g.graph().marginx = 20;
-            g.graph().marginy = 20;
-        }
 
-        g.graph().transition = function (selection) {
-            return selection.transition().duration(500);
-        };
-
-        bindActions();
+        drawGraphWithDigraphData(digraphData);
 
     }).fail(function (xhr, textStatus, errorThrown) {
         appendError(JSON.parse(xhr.responseText).responseLog);
@@ -87,6 +110,29 @@ function drawGraph() {
 
 }
 
+
+function drawGraphWithDigraphData(digraphData) {
+    // Cleanup old graph
+    var svg = d3.select("svg > g");
+    svg.selectAll("*").remove();
+
+    setupDagre();
+    g = graphlibDot.read(digraphData);
+    d3.select("svg g").call(render, g);
+    // Set margins, if not present
+    if (!g.graph().hasOwnProperty("marginx") &&
+        !g.graph().hasOwnProperty("marginy")) {
+        g.graph().marginx = 20;
+        g.graph().marginy = 20;
+    }
+
+    g.graph().transition = function (selection) {
+        return selection.transition().duration(500);
+    };
+
+    bindActions();
+
+}
 
 function appendInfo(text) {
     $("#shell-emulator").append("<li>" + text + "</li>");
@@ -107,25 +153,11 @@ function deleteAction(currentActionId) {
             var logOutput = responseJson.responseLog;
             var digraphData = responseJson.digraphData;
             var tomlText = responseJson.tomlData;
-            console.log(tomlText);
+            // console.log(tomlText);
             editor.setValue(tomlText, -1);
             appendInfo(logOutput);
 
-
-            setupDagre();
-            g = graphlibDot.read(digraphData);
-            // Render the graph into svg g
-            d3.select("svg g").call(render, g);
-            if (!g.graph().hasOwnProperty("marginx") &&
-                !g.graph().hasOwnProperty("marginy")) {
-                g.graph().marginx = 20;
-                g.graph().marginy = 20;
-            }
-
-            g.graph().transition = function (selection) {
-                return selection.transition().duration(500);
-            };
-            bindActions();
+            drawGraphWithDigraphData(digraphData);
         }
     );
 }
@@ -157,7 +189,6 @@ function getAction(currentActionId) {
                     "</tr>";
                 $("#modal-action-params").append(paramRow);
             }
-            // $("#modal-action-id").html(currentActionId);
 
         }
     ).fail(function (xhr, textStatus, errorThrown) {
@@ -165,9 +196,6 @@ function getAction(currentActionId) {
     });
 }
 
-function addMoreParam() {
-
-}
 
 function bindActions() {
     $("[id$='-remove']").click(
@@ -191,15 +219,48 @@ function bindActions() {
 }
 
 
-function addActionToList(action) {
-    var toAppend = "<div class=\"list-group-item list-group-item-action flex-column align-items-start active\">\n" +
-        " <div class=\"d-flex w-100 justify-content-between\">\n" +
-        "                            <h5 class=\"mb-1\">" + action.type + "</h5>\n" +
-        "                        </div>\n" +
-        "                        <p class=\"mb-1\">" + action.description + "</p>\n" +
-        "                        <br>\n" +
-        "           <button class=\"badge badge-info badge-pill\" id='" + action.type + "' >add this action</button>\n" +
-        "</div>"
+function addActionToGraph(currentActionType) {
 
-    $("#actions-list").append(toAppend);
+    appendInfo("Requesting TOML to Digraph conversion!");
+    setupDagre();
+    $.ajax({
+        type: "POST",
+        url: "/tomlToDigraph",
+        data: editor.getValue(),
+        crossDomain: true,
+
+    }).done(function (data) {
+
+        var responseJson = JSON.parse(data);
+        var logOutput = responseJson.responseLog;
+        var digraphData = responseJson.digraphData;
+
+        appendInfo(logOutput);
+
+        drawGraphWithDigraphData(digraphData);
+
+        $.ajax({
+            type: "GET",
+            url: "/addAction/" + currentActionType,
+            crossDomain: true
+        }).done(function (data) {
+                var responseJson = JSON.parse(data);
+                var logOutput = responseJson.responseLog;
+                var tomlData = responseJson.tomlData;
+                var digraphData = responseJson.digraphData;
+                appendInfo(logOutput);
+                editor.setValue(tomlData, -1);
+                drawGraphWithDigraphData(digraphData);
+
+            }
+        ).fail(function (xhr, textStatus, errorThrown) {
+            appendError(JSON.parse(xhr.responseText).responseLog);
+
+        });
+
+    }).fail(function (xhr, textStatus, errorThrown) {
+        appendError(JSON.parse(xhr.responseText).responseLog);
+    });
+
+
 }

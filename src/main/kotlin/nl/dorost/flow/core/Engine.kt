@@ -253,7 +253,7 @@ class FlowEngine {
         try {
             blocks = this.parseToBlocks(toml)
         } catch (e: Exception) {
-            val errorMessage = "Error on parising to blocks! ${e.localizedMessage}"
+            val errorMessage = "Error on parsing to blocks! ${e.localizedMessage}"
             LOG.error(errorMessage)
             throw RuntimeException(errorMessage)
         }
