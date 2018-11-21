@@ -4,6 +4,12 @@
 complex flows of actions. Flow is highly extensible by allowing you to `register` new `Block`s. There comes also a library
 of commonly used actions.
 
+## Similar Work and comparison
+Tinder's [State Machine Project](https://github.com/Tinder/StateMachine) is one of the interesting
+implementations for buliding state machines. (tbd)
+
+
+
 # Motivation
 
 The idea of building **Flow** born in my mind while trying to build a software that contains lots of steps and conditions.
@@ -104,6 +110,10 @@ first and last respectively.
 
 **NOTE:**
 You are not allowed to use `returnAfter=true` inside a container.
+
+
+## Programmatical Definition (DSL)
+(tbd)
 
 # Usage
 

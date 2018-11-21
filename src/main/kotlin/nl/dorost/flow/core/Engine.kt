@@ -55,7 +55,7 @@ class FlowEngine {
                     act = action.act
                     type = action.type
                     description = action.description
-                    params = params.plus(action.params).toMutableMap()
+                    params = action.params.map { it -> it.key to params.getOrDefault(it.key, "") }.toMap().toMutableMap()
                 }
             } ?: throw TypeNotRegisteredException("Type ${currentBlock.type} is not a registered action!")
         }

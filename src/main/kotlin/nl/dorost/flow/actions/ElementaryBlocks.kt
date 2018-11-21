@@ -18,7 +18,9 @@ val elementaryActions = mutableListOf<Action>(
             val constValue =
                 action.params["const"] ?: throw UnsatisfiedParamsException("Parameter const not found!")
             mapOf("value" to constValue)
-        }),
+        },
+        params = mutableMapOf("const" to "")
+    ),
     Action(
         name = "Makes http POST call",
         description = "Make the post call based on the parameters given. Passes the <code>response</code>.",

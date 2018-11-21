@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0076)https://dagrejs.github.io/project/dagre-d3/latest/demo/interactive-demo.html -->
 <html>
 
 <head>
@@ -7,385 +6,28 @@
     <title>Spaghetti Flow Design Tool</title>
 
 
-    <link rel="stylesheet" href="./bootstrap.min.css">
-    <link href="./bootstrap-social-gh-pages/assets/css/font-awesome.css" rel="stylesheet">
-    <link href="./bootstrap-social-gh-pages/assets/css/docs.css" rel="stylesheet">
-    <link href="./bootstrap-social-gh-pages/bootstrap-social.css" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.3/slate/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-ywjdn7N8uoxzIfGl7jlEBlqw2BNicOSzZDgo7A2ffvbM24Ct9plRp7KwtaIqZ33j" crossorigin="anonymous">
 
 
-    <style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/5.1.1/bootstrap-social.css"/>
 
-        svg {
-            border: 1px solid #999;
-            overflow: hidden;
-        }
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+          integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
-        .node {
-            white-space: nowrap;
-        }
 
-        .node rect,
-        .node circle,
-        .node ellipse {
-            stroke: #333;
-            fill: #fff;
-            stroke-width: 1.5px;
-        }
-
-        .cluster rect {
-            stroke: #333;
-            fill: #000;
-            fill-opacity: 0.1;
-            stroke-width: 1.5px;
-        }
-
-        .edgePath path.path {
-            stroke: #333;
-            stroke-width: 1.5px;
-            fill: none;
-        }
-
-    </style>
-
-    <style>
-        h1,
-        h2 {
-            color: #333;
-        }
-
-        textarea {
-            width: 800px;
-        }
-
-        label {
-            margin-top: 1em;
-            display: block;
-        }
-
-        .error {
-            color: red;
-        }
-
-        #editor {
-            width: auto;
-            display: block;
-            height: 600px;
-        }
-
-        svg {
-            width: 100%;
-            display: block;
-            height: 600px;
-            background-color: white;
-        }
-
-        .scroll-area {
-            width: 100%;
-            max-height: 600px;
-            overflow-y: scroll;
-        }
-
-        .shell-wrap {
-            width: auto;
-            max-height: 400px;
-            overflow-y: scroll;
-            display: block;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
-            -webkit-border-radius: 3px;
-            -moz-border-radius: 3px;
-            border-radius: 3px;
-        }
-
-        .shell-top-bar {
-            text-align: center;
-            color: #525252;
-            padding: 5px 0;
-            margin: 0;
-            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5);
-            font-size: 0.85em;
-            border: 1px solid #CCCCCC;
-            border-bottom: none;
-
-            -webkit-border-top-left-radius: 3px;
-            -webkit-border-top-right-radius: 3px;
-            -moz-border-radius-topleft: 3px;
-            -moz-border-radius-topright: 3px;
-            border-top-left-radius: 3px;
-            border-top-right-radius: 3px;
-
-            background: #f7f7f7; /* Old browsers */
-            background: -moz-linear-gradient(top, #f7f7f7 0%, #B8B8B8 100%); /* FF3.6+ */
-            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #f7f7f7), color-stop(100%, #B8B8B8)); /* Chrome,Safari4+ */
-            background: -webkit-linear-gradient(top, #f7f7f7 0%, #B8B8B8 100%); /* Chrome10+,Safari5.1+ */
-            background: -o-linear-gradient(top, #f7f7f7 0%, #B8B8B8 100%); /* Opera 11.10+ */
-            background: -ms-linear-gradient(top, #f7f7f7 0%, #B8B8B8 100%); /* IE10+ */
-            background: linear-gradient(to bottom, #f7f7f7 0%, #B8B8B8 100%); /* W3C */
-            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f7f7f7', endColorstr='#B8B8B8', GradientType=0); /* IE6-9 */
-        }
-
-        .shell-body {
-            height: 400px;
-            max-height: 400px;
-            overflow-y: scroll;
-            margin: 0;
-            padding: 5px;
-            list-style: none;
-            background: #141414;
-            color: #45D40C;
-            font: 0.8em 'Andale Mono', Consolas, 'Courier New';
-            line-height: 1.6em;
-
-            -webkit-border-bottom-right-radius: 3px;
-            -webkit-border-bottom-left-radius: 3px;
-            -moz-border-radius-bottomright: 3px;
-            -moz-border-radius-bottomleft: 3px;
-            border-bottom-right-radius: 3px;
-            border-bottom-left-radius: 3px;
-        }
-
-        .shell-body li:before {
-            content: '$';
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-
-        .shell-body li {
-            word-wrap: break-word;
-            position: relative;
-            padding: 0 0 0 15px;
-        }
-
-    </style>
-
+    <link rel="stylesheet" type="text/css" href="./app.css">
 
     <script src="https://code.jquery.com/jquery-3.3.1.js"
             integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
             crossorigin="anonymous"></script>
-
-
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
             crossorigin="anonymous"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
-
-
-    <script src="./flow-visualization_files/d3.v4.js"></script>
-    <script src="./flow-visualization_files/graphlib-dot.js"></script>
-    <script src="./flow-visualization_files/dagre-d3.js"></script>
-
-
-    <script>
-
-
-        var editor;
-        var svg;
-        var render;
-        var g;
-
-
-        $(document).ready(function () {
-            console.log("Starting up!");
-            editor = ace.edit("editor");
-            editor.setTheme("ace/theme/monokai");
-            editor.getSession().setMode("ace/mode/javascript");
-            editor.session.setMode("ace/mode/toml");
-
-            setupDagre();
-
-            populateActionsList();
-
-        });
-
-        function populateActionsList() {
-            $.ajax({
-                type: "GET",
-                url: "http://localhost:8080/getLibrary/",
-                crossDomain: true,
-
-            }).done(function (data) {
-                var responseJson = JSON.parse(data);
-                var logOutput = responseJson.responseLog;
-                var action, actions = responseJson.library;
-
-                appendInfo(logOutput);
-
-                $("#actions-list div").remove();
-                for (action of actions){
-                    addActionToList(action);
-                }
-
-            });
-        }
-
-        function setupDagre() {
-            svg = d3.select("svg");
-            render = dagreD3.render();
-            inner = d3.select("svg g"),
-                zoom = d3.zoom().on("zoom", function () {
-                    inner.attr("transform", d3.event.transform);
-                });
-            svg.call(zoom);
-        }
-
-
-        function drawGraph() {
-            appendInfo("Requesting TOML to Digraph conversion!");
-            setupDagre();
-            $.ajax({
-                type: "POST",
-                url: "http://localhost:8080/tomlToDigraph",
-                data: editor.getValue(),
-                crossDomain: true,
-
-            }).done(function (data) {
-
-                var responseJson = JSON.parse(data);
-                var logOutput = responseJson.responseLog;
-                var digraphData = responseJson.digraphData;
-
-                appendInfo(logOutput);
-                setupDagre();
-                g = graphlibDot.read(digraphData);
-                d3.select("svg g").call(render, g);
-                // Set margins, if not present
-                if (!g.graph().hasOwnProperty("marginx") &&
-                    !g.graph().hasOwnProperty("marginy")) {
-                    g.graph().marginx = 20;
-                    g.graph().marginy = 20;
-                }
-
-                g.graph().transition = function (selection) {
-                    return selection.transition().duration(500);
-                };
-
-                bindActions();
-
-            }).fail(function (xhr, textStatus, errorThrown) {
-                appendError(JSON.parse(xhr.responseText).responseLog);
-            });
-
-        }
-
-
-        function appendInfo(text) {
-            $("#shell-emulator").append("<li>" + text + "</li>");
-        }
-
-        function appendError(text) {
-            $("#shell-emulator").append("<li style='color: red;'>" + text + "</li>");
-        }
-
-        function deleteAction(currentActionId) {
-            $.ajax({
-                type: "GET",
-                url: "http://localhost:8080/deleteAction/" + currentActionId,
-                crossDomain: true
-            }).done(
-                function (data) {
-                    var responseJson = JSON.parse(data);
-                    var logOutput = responseJson.responseLog;
-                    var digraphData = responseJson.digraphData;
-                    var tomlText = responseJson.tomlData;
-                    console.log(tomlText);
-                    editor.setValue(tomlText, -1);
-                    appendInfo(logOutput);
-
-
-                    setupDagre();
-                    g = graphlibDot.read(digraphData);
-                    // Render the graph into svg g
-                    d3.select("svg g").call(render, g);
-                    if (!g.graph().hasOwnProperty("marginx") &&
-                        !g.graph().hasOwnProperty("marginy")) {
-                        g.graph().marginx = 20;
-                        g.graph().marginy = 20;
-                    }
-
-                    g.graph().transition = function (selection) {
-                        return selection.transition().duration(500);
-                    };
-                    bindActions();
-                }
-            );
-        }
-
-
-        function getAction(currentActionId) {
-            $.ajax({
-                type: "GET",
-                url: "http://localhost:8080/getAction/" + currentActionId,
-                crossDomain: true
-            }).done(
-                function (data) {
-                    var responseJson = JSON.parse(data);
-                    var logOutput = responseJson.responseLog;
-                    var action = responseJson.blockInfo;
-                    appendInfo(logOutput);
-
-                    $("#modal-action-id").html("ID: " + action.id);
-                    $("#modal-action-name").val(action.name);
-                    $("#modal-action-type").html("Type: " + action.type);
-                    $("#modal-action-description").html(action.description);
-
-                    var params = action.params;
-                    $("#modal-action-params tr").remove();
-                    for (var k in params) {
-                        var paramRow = "<tr><td>" + k + "</td>" +
-                            "<td><input class='form-control form-control-sm' type='text' value='" + params[k] + "'></td>" +
-                            //  "<td><button class='badge badge-danger badge-pill'>remove</button>" +
-                            "</tr>";
-                        $("#modal-action-params").append(paramRow);
-                    }
-                    // $("#modal-action-id").html(currentActionId);
-
-                }
-            ).fail(function (xhr, textStatus, errorThrown) {
-                appendError(JSON.parse(xhr.responseText).responseLog);
-            });
-        }
-
-        function addMoreParam() {
-
-        }
-
-        function bindActions() {
-            $("[id$='-remove']").click(
-                function () {
-                    var strIdsplits = $(this).attr('id').split('-');
-                    var currentId = strIdsplits.slice(0, strIdsplits.length - 1).join('-');
-                    appendInfo("Requesting to delete action " + currentId);
-                    deleteAction(currentId);
-                }
-            );
-            $("[id$='-edit']").click(
-                function () {
-                    // alert('Editing ' + $(this).attr('id'));
-                    var strIdsplits = $(this).attr('id').split('-');
-                    var currentId = strIdsplits.slice(0, strIdsplits.length - 1).join('-');
-                    appendInfo("Editing block: \"" + currentId + "\" , fetching info...");
-                    $('#action-modal').modal('show');
-                    getAction(currentId);
-                }
-            );
-        }
-
-
-        function addActionToList(action) {
-            var toAppend = "<div class=\"list-group-item list-group-item-action flex-column align-items-start active\">\n" +
-                "                        <div class=\"d-flex w-100 justify-content-between\">\n" +
-                "                            <h5 class=\"mb-1\">" + action.type + "</h5>\n" +
-                "                        </div>\n" +
-                "                        <p class=\"mb-1\">" + action.description + "</p>\n" +
-                "                        <br>\n" +
-                "           <button class=\"badge badge-info badge-pill\" id='" + action.type + "' >add this action</button>\n" +
-                "</div>"
-
-            $("#actions-list").append(toAppend);
-        }
-
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.js"></script>
+    <script src="./graphlib-dot.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.js"></script>
 
 
 </head>
@@ -421,7 +63,7 @@
 </nav>
 
 
-<table width="100%" class="table table-bordered">
+<table width="100%" class="table table-bordered table-dark table-striped">
     <colgroup>
         <col width="15%">
         <col width="30%">
@@ -430,7 +72,7 @@
         <col width="15%">
     </colgroup>
 
-    <tr class="table-dark">
+    <tr>
         <td>
             <h3>List of blocks</h3>
 
@@ -447,126 +89,92 @@
                     </div>
                     <div class="list-group-item list-group-item-action flex-column align-items-start active">
                         <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">A container example</h5>
+                            <h5 class="mb-1">Custom Actions</h5>
                         </div>
-                        <p class="mb-1">Container description here.</p>
-                        <small>Input/Output docs.</small>
+                        <p class="mb-1">Write your containers Here.</p>
                         <br>
-                        <br>
-                        <button class="badge badge-danger badge-pill">remove</button>
+                        <button class="badge badge-danger badge-pill">Register container as action</button>
                     </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">A container example</h5>
-                        </div>
-                        <p class="mb-1">Container description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <br>
-                        <button class="badge badge-danger badge-pill">remove</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">A container example</h5>
-                        </div>
-                        <p class="mb-1">Container description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <br>
-                        <button class="badge badge-danger badge-pill">remove</button>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">A container example</h5>
-                        </div>
-                        <p class="mb-1">Container description here.</p>
-                        <small>Input/Output docs.</small>
-                        <br>
-                        <br>
-                        <button class="badge badge-danger badge-pill">remove</button>
-                    </div>
+
+
                 </div>
             </div>
             <br>
-            <button type="button" class="btn btn-info btn-block" id="add-container">Add container</button>
             <button type="button" class="btn btn-info btn-block">Register/Update Container as Action</button>
 
 
         </td>
         <td>
             <div id="editor">
-                [flow]
-                # id_prefix = "main_"
-                name = "Example Flow"
-                author = "amin@dorost.nl"
+[flow]
+# id_prefix = "main_"
+name = "Example Flow"
+author = "amin@dorost.nl"
 
-                [[action]]
-                name = "intial action"
-                source = true
-                type = "http-get"
-                id = "initial-action"
-                next = ["new-defined-action"]
+[[action]]
+name = "intial action"
+source = true
+type = "http-get"
+id = "initial-action"
+next = ["new-defined-action"]
 
-                [[action]]
-                name = "new defined action"
-                type = "constant"
-                id = "new-defined-action"
-                next = ["4"]
+[[action]]
+name = "new defined action"
+type = "constant"
+id = "new-defined-action"
+next = ["4"]
 
-                [[branch]]
-                name = "branch-1"
-                id = "4"
-                on = "value"
-                [branch.mapping]
-                branch-1 = "5"
-                branch-2 = "6"
-                branch-3 = "7"
+[[branch]]
+name = "branch-1"
+id = "4"
+on = "value"
+[branch.mapping]
+branch-1 = "5"
+branch-2 = "6"
+branch-3 = "7"
 
-                [[action]]
-                name = "action-3"
-                type = "constant"
-                id = "5"
-                next = ["7"]
-                [action.params]
-                param-4 = "value-4"
-
-
-                [[action]]
-                name = "Branch eventually came here!"
-                type = "constant"
-                id = "6"
-                returnAfter = false
-                [action.params]
-                "param-5" = "value-5"
+[[action]]
+name = "action-3"
+type = "constant"
+id = "5"
+next = ["7"]
+[action.params]
+param-4 = "value-4"
 
 
-                [[action]]
-                name = "action-5"
-                type = "constant"
-                id = "7"
-                output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
-                [action.params]
-                param-6 = "value-6"
+[[action]]
+name = "Branch eventually came here!"
+type = "constant"
+id = "6"
+returnAfter = false
+[action.params]
+"param-5" = "value-5"
+
+
+[[action]]
+name = "action-5"
+type = "constant"
+id = "7"
+output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
+[action.params]
+param-6 = "value-6"
             </div>
         </td>
-        <td>
+        <td class="table-dark">
             <button type="button" class="btn btn-info btn-block" id="tomlToDigraph" onclick="drawGraph()">
 
                 <h3>&#8250;</h3>
             </button>
             <br>
-            <!--<button type="button" class="btn btn-danger btn-block">-->
-            <!--<h3>&#8249;</h3>-->
-            <!--</button>-->
 
         </td>
-        <td>
+        <td class="table-dark">
             <svg>
                 <g></g>
             </svg>
         </td>
 
-        <td>
+        <td class="table-dark">
             <div class="text-center">
                 <button type="button" class="btn btn-warning btn-sm text-center" id="executeFlow">
                     Add Branch
@@ -705,7 +313,6 @@
 
                 </table>
 
-                <!-- <button class="badge badge-info badge-pill" id="modal-action-param-add">add param</button> -->
                 <hr>
                 <h4>Action Output Keys:</h4>
                 <table class="table table-secondary" id="modal-action-output-keys">
@@ -746,6 +353,9 @@
         </div>
     </div>
 </div>
+
+
+<script src="./app.js"></script>
 
 
 </body>

@@ -8,6 +8,7 @@ import io.ktor.http.content.resources
 import io.ktor.http.content.static
 import io.ktor.request.receiveText
 import io.ktor.response.respond
+import io.ktor.response.respondFile
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
@@ -17,6 +18,7 @@ import nl.dorost.flow.core.Action
 import nl.dorost.flow.core.Branch
 import nl.dorost.flow.core.FlowEngine
 import nl.dorost.flow.utils.ResponseMessage
+import java.io.File
 import java.lang.Exception
 
 fun main(args: Array<String>) {
@@ -26,9 +28,13 @@ fun main(args: Array<String>) {
     val server = embeddedServer(Netty, port = 8080) {
         routing {
 
+
+            get("/"){
+                call.respondFile(File(Thread.currentThread().contextClassLoader.getResource("static/index.html").path))
+            }
+
             static("/") {
                 resources("static")
-                default("static/index.html")
             }
 
             post("/tomlToDigraph") {
@@ -39,7 +45,6 @@ fun main(args: Array<String>) {
                     val blocks = flowEngine.tomlToBlocks(tomlString)
                     flowEngine.wire(blocks)
                     digraph = flowEngine.blocksToDigraph(blocks)
-                    flowEngine.wire(blocks)
                     call.respond(
                         HttpStatusCode.OK,
                         objectMapper.writeValueAsString(
