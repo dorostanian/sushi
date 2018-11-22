@@ -22,10 +22,8 @@ var input = document.getElementById("actionsDir");
 awesomplete = new Awesomplete(input);
 
 input.addEventListener("awesomplete-select", function (selection) {
-    console.log("Selected " + selection.text);
     var action = actions.find(obj => obj.type == selection.text);
     addedActionContainer.action = action;
-    console.log(addedActionContainer.action);
 });
 
 $(document).ready(function () {
@@ -136,10 +134,12 @@ function drawGraphWithDigraphData(digraphData) {
 
 function appendInfo(text) {
     $("#shell-emulator").append("<li>" + text + "</li>");
+    $('#shell-emulator').animate({scrollTop: $('#shell-emulator').prop("scrollHeight")}, 500);
 }
 
 function appendError(text) {
     $("#shell-emulator").append("<li style='color: red;'>" + text + "</li>");
+    $('#shell-emulator').animate({scrollTop: $('#shell-emulator').prop("scrollHeight")}, 500);
 }
 
 function deleteAction(currentActionId) {
@@ -264,3 +264,4 @@ function addActionToGraph(currentActionType) {
 
 
 }
+

@@ -62,8 +62,7 @@ svg {
 
 .shell-wrap {
     width: auto;
-    max-height: 400px;
-    overflow-y: scroll;
+    max-height: 300px;
     display: block;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
     -webkit-border-radius: 3px;
@@ -99,10 +98,10 @@ svg {
 }
 
 .shell-body {
-    height: 400px;
-    max-height: 400px;
-    overflow-y: scroll;
+    height: 250px;
+    max-height: 250px;
     margin: 0;
+    overflow-y: scroll;
     padding: 5px;
     list-style: none;
     background: #141414;
