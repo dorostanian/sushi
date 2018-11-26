@@ -15,8 +15,20 @@ var addedActionContainer = new Vue({
                 docs: ""
             }
         }
-    })
-;
+    });
+
+var blockEditModal = new Vue({
+    el: '#block-modal',
+    data: {
+        action: {
+            id: "",
+            type: "",
+            name: "",
+            docs: ""
+        }
+    }
+});
+
 
 var input = document.getElementById("actionsDir");
 awesomplete = new Awesomplete(input);
@@ -145,7 +157,7 @@ function appendError(text) {
 function deleteAction(currentActionId) {
     $.ajax({
         type: "GET",
-        url: "http://localhost:8080/deleteAction/" + currentActionId,
+        url: "/deleteBlock" + currentActionId,
         crossDomain: true
     }).done(
         function (data) {
@@ -175,20 +187,7 @@ function getAction(currentActionId) {
             var action = responseJson.blockInfo;
             appendInfo(logOutput);
 
-            $("#modal-action-id").html("ID: " + action.id);
-            $("#modal-action-name").val(action.name);
-            $("#modal-action-type").html("Type: " + action.type);
-            $("#modal-action-description").html(action.description);
-
-            var params = action.params;
-            $("#modal-action-params tr").remove();
-            for (var k in params) {
-                var paramRow = "<tr><td>" + k + "</td>" +
-                    "<td><input class='form-control form-control-sm' type='text' value='" + params[k] + "'></td>" +
-                    //  "<td><button class='badge badge-danger badge-pill'>remove</button>" +
-                    "</tr>";
-                $("#modal-action-params").append(paramRow);
-            }
+            blockEditModal.action = action;
 
         }
     ).fail(function (xhr, textStatus, errorThrown) {
@@ -202,7 +201,7 @@ function bindActions() {
         function () {
             var strIdsplits = $(this).attr('id').split('-');
             var currentId = strIdsplits.slice(0, strIdsplits.length - 1).join('-');
-            appendInfo("Requesting to delete action " + currentId);
+            appendInfo("Requesting to delete block " + currentId);
             deleteAction(currentId);
         }
     );
@@ -212,8 +211,8 @@ function bindActions() {
             var strIdsplits = $(this).attr('id').split('-');
             var currentId = strIdsplits.slice(0, strIdsplits.length - 1).join('-');
             appendInfo("Editing block: \"" + currentId + "\" , fetching info...");
-            $('#action-modal').modal('show');
             getAction(currentId);
+            $('#block-modal').modal('show');
         }
     );
 }

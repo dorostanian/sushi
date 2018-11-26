@@ -136,8 +136,8 @@ fun main(args: Array<String>) {
                 )
             }
 
-            get("/deleteAction/{actionId}") { pipelineContext ->
-                val actionId = call.parameters["actionId"]
+            get("/deleteBlock/{blockId}") { pipelineContext ->
+                val actionId = call.parameters["blockId"]
 
                 flowEngine.flows.removeIf { it.id == actionId }
                 flowEngine.flows.forEach { block ->

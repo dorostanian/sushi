@@ -62,6 +62,12 @@ val elementaryActions = mutableListOf<Action>(
             mapOf("body" to value)
         }
     )
+    // desgign a scenario
+    // send email block
+    // connect to telegram bot
+    // Persistence blocks (GCP)
+    // BigQuery, ....
+
 )
 
 class UnsatisfiedParamsException(msg: String) : RuntimeException(msg)

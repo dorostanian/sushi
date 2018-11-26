@@ -198,14 +198,17 @@
             </div>
             <hr>
 
-            <div class="list-group-item list-group-item-action flex-column align-items-start active" id="added-action-container" v-if="action.type">
+            <div class="list-group-item list-group-item-action flex-column align-items-start active"
+                 id="added-action-container" v-if="action.type">
                 <div class="d-flex w-100 justify-content-between">
                     <h5 class="mb-1" id="added-action-type">{{action.type}}</h5>
                 </div>
                 <p class="mb-1" id="added-action-description">{{action.name}}</p>
                 <small id="added-action-outputs">{{action.docs}}</small>
                 <br>
-                <button class="badge badge-info badge-pill" v-bind:id="action.type" onclick="addActionToGraph(this.id)">add this action</button>
+                <button class="badge badge-info badge-pill" v-bind:id="action.type" onclick="addActionToGraph(this.id)">
+                    add this action
+                </button>
             </div>
 
             <div class="form-group" id="addActions">
@@ -243,7 +246,7 @@
 </table>
 
 
-<div class="modal" id="action-modal">
+<div class="modal" id="block-modal">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -253,18 +256,28 @@
                 </button>
             </div>
             <div class="modal-body" id="action-modal-body">
-                <small id="modal-action-id">Action ID here</small>
+                <small id="modal-action-id">ID: {{action.id}}</small>
                 <br>
-                <small id="modal-action-type">Action Type Here</small>
+                <small id="modal-action-type">Type: {{action.type}}</small>
                 <br>
-                <small id="modal-action-description">Action Description here...</small>
+                <small id="modal-action-description">Description: {{action.description}}</small>
                 <hr>
                 <b>Name: </b>
-                <input class="form-control form-control-sm" type="text" placeholder="current-name"
+                <input class="form-control form-control-sm" type="text" :value="action.name"
                        id="modal-action-name">
                 <hr>
                 <h4>Action Params:</h4>
+
                 <table class="table table-secondary" id="modal-action-params">
+
+                    <tr v-for="(value, key) in action.params">
+                        <td>
+                            {{key}}
+                        </td>
+                        <td>
+                            <input class="form-control form-control-sm" type="text" v-bind:value="value"></td>
+                        <td>
+                    </tr>
 
                 </table>
 
@@ -301,7 +314,9 @@
 
             </div>
             <div class="modal-footer">
-                <button id="modal-action-save" type="button" class="btn btn-success">Save changes</button>
+                <button id="modal-action-save" type="button" class="btn btn-success" onclick="updateAction()">Save
+                    changes
+                </button>
                 <button id="modal-action-cancel" type=" button" class="btn btn-secondary" data-dismiss="modal">Cancel
                 </button>
             </div>
