@@ -20,15 +20,14 @@ abstract class Block {
 }
 
 
-class Action(
+open class Action(
     var nextBlocks: MutableList<String> = mutableListOf(),
     var returnAfterExec: Boolean = false,
     var source: Boolean = false,
     var params: MutableMap<String, String>? = null,
-    var innnerBlocks: MutableList<Block>? = mutableListOf()
+    var innnerBlocks: MutableList<Block>? = mutableListOf(),
+    var act: ((input: MutableMap<String, Any>) -> Deferred<MutableMap<String, Any>>)? = null
 ) : Block() {
-
-    protected fun act(input: MutableMap<String, Any>): Deferred<MutableMap<String, Any>>? = null
 
     override fun run(
         flowEngine: FlowEngine
