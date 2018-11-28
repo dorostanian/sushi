@@ -9,9 +9,7 @@ import io.ktor.http.content.static
 import io.ktor.request.receiveText
 import io.ktor.response.respond
 import io.ktor.response.respondFile
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.routing
+import io.ktor.routing.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import nl.dorost.flow.core.Action
@@ -104,7 +102,9 @@ fun main(args: Array<String>) {
 
                 registeredBlock?.let { action ->
                     flowEngine.flows.add(
-                        action.copy(id = UUID.randomUUID().toString())
+                        action.apply {
+                            id = UUID.randomUUID().toString()
+                        }
                     )
                     flowEngine.wire(flowEngine.flows)
                     val toml = flowEngine.blocksToToml(flowEngine.flows)

@@ -1,111 +1,108 @@
 package nl.dorost.flow.core
 
-import nl.dorost.flow.ExpectedParamNotPresentException
+import kotlinx.coroutines.*
 import nl.dorost.flow.MissingMappingValueException
 import org.slf4j.LoggerFactory
 
 
 val LOG = LoggerFactory.getLogger("FlowEngine")
 
-abstract class Block(
-    open val name: String,
-    open val description: String?,
-    open var id: String?,
-    open val type: String,
-    open val source: Boolean,
-    open var input: MutableMap<String, Any> = mutableMapOf(),
-    open val params: MutableMap<String, String> = mutableMapOf()
-) {
-    abstract fun run(flowEngine: FlowEngine): MutableMap<String, Any>
+abstract class Block {
+    var id: String? = null
+    var name: String? = null
+    var type: String? = null
+    var dependencies: MutableList<String>? = null
+    var output: Deferred<MutableMap<String, Any>>? = null
+    var description: String? = null
+    var started: Boolean = false
+
+    abstract fun run(flowEngine: FlowEngine): Job
 }
 
-data class Container(
-    var firstBlock: String? = null,
-    var lastBlock: String? = null,
-    override val name: String,
-    override var id: String? = null,
-    override val type: String,
-    override var input: MutableMap<String, Any> = mutableMapOf(),
-    override val params: MutableMap<String, String> = mutableMapOf(),
-    override val source: Boolean,
-    override val description: String? = null
-) : Block(name, description, id, type, source, input, params) {
 
-    override fun run(flowEngine: FlowEngine): MutableMap<String, Any> {
-        val flows = flowEngine.flows
-        LOG.debug("Executing Container id '$id', first is $firstBlock")
-        val firstBlock = flows.first { it.id == firstBlock }
-        return firstBlock.run(flowEngine)
-    }
-}
-
-data class Action(
-    var act: ((action: Action) -> Map<String, Any>)? = null,
+class Action(
     var nextBlocks: MutableList<String> = mutableListOf(),
-    val returnAfterExec: Boolean = false,
-    val listener: ActionListener? = null,
-    override val name: String,
-    override var id: String? = null,
-    override var type: String,
-    override var input: MutableMap<String, Any> = mutableMapOf(),
-    override var params: MutableMap<String, String> = mutableMapOf(),
-    override val source: Boolean = false,
-    override var description: String? = null
-) : Block(name, description, id, type, source, input, params) {
+    var returnAfterExec: Boolean = false,
+    var source: Boolean = false,
+    var params: MutableMap<String, String>? = null,
+    var innnerBlocks: MutableList<Block>? = mutableListOf()
+) : Block() {
 
-    override fun run(flowEngine: FlowEngine): MutableMap<String, Any> {
-        val flows = flowEngine.flows
-        val output = this.act!!.invoke(this)
-        LOG.debug("Executed Action id '$id', Name: '$name', Type: '$type', Output was: $output")
+    protected fun act(input: MutableMap<String, Any>): Deferred<MutableMap<String, Any>>? = null
 
-        if (this.returnAfterExec) {
-            flowEngine.returnedBlockId = this.id
-            flowEngine.returnValue = output as MutableMap<String, Any>
-            return output
+    override fun run(
+        flowEngine: FlowEngine
+    ) = GlobalScope.launch {
+        if (started) {
+            LOG.debug("Action $id executions is already started!")
+            return@launch
         }
-        var outputFromNextBlock: MutableMap<String, Any> = mutableMapOf()
+        started = true
+        LOG.debug("Executing Action id '$id', Name: '$name', Type: '$type', Output was: $output")
+
+        val input = flowEngine.getDependentBlocks(this@Action).flatMap { block ->
+            block.output?.await()?.entries!!.map { Pair(it.key, it.value) }
+        }.toMap().toMutableMap()
+
+
+        innnerBlocks?.let {
+            val innerEngine = FlowEngine()
+            innerEngine.wire(it)
+            innerEngine.executeFlow(input)
+            this@Action.output = innerEngine.returnValue
+        } ?: run {
+            this@Action.output = act(input)
+        }
+
+
+        if (returnAfterExec) {
+            flowEngine.returnedBlockId = id
+            flowEngine.returnValue = output
+        }
         nextBlocks.map { nextId ->
-            flows.first { it.id == nextId }
+            flowEngine.flows.first { it.id == nextId }
         }.forEach { nextBlock ->
-            nextBlock.input = output.toMutableMap()
-            outputFromNextBlock = nextBlock.run(flowEngine)
+            nextBlock.run(flowEngine)
         }
-        return output.plus(outputFromNextBlock).toMutableMap()
     }
 }
 
-data class Branch(
-    val mapping: HashMap<String, String>,
-    val on: String,
-    override val name: String,
-    override var id: String? = null,
-    override val type: String = BRANCH_TYPE.NORMAL.toString(),
-    override var input: MutableMap<String, Any> = mutableMapOf(),
-    override val params: MutableMap<String, String> = hashMapOf(),
-    override val source: Boolean,
-    override val description: String? = null
-) : Block(name, description, id, type, source, input, params) {
+class Branch(
+    var mapping: MutableMap<String, String> = mutableMapOf(),
+    var on: String? = null
+) : Block() {
 
-    override fun run(flowEngine: FlowEngine): MutableMap<String, Any> {
-        val flows = flowEngine.flows
+    override fun run(
+        flowEngine: FlowEngine
+    ) = GlobalScope.launch {
+        if (started) {
+            LOG.debug("Branch $id executions is already started!")
+            return@launch
+        }
+        started = true
+        val input = flowEngine.getDependentBlocks(this@Branch).flatMap { action ->
+            action.output?.await()?.entries!!.map { Pair(it.key, it.value) }
+        }.toMap().toMutableMap()
 
-        val variableToLook =
-            params.get("var-name") ?: throw ExpectedParamNotPresentException("Parameter var-name is not specified!")
+
+        this@Branch.output = async { input }
 
         if (type.equals(BRANCH_TYPE.ROUTER.toString(), true))
-            this.mapping.putAll(flowEngine.flows.map { Pair(it.id!!, it.id!!) }.toMap())
+            mapping.putAll(flowEngine.flows.map { Pair(it.id!!, it.id!!) }.toMap())
 
 
-        val valueToLook = mapping.get(input.get(variableToLook))
-            ?: throw MissingMappingValueException("No mapping specified for the value ${input.get(variableToLook)}")
+        val blockIdToBranch = mapping[input[on]]
+            ?: throw MissingMappingValueException("No mapping specified for the value ${input[on]}")
 
-        LOG.debug("Executing Branch id '$id', Inputs: ${this.input}, Params: ${this.params}, Branching to: $valueToLook")
-        val blockToGo = flows.first { it.id == valueToLook }
-        blockToGo.input = this.input
-        return blockToGo.run(flowEngine)
+        val blockToGo = flowEngine.flows.first { it.id == blockIdToBranch }
+        blockToGo.run(flowEngine)
+        LOG.debug("Executing Branch id '$id', Branching to: $blockIdToBranch, now executing...")
     }
+
 }
 
 enum class BRANCH_TYPE {
     NORMAL, ROUTER
 }
+
+

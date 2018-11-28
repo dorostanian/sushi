@@ -1,7 +1,7 @@
 package nl.dorost.flow.core
 
 import com.moandjiezana.toml.Toml
-import nl.dorost.flow.InvalidNextIdException
+import kotlinx.coroutines.Deferred
 import nl.dorost.flow.NonUniqueIdException
 import nl.dorost.flow.NonUniqueTypeException
 import nl.dorost.flow.TypeNotRegisteredException
@@ -15,10 +15,9 @@ import java.util.stream.Collectors
 class FlowEngine {
 
     var flows: MutableList<Block> = mutableListOf()
-    var returnValue: MutableMap<String, Any> = mutableMapOf()
+    var returnValue: Deferred<MutableMap<String, Any>>? = null
     var returnedBlockId: String? = null
     var registeredActions: MutableList<Action> = mutableListOf()
-    var prefixes: MutableSet<String> = mutableSetOf()
 
     init {
         registerActions(elementaryActions)
@@ -34,103 +33,34 @@ class FlowEngine {
         if (firstLayerBlocks.isEmpty())
             LOG.warn("There is no source block to start the execution, you need to mark at least one `source=true` block!")
         firstLayerBlocks.forEach { block ->
-            block.input = input
             block.run(this)
         }
     }
 
-    private fun verify(flows: List<Block>) {
-        checkForIdUniqeness(flows)
-        registerNewContainersAsAction(flows)
-        checkIfTypesRegistered(flows)
-        checkIdPrefixes(flows)
-        wireProperActsToBlocks(flows)
-    }
 
-    private fun wireProperActsToBlocks(flows: List<Block>) {
-        flows.filter { it is Action }.map { it as Action }.forEach { currentBlock ->
-            val registeredAction = registeredActions.firstOrNull { it.type == currentBlock.type }
-            registeredAction?.let { action ->
-                currentBlock.apply {
-                    act = action.act
-                    type = action.type
-                    description = action.description
-                    params = action.params.map { it -> it.key to params.getOrDefault(it.key, "") }.toMap().toMutableMap()
-                }
-            } ?: throw TypeNotRegisteredException("Type ${currentBlock.type} is not a registered action!")
+    private fun wireDependencies() {
+        flows.forEach { block ->
+            block.dependencies = getDependentBlocks(block).map { it.id!! }.toMutableList()
         }
     }
 
-    private fun checkIdPrefixes(flows: List<Block>) {
-        // Check if next block ids are valid
-        val correctionsList: MutableMap<String, String> = mutableMapOf()
-        flows.filter { it is Action }.map { it as Action }.flatMap { action ->
-            action.nextBlocks.map { action.id to it }
-        }.forEach { parentAndChild ->
-            val parent = parentAndChild.first
-            val child = parentAndChild.second
-            if (!flows.map { it.id }.contains(child)) {
-                val pref = prefixes.firstOrNull { pref ->
-                    flows.map { it.id }.contains("$pref$child")
-                } ?: throw InvalidNextIdException("Invalid next id: $child")
-                correctionsList[parent!!] = pref
+    private fun wireProperActsToBlocks() {
+
+        this.flows = flows.map { block ->
+            when (block) {
+                is Action -> registeredActions.firstOrNull { it.type == block.type }?.apply {
+                    id = block.id
+                    name = block.name
+                    params = block.params
+                    dependencies = block.dependencies
+                } ?: throw TypeNotRegisteredException("Type ${block.type} is not a registered action!")
+                is Branch -> block
+                else -> throw RuntimeException("Not expecting this type of block!")
             }
-        }
-
-        // Corrections applied to next blocks
-        flows.filter { it.id in correctionsList.keys }.forEach { action ->
-            val updatedIds = (action as Action).nextBlocks.map {
-                val newID = "${correctionsList[action.id]}$it"
-                LOG.warn("Changing next id: $it to $newID for parent ${action.id}")
-                newID
-            }
-            action.nextBlocks = updatedIds.toMutableList()
-        }
-
-        // Check if container first and last blocks need corrections
-        flows.filter { it is Container }.map { it as Container }
-            .forEach { container ->
-                if (!flows.map { it.id }.contains(container.firstBlock)) {
-                    val pref = prefixes.firstOrNull { pref ->
-                        flows.map { it.id }.contains("$pref${container.firstBlock}")
-                    } ?: throw InvalidNextIdException("Invalid first block id: ${container.firstBlock}")
-                    LOG.warn("Changing first block id to $pref${container.firstBlock} for ${container.id}")
-                    container.firstBlock = "$pref${container.firstBlock}"
-                }
-
-                if (!flows.map { it.id }.contains(container.lastBlock)) {
-                    val pref = prefixes.firstOrNull { pref ->
-                        flows.map { it.id }.contains("$pref${container.lastBlock}")
-                    } ?: throw InvalidNextIdException("Invalid last block id: ${container.lastBlock}")
-                    LOG.warn("Changing last block id to $pref${container.lastBlock} for ${container.id}")
-                    container.lastBlock = "$pref${container.lastBlock}"
-                }
-            }
-
-        // Check for Branches
-        flows.filter { it is Branch }.map { it as Branch }
-            .forEach { branch ->
-                branch.mapping.entries.forEach { (nextMappingKey, nextMappingValue) ->
-                    if (!flows.map { it.id }.contains(nextMappingValue)) {
-                        val pref = prefixes.firstOrNull { pref ->
-                            flows.map { it.id }.contains("$pref${nextMappingValue}")
-                        } ?: throw InvalidNextIdException("Invalid mapping id: ${nextMappingValue}")
-                        LOG.warn("Changing mapping value to $pref${nextMappingValue} for ${branch.id}")
-                        branch.mapping[nextMappingKey] = "$pref${nextMappingValue}"
-                    }
-                }
-
-            }
+        }.toMutableList()
     }
 
-    private fun checkIfTypesRegistered(flows: List<Block>) {
-        flows.filter { it is Action }.forEach { block ->
-            if (block.type !in registeredActions.map { it.type })
-                throw TypeNotRegisteredException("'${block.type}' type is not a registered Action!")
-        }
-    }
-
-    private fun checkForIdUniqeness(flows: List<Block>) {
+    private fun checkForIdUniqeness() {
         val duplicates = flows.map { it.id }
             .groupingBy { it }
             .eachCount()
@@ -140,104 +70,137 @@ class FlowEngine {
             throw NonUniqueIdException("All ids must be unique! Duplicate id: ${duplicates.first()}.")
     }
 
-    private fun registerNewContainersAsAction(containers: List<Block>) {
-        containers.filter { it is Container }.map { it as Container }.forEach { container ->
+    private fun registerNewContainersAsAction(containers: List<Container>) {
+        containers.forEach { container ->
             if (container.type in registeredActions.map { it.type })
                 throw NonUniqueTypeException("${container.type} already exists! Can't register new action with this type.")
+        }
 
+
+
+        containers.forEach { container ->
+            val firstBlock = flows.first { it.id == container.firstBlock }.apply { (this as Action).source = true }
+            val lastBlock =
+                flows.first { it.id == container.lastBlock }.apply { (this as Action).returnAfterExec = true }
+
+
+            val innerBlocksBlocks = getActionMap(firstBlock)
             registeredActions.add(
-                Action(
-                    name = container.name,
-                    type = container.type,
-                    description = container.description,
-                    act = { action: Action -> // TODO: test this
-                        container.run(this)
-                    },
+                Action().apply {
+                    type = container.type
                     params = container.params
-                )
+                    innnerBlocks = innerBlocksBlocks
+                }
             )
+
+            flows.removeIf { innerBlocksBlocks.map { it.id }.contains(it.id) }
+
         }
 
     }
 
-    fun wire(flows: List<Block>) {
-        this.flows = flows as MutableList<Block>
-        verify(flows)
+
+    fun getActionMap(block: Block): MutableList<Block> {
+
+        val blocks: MutableList<Block> = mutableListOf()
+        flows.filter {
+            when (it) {
+                is Action -> it.nextBlocks.contains(block.id)
+                is Branch -> it.mapping.values.contains(block.id)
+                else -> throw RuntimeException()
+            }
+        }.forEach {
+            when (it) {
+                is Action -> if (!it.returnAfterExec)
+                    blocks.addAll(getActionMap(it))
+                else
+                    return@forEach
+                is Branch -> blocks.addAll(getActionMap(it))
+                else -> throw RuntimeException()
+            }
+        }
+        return blocks
     }
 
-    private fun findFirstLayer(flows: MutableList<Block>): List<Block> = flows.filter { it.source }
+    fun wire(flows: List<Any>) {
+        this.flows = flows.filter { it is Block }.map { it as Block }.toMutableList()
+        checkForIdUniqeness()
+        registerNewContainersAsAction(flows.filter { it is Container }.map { it as Container })
+        wireDependencies()
+        wireProperActsToBlocks()
+    }
+
+    private fun findFirstLayer(flows: MutableList<Block>): List<Block> =
+        flows.filter { it is Action }.map { it as Action }.filter { it.source }
 
     fun parseToBlocks(toml: Toml): MutableList<Block> {
-        val containers = parseContainers(toml)
         val actions = parseActions(toml)
         val branches = parseBranches(toml)
-        return containers.plus(actions).plus(branches).toMutableList()
+        return actions.plus(branches).toMutableList()
     }
 
-    private fun parseContainers(toml: Toml): List<Block> {
-        return (toml.toMap().getOrDefault(
-            "container",
-            listOf<HashMap<String, Any>>()
-        ) as List<HashMap<String, Any>>).map {
-            Container(
-                name = it["name"]!! as String,
-                type = it.getOrDefault("type", "normal") as String,
-                id = it["id"]!! as String,
-                params = it.getOrDefault("params", mutableMapOf<String, String>()) as HashMap<String, String>,
-                firstBlock = it["first"] as String,
-                lastBlock = it["last"] as String,
-                source = it.getOrDefault("source", false) as Boolean,
+    private fun parseContainers(toml: Toml): List<Container> = toml.toMap()["container"]?.let {
+        (it as List<HashMap<String, Any>>).map {
+            Container().apply {
+                type = it.getOrDefault("type", "normal") as String
+                id = it["id"]!! as String
+                firstBlock = it["first"] as String
+                lastBlock = it["last"] as String
                 description = it["description"]?.let { it as String }
-            ) as Block
+            }
         }
-    }
+    } ?: listOf()
 
-    private fun parseBranches(toml: Toml): List<Branch> {
-        return (toml.toMap().getOrDefault(
-            "branch",
-            listOf<HashMap<String, Any>>()
-        ) as List<HashMap<String, Any>>).map { block: HashMap<String, Any> ->
-            Branch(
-                name = block["name"]!! as String,
-                type = block.getOrDefault("type", BRANCH_TYPE.NORMAL.toString()) as String,
-                id = block["id"]!! as String,
-                mapping = block.getOrDefault("mapping", mutableMapOf<String, String>()) as HashMap<String, String>,
-                source = block.getOrDefault("source", false) as Boolean,
-                on = block["on"]!! as String,
-                description = block["description"]?.let { it as String }
-            )
+    private fun parseBranches(toml: Toml): List<Branch> = toml.toMap()["branch"]?.let {
+        (it as List<HashMap<String, Any>>).map { block: HashMap<String, Any> ->
+            Branch().apply {
+                name = block["name"]!! as String
+                type = block.getOrDefault("type", BRANCH_TYPE.NORMAL.toString()) as String
+                id = block["id"]!! as String
+                mapping = block["mapping"]?.let { it as MutableMap<String, String> } ?: mutableMapOf()
+                on = block["on"]!! as String
+                description = block["description"]?.let { it as String } ?: ""
+            }
         }
-    }
+    } ?: listOf()
 
-    private fun parseActions(toml: Toml): List<Block> {
-        return (toml.toMap()["action"] as List<HashMap<String, Any>>).map { block: HashMap<String, Any> ->
-            Action(
-                name = block["name"]!! as String,
-                type = block["type"]!! as String,
-                returnAfterExec = block.getOrDefault("returnAfter", false) as Boolean,
-                id = block["id"]!! as String,
-                params = block.getOrDefault("params", mutableMapOf<String, String>()) as MutableMap<String, String>,
-                nextBlocks = block.getOrDefault("next", mutableListOf<String>()) as MutableList<String>,
-                source = block.getOrDefault("source", false) as Boolean,
-                description = block["description"]?.let { it as String }
-            ) as Block
+    fun getDependentBlocks(block: Block): MutableList<Block> = this.flows.filter { it ->
+        when (it) {
+            is Action -> it.nextBlocks.contains(block.id)
+            is Branch -> it.mapping.values.contains(block.id)
+            else -> throw RuntimeException("Not supported Block!")
         }
-    }
+    }.toMutableList()
+
+
+    private fun parseActions(toml: Toml): List<Block> =
+        toml.toMap()["action"]?.let {
+            (it as List<HashMap<String, Any>>).map { block: HashMap<String, Any> ->
+                registeredActions.firstOrNull { it.type == block["type"] }?.let { action ->
+                    action.apply {
+                        name = block["name"]!! as String
+                        type = block["type"]!! as String
+                        returnAfterExec = block.getOrDefault("returnAfter", false) as Boolean
+                        id = block["id"]!! as String
+                        params = block.getOrDefault(
+                            "params",
+                            mutableMapOf<String, String>()
+                        ) as MutableMap<String, String>
+                        nextBlocks = block.getOrDefault("next", mutableListOf<String>()) as MutableList<String>
+                        source = block.getOrDefault("source", false) as Boolean
+                        description = block["description"]?.let { it as String } ?: ""
+                    }
+                } ?: throw TypeNotRegisteredException("'${block["type"]}' type is not registered!")
+            }
+        } ?: listOf()
 
     fun readFlowsFromDir(path: String) =
         Files.walk(Paths.get(path)).filter { Files.isRegularFile(it) }.collect(Collectors.toList()).flatMap { path: Path ->
             val toml = Toml().read(path.toFile())
             val blocks = this.parseToBlocks(toml)
-            val flowInfo = toml.toMap().getOrDefault("flow", mapOf("id_prefix" to "")) as HashMap<String, String>
-            val prefix = flowInfo.getOrDefault("id_prefix", "")
-            prefixes.add(prefix)
-            addPrefixToIds(blocks, prefix)
-            blocks
+            val containers = this.parseContainers(toml)
+            blocks.plus(containers)
         }
-
-    private fun addPrefixToIds(blocks: MutableList<Block>, prefix: String) {
-        blocks.forEach { it.id = "${prefix}${it.id}" }
-    }
 
 
     fun tomlToBlocks(tomlText: String): MutableList<Block> {
@@ -320,11 +283,11 @@ class FlowEngine {
     }
 
     fun blocksToToml(blocks: MutableList<Block>): String {
-        var toml = "[flow]\n"+
+        var toml = "[flow]\n" +
                 "name = \"Generated Flow\"\n"
 
         blocks.forEach { block ->
-            when(block){
+            when (block) {
                 is Action -> {
                     toml += "[[action]]\n" +
                             "   name = \"${block.name}\"\n" +
@@ -333,19 +296,22 @@ class FlowEngine {
                     if (block.source)
                         toml += "   source = true\n"
 
-                    if (block.nextBlocks.size>0)
-                        toml += block.nextBlocks.map { "\"$it\"" }.joinToString(separator = ",", prefix = "   next = [", postfix = "]\n")
+                    if (block.nextBlocks.size > 0)
+                        toml += block.nextBlocks.map { "\"$it\"" }
+                            .joinToString(separator = ",", prefix = "   next = [", postfix = "]\n")
 
-                    if (block.params.size>0)
-                        toml += block.params.map { "        ${it.key} = \"${it.value}\"" }.joinToString(separator = "\n", postfix = "\n", prefix = "   [action.params]\n")
+                    if (block.params?.size!! > 0)
+                        toml += block.params?.map { "        ${it.key} = \"${it.value}\"" }
+                            ?.joinToString(separator = "\n", postfix = "\n", prefix = "   [action.params]\n")
                 }
                 is Branch -> {
                     toml += "[[branch]]\n" +
                             "   name = \"${block.name}\"\n" +
                             "   id = \"${block.id}\"\n" +
                             "   on = \"${block.on}\"\n"
-                    if (block.mapping.size>0)
-                        toml += block.mapping.entries.map { "        ${it.key} = \"${it.value}\""  }.joinToString(separator = "\n", postfix = "\n", prefix = "   [branch.mapping]\n")
+                    if (block.mapping.size > 0)
+                        toml += block.mapping.entries.map { "        ${it.key} = \"${it.value}\"" }
+                            .joinToString(separator = "\n", postfix = "\n", prefix = "   [branch.mapping]\n")
 
                 }
             }
@@ -354,6 +320,7 @@ class FlowEngine {
         return toml
 
     }
+
 
 }
 
