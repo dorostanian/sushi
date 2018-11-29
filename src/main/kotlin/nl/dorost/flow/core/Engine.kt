@@ -351,7 +351,7 @@ class FlowEngine {
         var count: Int = 0
         do {
             count = flows.count { it.started } + flows.count { it.skipped }
-        } while (count != flows.size || flows.any { it.output?.isCompleted != true })
+        } while (count != flows.size || flows.filter { it.started }.any { it.output?.isCompleted != true })
     }
 
 }
