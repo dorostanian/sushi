@@ -39,11 +39,14 @@ dependencies {
     compile("org.slf4j:slf4j-api:1.8.0-beta2")
     compile("org.slf4j:slf4j-simple:1.8.0-beta2")
 
+
     compile("com.fasterxml.jackson.core:jackson-databind:2.7.1-1")
     compile("com.fasterxml.jackson.module:jackson-module-kotlin:2.7.1-2")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.1")
 
-    testCompile("junit", "junit", "4.12")
+    compile("com.beust:klaxon:3.0.1")
+
+    testCompile("org.junit.jupiter:junit-jupiter-api:5.1.0")
 }
 
 configure<JavaPluginConvention> {

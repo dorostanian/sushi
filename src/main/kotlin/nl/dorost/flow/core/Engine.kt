@@ -21,7 +21,7 @@ class FlowEngine {
     val LOG = KotlinLogging.logger { }
 
     var flows: MutableList<Block> = mutableListOf()
-    var returnValue: Deferred<MutableMap<String, Any>>? = null
+    var returnValue: MutableMap<String, Any>? = null
     var returnedBlockId: String? = null
     var registeredActions: MutableList<Action> = mutableListOf()
     var listeners: List<BlockListener> = mutableListOf()
@@ -351,7 +351,7 @@ class FlowEngine {
         var count: Int = 0
         do {
             count = flows.count { it.started } + flows.count { it.skipped }
-        } while (count != flows.size)
+        } while (count != flows.size || flows.any { it.output?.isCompleted != true })
     }
 
 }

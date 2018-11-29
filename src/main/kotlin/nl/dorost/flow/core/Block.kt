@@ -36,7 +36,7 @@ open class Action(
             return@launch
         }
         started = true
-        listeners.forEach { it.updateReceived(message = "Executing Action id '$id', Name: '$name', Type: '$type', Output was: $output") }
+//        listeners.forEach { it.updateReceived(message = "Executing Action id '$id', Name: '$name', Type: '$type'") }
 
         val input = flowEngine.getDependentBlocks(this@Action).flatMap { block ->
             block.output?.await()?.entries!!.map { Pair(it.key, it.value) }
@@ -44,11 +44,11 @@ open class Action(
 
 
         innnerBlocks?.let {
-            listeners.forEach { it.updateReceived(message = "Running inside inner engine for action ${this@Action.type}") }
+//            listeners.forEach { it.updateReceived(message = "Running inside inner engine for action ${this@Action.type}") }
             val innerEngine = FlowEngine()
             innerEngine.wire(it)
             innerEngine.executeFlow(input)
-            this@Action.output = innerEngine.returnValue
+            this@Action.output = async{innerEngine.returnValue!!}
         } ?: run {
             this@Action.output = GlobalScope.async { act!!.invoke(input, this@Action) }
         }
@@ -56,7 +56,7 @@ open class Action(
 
         if (returnAfterExec) {
             flowEngine.returnedBlockId = id
-            flowEngine.returnValue = output
+            flowEngine.returnValue = this@Action.output!!.await()
         }
         nextBlocks.map { nextId ->
             flowEngine.flows.first { it.id == nextId }
@@ -75,7 +75,7 @@ class Branch(
         flowEngine: FlowEngine
     ) = GlobalScope.launch {
         if (started) {
-            listeners.forEach { it.updateReceived(message = "Branch $id executions is already started!") }
+//            listeners.forEach { it.updateReceived(message = "Branch $id executions is already started!") }
             return@launch
         }
         started = true
@@ -98,7 +98,7 @@ class Branch(
             blockToSkip.skipped = true
         }
         blockToGo.run(flowEngine)
-        listeners.forEach { it.updateReceived(message = "Executing Branch id '$id', Branching to: $blockIdToBranch, now executing...") }
+//        listeners.forEach { it.updateReceived(message = "Executing Branch id '$id', Branching to: $blockIdToBranch, now executing...") }
     }
 
 }

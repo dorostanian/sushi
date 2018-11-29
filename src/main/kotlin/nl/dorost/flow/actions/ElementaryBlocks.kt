@@ -16,7 +16,7 @@ val elementaryActions = mutableListOf(
         type = "log"
         description = "Logs whatever comes to the block as input!"
         act = { input, action ->
-            listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
+            action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
             input
         }
     },
@@ -25,7 +25,7 @@ val elementaryActions = mutableListOf(
         type = "constant"
         description = "Passes the constant value passed as parameter <code>const</code>."
         act = { input, action ->
-            listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
+            action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
             val constValue = action.params!!["value"] ?: throw UnsatisfiedParamsException("Parameter const not found!")
             mutableMapOf("value" to constValue)
         }
@@ -36,7 +36,7 @@ val elementaryActions = mutableListOf(
         description = "Make the post call based on the parameters given. Passes the <code>response</code>."
         type = "http-post"
         act = { input, action ->
-            listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
+            action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
             val url = action.params!!["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
             val contentType = action.params!!["CONTENT_TYPE"] ?: "application/json"
             val accept = action.params!!["Accept"] ?: "application/json"
@@ -56,7 +56,7 @@ val elementaryActions = mutableListOf(
         type = "http-get"
         params = mutableMapOf("url" to "", "Accept" to "application/json", "ContentType" to "", "body" to "")
         act = { input , action->
-            listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
+            action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
             val url = action.params!!["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
             val contentType = action.params!!["CONTENT_TYPE"] ?: "application/json"
             val accept = action.params!!["Accept"] ?: "application/json"
@@ -72,7 +72,7 @@ val elementaryActions = mutableListOf(
         params = mutableMapOf("value" to "")
         type = "json-in"
         act = { input, action ->
-            listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
+            action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
             val value = action.params!!["value"] ?: throw UnsatisfiedParamsException("Value not found!")
             mutableMapOf("body" to value)
         }
