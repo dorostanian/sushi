@@ -36,7 +36,7 @@ open class Action(
             return@launch
         }
         started = true
-//        listeners.forEach { it.updateReceived(message = "Executing Action id '$id', Name: '$name', Type: '$type'") }
+        listeners.forEach { it.updateReceived(message = "Executing Action id '$id', Name: '$name', Type: '$type'") }
 
         val input = flowEngine.getDependentBlocks(this@Action).flatMap { block ->
             block.output?.await()?.entries!!.map { Pair(it.key, it.value) }

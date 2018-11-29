@@ -347,11 +347,16 @@ class FlowEngine {
 
     }
 
-    fun await() {
-        var count: Int = 0
+    fun await(): Boolean {
+        var count: Int
         do {
             count = flows.count { it.started } + flows.count { it.skipped }
-        } while (count != flows.size || flows.filter { it.started }.any { it.output?.isCompleted != true })
+            if (flows.filter { it.started }.any{it.output?.isCancelled==true}) {
+                LOG.error { "Execution Failed to Complete!" }
+                return false
+            }
+        } while (count != flows.size || flows.filter { it.started }.any { it.output?.isCompleted != true } )
+        return true
     }
 
 }

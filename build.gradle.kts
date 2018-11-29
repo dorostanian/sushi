@@ -47,6 +47,7 @@ dependencies {
     compile("com.beust:klaxon:3.0.1")
 
     testCompile("org.junit.jupiter:junit-jupiter-api:5.1.0")
+    testCompile("org.awaitility:awaitility:3.1.3")
 }
 
 configure<JavaPluginConvention> {

@@ -1,9 +1,7 @@
 package nl.dorost.flow.actions
 
 import com.github.kittinunf.fuel.Fuel
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.consumesAll
 import nl.dorost.flow.core.Action
 import org.slf4j.LoggerFactory
@@ -16,7 +14,7 @@ val elementaryActions = mutableListOf(
         type = "log"
         description = "Logs whatever comes to the block as input!"
         act = { input, action ->
-            action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
+            action.listeners.forEach { it.updateReceived(message = "LOG: Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
             input
         }
     },
@@ -26,7 +24,8 @@ val elementaryActions = mutableListOf(
         description = "Passes the constant value passed as parameter <code>const</code>."
         act = { input, action ->
             action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
-            val constValue = action.params!!["value"] ?: throw UnsatisfiedParamsException("Parameter const not found!")
+            val constValue =
+                action.params!!["value"] ?: throw UnsatisfiedParamsException("Parameter not found for ${action.type}")
             mutableMapOf("value" to constValue)
         }
         params = mutableMapOf("value" to "")
@@ -55,7 +54,7 @@ val elementaryActions = mutableListOf(
         description = "Make the get call based on the parameters given. Passes the <code>response</code>"
         type = "http-get"
         params = mutableMapOf("url" to "", "Accept" to "application/json", "ContentType" to "", "body" to "")
-        act = { input , action->
+        act = { input, action ->
             action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
             val url = action.params!!["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
             val contentType = action.params!!["CONTENT_TYPE"] ?: "application/json"
@@ -67,8 +66,9 @@ val elementaryActions = mutableListOf(
         }
     },
     Action().apply {
-        name = "Get JSON as input from the parameter <code>value<code> and pass it along."
-        description = "Used when we want to pass an static JSON."
+        name = "JSON Input"
+        description = "Get JSON as input from the parameter <code>value<code> and pass it along." +
+                "Used when we want to pass an static JSON."
         params = mutableMapOf("value" to "")
         type = "json-in"
         act = { input, action ->
@@ -76,7 +76,18 @@ val elementaryActions = mutableListOf(
             val value = action.params!!["value"] ?: throw UnsatisfiedParamsException("Value not found!")
             mutableMapOf("body" to value)
         }
+    },
+    Action().apply {
+        name = "Delay"
+        params = mutableMapOf("seconds" to "1")
+        type = "delay"
+        act = { input, action ->
+            Thread.sleep(action.params!!["seconds"]!!.toLong() * 1000)
+            input
+        }
     }
+
+
     // desgign a scenario
     // send email block
     // connect to telegram bot
@@ -89,3 +100,4 @@ val elementaryActions = mutableListOf(
 class UnsatisfiedParamsException(msg: String) : RuntimeException(msg)
 
 class UnsatisfiedInputException(msg: String) : RuntimeException(msg)
+

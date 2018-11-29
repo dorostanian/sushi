@@ -2,12 +2,18 @@ package nl.dorost.flow.core
 
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
+import jdk.nashorn.internal.objects.Global
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import mu.KotlinLogging
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class FlowEngineTest {
@@ -156,5 +162,49 @@ internal class FlowEngineTest {
 
     }
 
+
+    @Test
+    fun `Test asynchronus calls`() {
+        val flows = mutableListOf(
+            Action().apply {
+                name = "input 1"
+                id = "1"
+                type = "constant"
+                source = true
+                params = mutableMapOf("value" to "5")
+                nextBlocks = mutableListOf("delay-1")
+            }, Action().apply {
+                name = "input 2"
+                id = "2"
+                source = true
+                type = "constant"
+                params = mutableMapOf("value" to "3")
+                nextBlocks = mutableListOf("delay-2")
+            }, Action().apply {
+                name = "Delay 1"
+                id = "delay-1"
+                params = mutableMapOf("seconds" to "2")
+                type = "delay"
+                nextBlocks = mutableListOf("3")
+            }, Action().apply {
+                name = "Delay 2"
+                params = mutableMapOf("seconds" to "2")
+                id = "delay-2"
+                type = "delay"
+                nextBlocks = mutableListOf("3")
+            }, Action().apply {
+                name = "Log the result"
+                id = "3"
+                type = "log"
+            }
+        )
+
+        flowEngine.wire(flows)
+        flowEngine.executeFlow()
+
+        Awaitility.await().atMost(2200, TimeUnit.MILLISECONDS).until {
+            flowEngine.await()
+        }
+    }
 
 }
