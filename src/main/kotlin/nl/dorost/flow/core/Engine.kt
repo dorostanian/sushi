@@ -3,6 +3,7 @@ package nl.dorost.flow.core
 import com.moandjiezana.toml.Toml
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import nl.dorost.flow.NonUniqueIdException
@@ -139,10 +140,20 @@ class FlowEngine {
 
     fun wire(flows: List<Any>) {
         this.flows = flows.filter { it is Block }.map { it as Block }.toMutableList()
+        checkForFields()
         checkForIdUniqeness()
         registerNewContainersAsAction(flows.filter { it is Container }.map { it as Container })
         wireDependencies()
         wireProperActsToBlocks()
+    }
+
+    private fun checkForFields() {
+        flows.filter { it is Branch }.map { it as Branch }.forEach {
+            if (it.on == null)
+                throw RuntimeException("Branch id ${it.id} doesn't have on attribute!")
+        }
+        flows.filter { it is Action }.map { it as Action }.firstOrNull { it.source }
+            ?: throw RuntimeException("There should be at least one source!")
     }
 
     private fun findFirstLayer(flows: MutableList<Block>): List<Block> =
@@ -336,10 +347,11 @@ class FlowEngine {
 
     }
 
-    fun await(){
-        GlobalScope.launch {
-            this@FlowEngine.flows.forEach { it.output?.await() }
-        }
+    fun await() {
+        var count: Int = 0
+        do {
+            count = flows.count { it.started } + flows.count { it.skipped }
+        } while (count != flows.size)
     }
 
 }

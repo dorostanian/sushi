@@ -12,6 +12,7 @@ abstract class Block {
     var output: Deferred<MutableMap<String, Any>>? = null
     var description: String? = null
     var started: Boolean = false
+    var skipped: Boolean = false
     var listeners: List<BlockListener> = mutableListOf()
 
     abstract fun run(flowEngine: FlowEngine): Job
@@ -24,7 +25,7 @@ open class Action(
     var source: Boolean = false,
     var params: MutableMap<String, String>? = null,
     var innnerBlocks: MutableList<Block>? = null,
-    var act: ((input: MutableMap<String, Any>) -> MutableMap<String, Any>)? = null
+    var act: ((input: MutableMap<String, Any>, action: Action) -> MutableMap<String, Any>)? = null
 ) : Block() {
 
     override fun run(
@@ -49,7 +50,7 @@ open class Action(
             innerEngine.executeFlow(input)
             this@Action.output = innerEngine.returnValue
         } ?: run {
-            this@Action.output = GlobalScope.async { act!!.invoke(input) }
+            this@Action.output = GlobalScope.async { act!!.invoke(input, this@Action) }
         }
 
 
@@ -93,6 +94,9 @@ class Branch(
             ?: throw MissingMappingValueException("No mapping specified for the value ${input[on]}")
 
         val blockToGo = flowEngine.flows.first { it.id == blockIdToBranch }
+        flowEngine.flows.filter { mapping.values.contains(it.id) }.filter { it.id != blockToGo.id }.forEach {blockToSkip ->
+            blockToSkip.skipped = true
+        }
         blockToGo.run(flowEngine)
         listeners.forEach { it.updateReceived(message = "Executing Branch id '$id', Branching to: $blockIdToBranch, now executing...") }
     }
