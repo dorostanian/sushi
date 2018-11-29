@@ -8,67 +8,74 @@ import nl.dorost.flow.core.Action
 import org.slf4j.LoggerFactory
 import java.lang.RuntimeException
 
-val LOG = LoggerFactory.getLogger("ElementaryBlocks")
 
-
-val elementaryActions = mutableListOf<Action>(
+val elementaryActions = mutableListOf(
     Action().apply {
-        name = "Constant Producer",
-        type = "constant",
-        description = "Passes the constant value passed as parameter <code>const</code>.",
+        name = "Logger"
+        type = "log"
+        description = "Logs whatever comes to the block as input!"
         act = { input ->
-            GlobalScope.async {
-                LOG.debug("Action id '${id}': ${name}. Input Value: ${input}, Params: ${params}")
-                val constValue = params!!["const"] ?: throw UnsatisfiedParamsException("Parameter const not found!")
-                mutableMapOf("value" to constValue as Any)
-            }
+            listeners.forEach { it.updateReceived(message = "Action id '${id}': ${name}. Input Value: ${input}") }
+            input
+        }
+    },
+    Action().apply {
+        name = "Constant Producer"
+        type = "constant"
+        description = "Passes the constant value passed as parameter <code>const</code>."
+        act = { input ->
+            listeners.forEach { it.updateReceived(message = "Action id '${id}': ${name}. Input Value: ${input}") }
+            val constValue = params!!["const"] ?: throw UnsatisfiedParamsException("Parameter const not found!")
+            mutableMapOf("value" to constValue)
         }
         params = mutableMapOf("const" to "")
     },
     Action().apply {
-        name = "Makes http POST call",
-        description = "Make the post call based on the parameters given. Passes the <code>response</code>.",
-        type = "http-post",
+        name = "Makes http POST call"
+        description = "Make the post call based on the parameters given. Passes the <code>response</code>."
+        type = "http-post"
         act = { input ->
-            GlobalScope.async {
-                val url = params!!["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
-                val contentType = params!!["CONTENT_TYPE"] ?: "application/json"
-                val accept = params!!["Accept"] ?: "application/json"
-                val body = input["body"] ?: UnsatisfiedParamsException("Missing body in the input!")
+            listeners.forEach { it.updateReceived(message = "Action id '${id}': ${name}. Input Value: ${input}") }
+            val url = params!!["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
+            val contentType = params!!["CONTENT_TYPE"] ?: "application/json"
+            val accept = params!!["Accept"] ?: "application/json"
+            val body = input["body"] ?: UnsatisfiedParamsException("Missing body in the input!")
 
-                val result = Fuel
-                    .post(url)
-                    .header("ContentType" to contentType, "Accept" to accept)
-                    .body(body as String)
-                    .responseString()
-                mutableMapOf("response" to String(result.second.data) as Any)
-            }
+            val result = Fuel
+                .post(url)
+                .header("ContentType" to contentType, "Accept" to accept)
+                .body(body as String)
+                .responseString()
+            mutableMapOf("response" to String(result.second.data))
         }
     },
-    Action(
-        name = "Makes http GET call",
-        description = "Make the get call based on the parameters given. Passes the <code>response</code>",
-        type = "http-get",
-        act = { action: Action ->
-            val url = action.params["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
-            val contentType = action.params["CONTENT_TYPE"] ?: "application/json"
-            val accept = action.params["Accept"] ?: "application/json"
+    Action().apply {
+        name = "Makes http GET call"
+        description = "Make the get call based on the parameters given. Passes the <code>response</code>"
+        type = "http-get"
+        params = mutableMapOf("url" to "", "Accept" to "application/json", "ContentType" to "", "body" to "")
+        act = { input ->
+            listeners.forEach { it.updateReceived(message = "Action id '${id}': ${name}. Input Value: ${input}") }
+            val url = params!!["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
+            val contentType = params!!["CONTENT_TYPE"] ?: "application/json"
+            val accept = params!!["Accept"] ?: "application/json"
             val result = Fuel.get(url)
                 .header("ContentType" to contentType, "Accept" to accept)
                 .responseString()
-            mapOf("response" to String(result.second.data))
-        },
-        params = mutableMapOf("url" to "", "Accept" to "application/json", "ContentType" to "", "body" to "")
-    ),
-    Action(
-        name = "Get JSON as input from the parameter <code>value<code> and pass it along.",
-        description = "Used when we want to pass an static JSON.",
-        type = "json-in",
-        act = { action: Action ->
-            val value = action.params["value"] ?: throw UnsatisfiedParamsException("Value not found!")
-            mapOf("body" to value)
+            mutableMapOf("response" to String(result.second.data))
         }
-    )
+    },
+    Action().apply {
+        name = "Get JSON as input from the parameter <code>value<code> and pass it along."
+        description = "Used when we want to pass an static JSON."
+        params = mutableMapOf("value" to "")
+        type = "json-in"
+        act = { input ->
+            listeners.forEach { it.updateReceived(message = "Action id '${id}': ${name}. Input Value: ${input}") }
+            val value = params!!["value"] ?: throw UnsatisfiedParamsException("Value not found!")
+            mutableMapOf("body" to value)
+        }
+    }
     // desgign a scenario
     // send email block
     // connect to telegram bot

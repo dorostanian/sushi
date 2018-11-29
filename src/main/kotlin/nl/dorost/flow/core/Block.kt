@@ -2,10 +2,7 @@ package nl.dorost.flow.core
 
 import kotlinx.coroutines.*
 import nl.dorost.flow.MissingMappingValueException
-import org.slf4j.LoggerFactory
 
-
-val LOG = LoggerFactory.getLogger("FlowEngine")
 
 abstract class Block {
     var id: String? = null
@@ -15,6 +12,7 @@ abstract class Block {
     var output: Deferred<MutableMap<String, Any>>? = null
     var description: String? = null
     var started: Boolean = false
+    var listeners: List<BlockListener> = mutableListOf()
 
     abstract fun run(flowEngine: FlowEngine): Job
 }
@@ -25,19 +23,19 @@ open class Action(
     var returnAfterExec: Boolean = false,
     var source: Boolean = false,
     var params: MutableMap<String, String>? = null,
-    var innnerBlocks: MutableList<Block>? = mutableListOf(),
-    var act: ((input: MutableMap<String, Any>) -> Deferred<MutableMap<String, Any>>)? = null
+    var innnerBlocks: MutableList<Block>? = null,
+    var act: ((input: MutableMap<String, Any>) -> MutableMap<String, Any>)? = null
 ) : Block() {
 
     override fun run(
         flowEngine: FlowEngine
     ) = GlobalScope.launch {
         if (started) {
-            LOG.debug("Action $id executions is already started!")
+            listeners.forEach { it.updateReceived(message = "Action $id executions is already started!") }
             return@launch
         }
         started = true
-        LOG.debug("Executing Action id '$id', Name: '$name', Type: '$type', Output was: $output")
+        listeners.forEach { it.updateReceived(message = "Executing Action id '$id', Name: '$name', Type: '$type', Output was: $output") }
 
         val input = flowEngine.getDependentBlocks(this@Action).flatMap { block ->
             block.output?.await()?.entries!!.map { Pair(it.key, it.value) }
@@ -45,12 +43,13 @@ open class Action(
 
 
         innnerBlocks?.let {
+            listeners.forEach { it.updateReceived(message = "Running inside inner engine for action ${this@Action.type}") }
             val innerEngine = FlowEngine()
             innerEngine.wire(it)
             innerEngine.executeFlow(input)
             this@Action.output = innerEngine.returnValue
         } ?: run {
-            this@Action.output = act(input)
+            this@Action.output = GlobalScope.async { act!!.invoke(input) }
         }
 
 
@@ -75,7 +74,7 @@ class Branch(
         flowEngine: FlowEngine
     ) = GlobalScope.launch {
         if (started) {
-            LOG.debug("Branch $id executions is already started!")
+            listeners.forEach { it.updateReceived(message = "Branch $id executions is already started!") }
             return@launch
         }
         started = true
@@ -95,7 +94,7 @@ class Branch(
 
         val blockToGo = flowEngine.flows.first { it.id == blockIdToBranch }
         blockToGo.run(flowEngine)
-        LOG.debug("Executing Branch id '$id', Branching to: $blockIdToBranch, now executing...")
+        listeners.forEach { it.updateReceived(message = "Executing Branch id '$id', Branching to: $blockIdToBranch, now executing...") }
     }
 
 }

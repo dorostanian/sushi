@@ -1,5 +1,5 @@
 package nl.dorost.flow.core
 
-interface ActionListener {
-    fun actionExecuted(actionOutput: MutableMap<String, Any>)
+interface BlockListener {
+    fun updateReceived(context: MutableMap<String, Any>? = null, message: String? = null)
 }

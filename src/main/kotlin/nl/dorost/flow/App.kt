@@ -2,7 +2,9 @@ package nl.dorost.flow
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.application.call
+import io.ktor.application.install
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.cio.websocket.*
 import io.ktor.http.content.default
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
@@ -12,21 +14,51 @@ import io.ktor.response.respondFile
 import io.ktor.routing.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.websocket.WebSockets
+import io.ktor.websocket.webSocket
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.mapNotNull
+import kotlinx.coroutines.delay
+import mu.KotlinLogging
 import nl.dorost.flow.core.Action
+import nl.dorost.flow.core.BlockListener
 import nl.dorost.flow.core.Branch
 import nl.dorost.flow.core.FlowEngine
 import nl.dorost.flow.utils.ResponseMessage
 import java.io.File
 import java.lang.Exception
+import java.time.Duration
 import java.util.*
 
 fun main(args: Array<String>) {
+
     val flowEngine = FlowEngine()
+
+
+
+    flowEngine.registerListeners(
+        listOf(
+            object : BlockListener{
+                val LOG = KotlinLogging.logger("LoggerListener")
+                override fun updateReceived(context: MutableMap<String, Any>?, message: String?) {
+                    LOG.info { "Message: $message, Context: $context" }
+                }
+            }
+        )
+    )
+
     val objectMapper = ObjectMapper()
 
+
     val server = embeddedServer(Netty, port = 8080) {
+
+        install(WebSockets)
+
         routing {
 
+            webSocket("/ws") {
+                    outgoing.send(Frame.Text("YOU SAID"))
+            }
 
             get("/") {
                 call.respondFile(File(Thread.currentThread().contextClassLoader.getResource("static/index.html").path))

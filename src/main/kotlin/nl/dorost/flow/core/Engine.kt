@@ -2,6 +2,9 @@ package nl.dorost.flow.core
 
 import com.moandjiezana.toml.Toml
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import mu.KotlinLogging
 import nl.dorost.flow.NonUniqueIdException
 import nl.dorost.flow.NonUniqueTypeException
 import nl.dorost.flow.TypeNotRegisteredException
@@ -14,10 +17,13 @@ import java.util.stream.Collectors
 
 class FlowEngine {
 
+    val LOG = KotlinLogging.logger { }
+
     var flows: MutableList<Block> = mutableListOf()
     var returnValue: Deferred<MutableMap<String, Any>>? = null
     var returnedBlockId: String? = null
     var registeredActions: MutableList<Action> = mutableListOf()
+    var listeners: List<BlockListener> = mutableListOf()
 
     init {
         registerActions(elementaryActions)
@@ -27,11 +33,17 @@ class FlowEngine {
         registeredActions.addAll(blocks)
     }
 
+    fun registerListeners(listeners: List<BlockListener>) {
+        this.listeners = listeners
+    }
+
     fun executeFlow(input: MutableMap<String, Any> = mutableMapOf()) {
         LOG.info("Starting the execution!")
         val firstLayerBlocks = findFirstLayer(flows)
-        if (firstLayerBlocks.isEmpty())
-            LOG.warn("There is no source block to start the execution, you need to mark at least one `source=true` block!")
+        if (firstLayerBlocks.isEmpty()) {
+            LOG.error("There is no source block to start the execution, you need to mark at least one `source=true` block!")
+            throw RuntimeException("There is no source block to start the execution, you need to mark at least one `source=true` block!")
+        }
         firstLayerBlocks.forEach { block ->
             block.run(this)
         }
@@ -48,17 +60,20 @@ class FlowEngine {
 
         this.flows = flows.map { block ->
             when (block) {
-                is Action -> registeredActions.firstOrNull { it.type == block.type }?.apply {
-                    id = block.id
-                    name = block.name
-                    params = block.params
-                    dependencies = block.dependencies
-                } ?: throw TypeNotRegisteredException("Type ${block.type} is not a registered action!")
+                is Action -> {
+                    registeredActions.firstOrNull { it.type == block.type }?.let { registeredAction ->
+                        block.apply {
+                            act = registeredAction.act
+                            listeners = this@FlowEngine.listeners
+                        }
+                    } ?: throw TypeNotRegisteredException("Type ${block.type} is not a registered action!")
+                }
                 is Branch -> block
                 else -> throw RuntimeException("Not expecting this type of block!")
             }
         }.toMutableList()
     }
+
 
     private fun checkForIdUniqeness() {
         val duplicates = flows.map { it.id }
@@ -187,7 +202,7 @@ class FlowEngine {
                             mutableMapOf<String, String>()
                         ) as MutableMap<String, String>
                         nextBlocks = block.getOrDefault("next", mutableListOf<String>()) as MutableList<String>
-                        source = block.getOrDefault("source", false) as Boolean
+                        source = block["source"] as? Boolean ?: false
                         description = block["description"]?.let { it as String } ?: ""
                     }
                 } ?: throw TypeNotRegisteredException("'${block["type"]}' type is not registered!")
@@ -321,6 +336,11 @@ class FlowEngine {
 
     }
 
+    fun await(){
+        GlobalScope.launch {
+            this@FlowEngine.flows.forEach { it.output?.await() }
+        }
+    }
 
 }
 
