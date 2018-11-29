@@ -207,4 +207,53 @@ internal class FlowEngineTest {
         }
     }
 
+    @Test
+    fun `Test container registration`(){
+        val flows = mutableListOf(
+            Action().apply {
+                name = "intial"
+                id = "1"
+                type = "log"
+                source = true
+                nextBlocks = mutableListOf("new-type")
+            }, Action().apply {
+                name = "New registered type"
+                id = "new-type"
+                type = "container-as-action"
+                nextBlocks = mutableListOf("last-block")
+            }, Action().apply {
+                name = "Last block"
+                id = "last-block"
+                type = "log"
+            }, Container().apply {
+                id = "my-container"
+                type = "container-as-action"
+                firstBlock = "container-1"
+                lastBlock = "container-3"
+                params = mutableMapOf("something" to "some value")
+            },Action().apply {
+                name = "cont-1"
+                id = "container-1"
+                type = "log"
+                nextBlocks = mutableListOf("container-2")
+            },
+            Action().apply {
+                name = "cont-2"
+                id = "container-2"
+                type = "delay"
+                params = mutableMapOf("seconds" to "3")
+                nextBlocks = mutableListOf("container-3")
+            },
+            Action().apply {
+                name = "cont-3"
+                id = "container-3"
+                type = "log"
+            }
+        )
+        flowEngine.wire(flows)
+        flowEngine.executeFlow()
+        flowEngine.await()
+    }
+
+
 }

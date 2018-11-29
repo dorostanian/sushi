@@ -46,8 +46,10 @@ open class Action(
         innnerBlocks?.let {
 //            listeners.forEach { it.updateReceived(message = "Running inside inner engine for action ${this@Action.type}") }
             val innerEngine = FlowEngine()
+            innerEngine.registerListeners(listeners)
             innerEngine.wire(it)
             innerEngine.executeFlow(input)
+            innerEngine.await()
             this@Action.output = async{innerEngine.returnValue!!}
         } ?: run {
             this@Action.output = GlobalScope.async { act!!.invoke(input, this@Action) }

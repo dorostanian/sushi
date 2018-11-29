@@ -39,7 +39,6 @@ class FlowEngine {
     }
 
     fun executeFlow(input: MutableMap<String, Any> = mutableMapOf()) {
-        LOG.info("Starting the execution!")
         val firstLayerBlocks = findFirstLayer(flows)
         if (firstLayerBlocks.isEmpty()) {
             LOG.error("There is no source block to start the execution, you need to mark at least one `source=true` block!")
@@ -66,6 +65,7 @@ class FlowEngine {
                         block.apply {
                             act = registeredAction.act
                             listeners = this@FlowEngine.listeners
+                            innnerBlocks = registeredAction.innnerBlocks
                         }
                     } ?: throw TypeNotRegisteredException("Type ${block.type} is not a registered action!")
                 }
@@ -100,7 +100,7 @@ class FlowEngine {
                 flows.first { it.id == container.lastBlock }.apply { (this as Action).returnAfterExec = true }
 
 
-            val innerBlocksBlocks = getActionMap(firstBlock)
+            val innerBlocksBlocks = getActionMap(firstBlock).plus(firstBlock).toMutableList()
             registeredActions.add(
                 Action().apply {
                     type = container.type
@@ -120,17 +120,17 @@ class FlowEngine {
 
         val blocks: MutableList<Block> = mutableListOf()
         flows.filter {
-            when (it) {
-                is Action -> it.nextBlocks.contains(block.id)
-                is Branch -> it.mapping.values.contains(block.id)
-                else -> throw RuntimeException()
-            }
+            it.dependencies!!.contains(block.id)
         }.forEach {
             when (it) {
-                is Action -> if (!it.returnAfterExec)
+                is Action -> if (!it.returnAfterExec) {
+                    blocks.add(it)
                     blocks.addAll(getActionMap(it))
-                else
+                }
+                else {
+                    blocks.add(it)
                     return@forEach
+                }
                 is Branch -> blocks.addAll(getActionMap(it))
                 else -> throw RuntimeException()
             }
@@ -142,8 +142,8 @@ class FlowEngine {
         this.flows = flows.filter { it is Block }.map { it as Block }.toMutableList()
         checkForFields()
         checkForIdUniqeness()
-        registerNewContainersAsAction(flows.filter { it is Container }.map { it as Container })
         wireDependencies()
+        registerNewContainersAsAction(flows.filter { it is Container }.map { it as Container })
         wireProperActsToBlocks()
     }
 
