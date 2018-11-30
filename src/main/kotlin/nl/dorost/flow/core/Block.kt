@@ -44,13 +44,13 @@ open class Action(
 
 
         innnerBlocks?.let {
-//            listeners.forEach { it.updateReceived(message = "Running inside inner engine for action ${this@Action.type}") }
+            //            listeners.forEach { it.updateReceived(message = "Running inside inner engine for action ${this@Action.type}") }
             val innerEngine = FlowEngine()
             innerEngine.registerListeners(listeners)
             innerEngine.wire(it)
             innerEngine.executeFlow(input)
             innerEngine.await()
-            this@Action.output = async{innerEngine.returnValue!!}
+            this@Action.output = async { innerEngine.returnValue!! }
         } ?: run {
             this@Action.output = GlobalScope.async { act!!.invoke(input, this@Action) }
         }
@@ -96,9 +96,10 @@ class Branch(
             ?: throw MissingMappingValueException("No mapping specified for the value ${input[on]}")
 
         val blockToGo = flowEngine.flows.first { it.id == blockIdToBranch }
-        flowEngine.flows.filter { mapping.values.contains(it.id) }.filter { it.id != blockToGo.id }.forEach {blockToSkip ->
-            blockToSkip.skipped = true
-        }
+        flowEngine.flows.filter { mapping.values.contains(it.id) }.filter { it.id != blockToGo.id }
+            .forEach { blockToSkip ->
+                blockToSkip.skipped = true
+            }
         blockToGo.run(flowEngine)
 //        listeners.forEach { it.updateReceived(message = "Executing Branch id '$id', Branching to: $blockIdToBranch, now executing...") }
     }
@@ -108,5 +109,6 @@ class Branch(
 enum class BRANCH_TYPE {
     NORMAL, ROUTER
 }
+
 
 

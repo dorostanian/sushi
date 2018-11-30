@@ -8,6 +8,7 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.http.content.default
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
+import io.ktor.request.receive
 import io.ktor.request.receiveText
 import io.ktor.response.respond
 import io.ktor.response.respondFile
@@ -33,8 +34,6 @@ import java.util.*
 fun main(args: Array<String>) {
 
     val flowEngine = FlowEngine()
-
-
 
     flowEngine.registerListeners(
         listOf(
@@ -75,7 +74,7 @@ fun main(args: Array<String>) {
                     flowEngine.flows.clear()
                     val blocks = flowEngine.tomlToBlocks(tomlString)
                     flowEngine.wire(blocks)
-                    digraph = flowEngine.blocksToDigraph(blocks)
+                    digraph = flowEngine.blocksToDigraph()
                     call.respond(
                         HttpStatusCode.OK,
                         objectMapper.writeValueAsString(
@@ -140,7 +139,7 @@ fun main(args: Array<String>) {
                     )
                     flowEngine.wire(flowEngine.flows)
                     val toml = flowEngine.blocksToToml(flowEngine.flows)
-                    val digraph = flowEngine.blocksToDigraph(flowEngine.flows)
+                    val digraph = flowEngine.blocksToDigraph()
                     call.respond(
                         HttpStatusCode.OK,
                         objectMapper.writeValueAsString(
@@ -154,6 +153,23 @@ fun main(args: Array<String>) {
                 }
 
 
+            }
+
+            post("/executeFlow"){
+                val tomlString = call.receiveText()
+                val blocks = flowEngine.tomlToBlocks(tomlString)
+                flowEngine.wire(blocks)
+                flowEngine.executeFlow()
+                call.respond(
+                    HttpStatusCode.OK,
+                    objectMapper.writeValueAsString(
+                        ResponseMessage(
+                            responseLog = "Started flow execution successfully!",
+                            tomlData = tomlString
+                        )
+                    )
+
+                )
             }
 
             get("/getLibrary") {
@@ -184,7 +200,7 @@ fun main(args: Array<String>) {
                 }
                 // Rebuild graph and send back the response
 
-                val digraph = flowEngine.blocksToDigraph(flowEngine.flows)
+                val digraph = flowEngine.blocksToDigraph()
                 val tomlText: String = flowEngine.blocksToToml(flowEngine.flows)
                 call.respond(
                     HttpStatusCode.OK,

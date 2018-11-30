@@ -108,7 +108,7 @@ function drawGraph() {
     $.ajax({
         type: "POST",
         url: "/tomlToDigraph",
-        data: editor.getValue(),
+        data: editor.getValue() + editorContainers.getValue(),
         crossDomain: true,
 
     }).done(function (data) {
@@ -208,7 +208,7 @@ function bindActions() {
         function () {
             var strIdsplits = $(this).attr('id').split('-');
             var currentId = strIdsplits.slice(0, strIdsplits.length - 1).join('-');
-            appendInfo("Requesting to delete block " + currentId);
+            appendInfo("Request: Deleting the block " + currentId);
             deleteAction(currentId);
         }
     );
@@ -217,7 +217,7 @@ function bindActions() {
             // alert('Editing ' + $(this).attr('id'));
             var strIdsplits = $(this).attr('id').split('-');
             var currentId = strIdsplits.slice(0, strIdsplits.length - 1).join('-');
-            appendInfo("Editing block: \"" + currentId + "\" , fetching info...");
+            appendInfo("Request: Editing the block: \"" + currentId + "\" , fetching info...");
             getAction(currentId);
             $('#block-modal').modal('show');
         }
@@ -226,13 +226,12 @@ function bindActions() {
 
 
 function addActionToGraph(currentActionType) {
-
     appendInfo("Requesting TOML to Digraph conversion!");
     setupDagre();
     $.ajax({
         type: "POST",
         url: "/tomlToDigraph",
-        data: editor.getValue(),
+        data: editor.getValue() + '\n' + editorContainers.getValue(),
         crossDomain: true,
 
     }).done(function (data) {
@@ -267,6 +266,32 @@ function addActionToGraph(currentActionType) {
     }).fail(function (xhr, textStatus, errorThrown) {
         appendError(JSON.parse(xhr.responseText).responseLog);
     });
+}
+
+
+function executeFlow(){
+    appendInfo("Request: executing the flow...")
+    $.ajax({
+        type: "POST",
+        url: "/executeFlow",
+        data: editor.getValue() + '\n' + editorContainers.getValue(),
+        crossDomain: true,
+
+    }).done(function (data) {
+
+        var responseJson = JSON.parse(data);
+        var logOutput = responseJson.responseLog;
+        var digraphData = responseJson.digraphData;
+
+        appendInfo(logOutput);
+        drawGraphWithDigraphData(digraphData);
+
+
+
+    }).fail(function (xhr, textStatus, errorThrown) {
+        appendError(JSON.parse(xhr.responseText).responseLog);
+    });
+
 
 
 }

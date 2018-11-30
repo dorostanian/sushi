@@ -91,7 +91,8 @@ class FlowEngine {
     private fun registerNewContainersAsAction(containers: List<Container>) {
         containers.forEach { container ->
             if (container.type in registeredActions.map { it.type })
-                throw NonUniqueTypeException("${container.type} already exists! Can't register new action with this type.")
+                throw NonUniqueTypeException("${container.type} already exists! Can't register new action with this type.\n" +
+                        "Consider adding `update=true` or remove the container definition")
         }
 
 
@@ -110,6 +111,7 @@ class FlowEngine {
                     innnerBlocks = innerBlocksBlocks
                 }
             )
+            LOG.info { "Registered container ${container.type}" }
 
             flows.removeIf { innerBlocksBlocks.map { it.id }.contains(it.id) }
 
@@ -140,11 +142,12 @@ class FlowEngine {
     }
 
     fun wire(flows: List<Any>) {
+        val containers = flows.filter { it is Container }.map { it as Container }
         this.flows = flows.filter { it is Block }.map { it as Block }.toMutableList()
         checkForFields()
         checkForIdUniqeness()
         wireDependencies()
-        registerNewContainersAsAction(flows.filter { it is Container }.map { it as Container })
+        registerNewContainersAsAction(containers)
         wireProperActsToBlocks()
     }
 
@@ -160,10 +163,11 @@ class FlowEngine {
     private fun findFirstLayer(flows: MutableList<Block>): List<Block> =
         flows.filter { it is Action }.map { it as Action }.filter { it.source }
 
-    fun parseToBlocks(toml: Toml): MutableList<Block> {
+    fun parseToBlocks(toml: Toml): MutableList<Any> {
         val actions = parseActions(toml)
         val branches = parseBranches(toml)
-        return actions.plus(branches).toMutableList()
+        val containers = parseContainers(toml)
+        return actions.plus(branches).plus(containers).toMutableList()
     }
 
     private fun parseContainers(toml: Toml): List<Container> = toml.toMap()["container"]?.let {
@@ -174,6 +178,7 @@ class FlowEngine {
                 firstBlock = it["first"] as String
                 lastBlock = it["last"] as String
                 description = it["description"]?.let { it as String }
+                update = (it["update"] as? Boolean) ?: false
             }
         }
     } ?: listOf()
@@ -229,7 +234,7 @@ class FlowEngine {
         }
 
 
-    fun tomlToBlocks(tomlText: String): MutableList<Block> {
+    fun tomlToBlocks(tomlText: String): MutableList<Any> {
         val toml: Toml?
         try {
             toml = Toml().read(tomlText)
@@ -238,7 +243,7 @@ class FlowEngine {
             LOG.error(errorMessage)
             throw RuntimeException(errorMessage)
         }
-        val blocks: MutableList<Block>
+        val blocks: MutableList<Any>
         try {
             blocks = this.parseToBlocks(toml)
         } catch (e: Exception) {
@@ -249,7 +254,7 @@ class FlowEngine {
         return blocks
     }
 
-    fun blocksToDigraph(blocks: MutableList<Block>): String {
+    fun blocksToDigraph(): String {
         var digraph = "digraph {\n"
         digraph += "node [rx=5 ry=5 labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
         digraph += "edge [labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
@@ -278,7 +283,7 @@ class FlowEngine {
         val branchNode = "\"%s\" [labelType=\"html\" label=\"%s\" style=\"fill: #FFCCCC;\"];\n"
 
         // add nodes
-        blocks.filter { it is Action }.map { it as Action }.forEach { action ->
+        flows.filter { it is Action }.map { it as Action }.forEach { action ->
             digraph += String.format(
                 normalNode,
                 action.id,
@@ -292,24 +297,30 @@ class FlowEngine {
         }
 
         // add branches
-        blocks.filter { it is Branch }.map { it as Branch }.forEach { block ->
+        flows.filter { it is Branch }.map { it as Branch }.forEach { block ->
             digraph += String.format(
                 branchNode,
                 block.id,
-                String.format(branchInnerHtml, block.name, block.on, block.id, block.id)
+                String.format(
+                    branchInnerHtml,
+                    block.name,
+                    block.on,
+                    block.id,
+                    block.id
+                )
             )
         }
 
 
         // add edges
-        blocks.filter { it is Action }.map { it as Action }.flatMap { block ->
+        flows.filter { it is Action }.map { it as Action }.flatMap { block ->
             block.nextBlocks.map { Pair(block.id, it) }
         }.forEach { edge ->
             digraph += String.format(normalEdgeHtml, edge.first, edge.second)
         }
 
         // add branch edges
-        blocks.filter { it is Branch }.map { it as Branch }.flatMap { branch ->
+        flows.filter { it is Branch }.map { it as Branch }.flatMap { branch ->
             branch.mapping.map { Pair(branch.id, it) }
         }.forEach { mapping ->
             digraph += String.format(branchEdgeHtml, mapping.first, mapping.second.value, mapping.second.key)

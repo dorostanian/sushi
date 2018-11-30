@@ -25,7 +25,7 @@ val elementaryActions = mutableListOf(
         act = { input, action ->
             action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
             val constValue =
-                action.params!!["value"] ?: throw UnsatisfiedParamsException("Parameter not found for ${action.type}")
+                action.params!!["value"] ?: throw UnsatisfiedParamsException("Parameter not found for action Id: ${action.id}")
             mutableMapOf("value" to constValue)
         }
         params = mutableMapOf("value" to "")
