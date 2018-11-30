@@ -126,8 +126,7 @@ class FlowEngine {
                 is Action -> if (!it.returnAfterExec) {
                     blocks.add(it)
                     blocks.addAll(getActionMap(it))
-                }
-                else {
+                } else {
                     blocks.add(it)
                     return@forEach
                 }
@@ -202,23 +201,22 @@ class FlowEngine {
     private fun parseActions(toml: Toml): List<Block> =
         toml.toMap()["action"]?.let {
             (it as List<HashMap<String, Any>>).map { block: HashMap<String, Any> ->
-                registeredActions.firstOrNull { it.type == block["type"] }?.let { action ->
-                    action.apply {
-                        name = block["name"]!! as String
-                        type = block["type"]!! as String
-                        returnAfterExec = block.getOrDefault("returnAfter", false) as Boolean
-                        id = block["id"]!! as String
-                        params = block.getOrDefault(
-                            "params",
-                            mutableMapOf<String, String>()
-                        ) as MutableMap<String, String>
-                        nextBlocks = block.getOrDefault("next", mutableListOf<String>()) as MutableList<String>
-                        source = block["source"] as? Boolean ?: false
-                        description = block["description"]?.let { it as String } ?: ""
-                    }
-                } ?: throw TypeNotRegisteredException("'${block["type"]}' type is not registered!")
+                Action().apply {
+                    name = block["name"]!! as String
+                    type = block["type"]!! as String
+                    returnAfterExec = block.getOrDefault("returnAfter", false) as Boolean
+                    id = block["id"]!! as String
+                    params = block.getOrDefault(
+                        "params",
+                        mutableMapOf<String, String>()
+                    ) as MutableMap<String, String>
+                    nextBlocks = block.getOrDefault("next", mutableListOf<String>()) as MutableList<String>
+                    source = block["source"] as? Boolean ?: false
+                    description = block["description"]?.let { it as String } ?: ""
+                }
             }
         } ?: listOf()
+
 
     fun readFlowsFromDir(path: String) =
         Files.walk(Paths.get(path)).filter { Files.isRegularFile(it) }.collect(Collectors.toList()).flatMap { path: Path ->
@@ -351,11 +349,11 @@ class FlowEngine {
         var count: Int
         do {
             count = flows.count { it.started } + flows.count { it.skipped }
-            if (flows.filter { it.started }.any{it.output?.isCancelled==true}) {
+            if (flows.filter { it.started }.any { it.output?.isCancelled == true }) {
                 LOG.error { "Execution Failed to Complete!" }
                 return false
             }
-        } while (count != flows.size || flows.filter { it.started }.any { it.output?.isCompleted != true } )
+        } while (count != flows.size || flows.filter { it.started }.any { it.output?.isCompleted != true })
         return true
     }
 
