@@ -44,13 +44,20 @@ label {
 #editor {
     width: auto;
     display: block;
-    height: 600px;
+    height: 660px;
+}
+
+
+#editor-containers {
+    width: auto;
+    display: block;
+    height: 660px;
 }
 
 svg {
     width: 100%;
     display: block;
-    height: 600px;
+    height: 700px;
     background-color: white;
 }
 

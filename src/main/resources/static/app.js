@@ -1,4 +1,5 @@
 var editor;
+var editorContainers;
 var svg;
 var render;
 var g;
@@ -41,9 +42,15 @@ input.addEventListener("awesomplete-select", function (selection) {
 $(document).ready(function () {
     console.log("Starting up!");
     editor = ace.edit("editor");
+    editorContainers = ace.edit("editor-containers");
+
     editor.setTheme("ace/theme/monokai");
     editor.getSession().setMode("ace/mode/javascript");
     editor.session.setMode("ace/mode/toml");
+
+    editorContainers.setTheme("ace/theme/monokai");
+    editorContainers.getSession().setMode("ace/mode/javascript");
+    editorContainers.session.setMode("ace/mode/toml");
 
     setupDagre();
 
@@ -157,7 +164,7 @@ function appendError(text) {
 function deleteAction(currentActionId) {
     $.ajax({
         type: "GET",
-        url: "/deleteBlock" + currentActionId,
+        url: "/deleteBlock/" + currentActionId,
         crossDomain: true
     }).done(
         function (data) {

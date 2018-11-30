@@ -3,7 +3,7 @@
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Spaghetti Flow Design Tool</title>
+    <title>Sushi Flow Design Tool</title>
 
     <!--Bootstrap CSS-->
     <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.3/slate/bootstrap.min.css" rel="stylesheet"
@@ -58,7 +58,7 @@
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Spaghetti Flow Design Tool</a>
+    <a class="navbar-brand" href="#"><span class="text-info">Sushi</span>  Flow Design Tool</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
             aria-controls="navbarColor01"
             aria-expanded="false" aria-label="Toggle navigation">
@@ -84,96 +84,78 @@
 
 <table width="100%" class="table table-bordered table-dark table-striped">
     <colgroup>
-        <col width="15%">
-        <col width="30%">
+        <col width="22.5%">
+        <col width="22.5%">
         <col width="5%">
-        <col width="35%">
-        <col width="15%">
+        <col width="40%">
+        <col width="10%">
     </colgroup>
 
     <tr>
         <td>
-            <h3>List of blocks</h3>
+            <h3>Main Flow</h3>
+            <div id="editor">
+[[action]]
+name = "intial action"
+source = true
+type = "http-get"
+id = "initial-action"
+next = ["new-defined-action"]
 
-            <div class="scroll-area" style="max-height: 450px; height: 450px;">
+[[action]]
+name = "new defined action"
+type = "constant"
+id = "new-defined-action"
+next = ["4"]
 
-                <div class="list-group">
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active"
-                         id="mainFlow">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Main Flow</h5>
-                        </div>
-                        <p class="mb-1">This describes the main flow that will be executed.</p>
-                        <small>You need to have at least one starting block.</small>
-                    </div>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start active">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1">Custom Actions</h5>
-                        </div>
-                        <p class="mb-1">Write your containers Here.</p>
-                        <br>
-                        <button class="badge badge-danger badge-pill">Register containers as action</button>
-                    </div>
+[[branch]]
+name = "branch-1"
+id = "4"
+on = "value"
+[branch.mapping]
+branch-1 = "5"
+branch-2 = "6"
+branch-3 = "7"
+
+[[action]]
+name = "action-3"
+type = "constant"
+id = "5"
+next = ["7"]
+[action.params]
+param-4 = "value-4"
 
 
-                </div>
+[[action]]
+name = "Branch eventually came here!"
+type = "constant"
+id = "6"
+returnAfter = false
+[action.params]
+"param-5" = "value-5"
+
+
+[[action]]
+name = "action-5"
+type = "constant"
+id = "7"
+output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
+[action.params]
+param-6 = "value-6"
             </div>
+
 
         </td>
         <td>
-            <div id="editor">
-                [flow]
-                # id_prefix = "main_"
-                name = "Example Flow"
-                author = "amin@dorost.nl"
+            <h3>Containers </h3>
 
-                [[action]]
-                name = "intial action"
-                source = true
-                type = "http-get"
-                id = "initial-action"
-                next = ["new-defined-action"]
-
-                [[action]]
-                name = "new defined action"
-                type = "constant"
-                id = "new-defined-action"
-                next = ["4"]
-
-                [[branch]]
-                name = "branch-1"
-                id = "4"
-                on = "value"
-                [branch.mapping]
-                branch-1 = "5"
-                branch-2 = "6"
-                branch-3 = "7"
-
-                [[action]]
-                name = "action-3"
-                type = "constant"
-                id = "5"
-                next = ["7"]
-                [action.params]
-                param-4 = "value-4"
-
-
-                [[action]]
-                name = "Branch eventually came here!"
-                type = "constant"
-                id = "6"
-                returnAfter = false
-                [action.params]
-                "param-5" = "value-5"
-
-
-                [[action]]
-                name = "action-5"
-                type = "constant"
-                id = "7"
-                output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
-                [action.params]
-                param-6 = "value-6"
+            <div id="editor-containers">
+[[action]]
+name = "intial action"
+source = true
+type = "http-get"
+id = "initial-action"
+next = ["new-defined-action"]
             </div>
         </td>
         <td class="table-dark">
@@ -213,7 +195,7 @@
 
             <div class="form-group" id="addActions">
                 <label>Add Action</label>
-                <input id="actionsDir" class="form-control" onkeyup="clearAction(this.value)"/>
+                <input id="actionsDir" class="form-control btn-block" onkeyup="clearAction(this.value)"/>
             </div>
 
 
