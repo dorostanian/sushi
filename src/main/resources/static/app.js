@@ -291,8 +291,21 @@ function executeFlow(){
     }).fail(function (xhr, textStatus, errorThrown) {
         appendError(JSON.parse(xhr.responseText).responseLog);
     });
-
-
-
 }
+
+var ws = new WebSocket('ws://localhost:8080/ws');
+ws.onopen = function() {
+    appendInfo('Connected to backend!');
+};
+ws.onclose = function() {
+    appendError('Disconnected from backend!');
+};
+
+ws.onmessage = function(event) {
+    var data = JSON.parse(event.data);
+    if (data.first=='ERROR')
+        appendError(data.second)
+    else
+        appendInfo(data.second);
+};
 

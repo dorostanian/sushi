@@ -43,7 +43,7 @@ class FlowEngine {
     fun executeFlow(input: MutableMap<String, Any> = mutableMapOf()) {
         val firstLayerBlocks = findFirstLayer(flows)
         if (firstLayerBlocks.isEmpty()) {
-            LOG.error("There is no source block to start the execution, you need to mark at least one `source=true` block!")
+            listeners.forEach { it.updateReceived(message = "There is no source block to start the execution, you need to mark at least one `source=true` block!") }
             throw RuntimeException("There is no source block to start the execution, you need to mark at least one `source=true` block!")
         }
         firstLayerBlocks.forEach { block ->
@@ -90,9 +90,13 @@ class FlowEngine {
 
     private fun registerNewContainersAsAction(containers: List<Container>) {
         containers.forEach { container ->
-            if (container.type in registeredActions.map { it.type })
-                throw NonUniqueTypeException("${container.type} already exists! Can't register new action with this type.\n" +
-                        "Consider adding `update=true` or remove the container definition")
+            if (container.type in registeredActions.map { it.type }) {
+                val msg = "${container.type} already exists! Can't register new action with this type.\n" +
+                        "Consider adding `update=true` or remove the container definition"
+                listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
+                listeners.forEach { it.updateReceived(message = "Stopping the flow execution!", type = MessageType.ERROR) }
+                throw NonUniqueTypeException(msg)
+            }
         }
 
 
@@ -240,7 +244,7 @@ class FlowEngine {
             toml = Toml().read(tomlText)
         } catch (e: Exception) {
             val errorMessage = "TOML could not be parsed correctly! ${e.localizedMessage}"
-            LOG.error(errorMessage)
+            listeners.forEach { it.updateReceived(message = errorMessage) }
             throw RuntimeException(errorMessage)
         }
         val blocks: MutableList<Any>
@@ -248,7 +252,7 @@ class FlowEngine {
             blocks = this.parseToBlocks(toml)
         } catch (e: Exception) {
             val errorMessage = "Error on parsing to blocks! ${e.localizedMessage}"
-            LOG.error(errorMessage)
+            listeners.forEach { it.updateReceived(message = errorMessage) }
             throw RuntimeException(errorMessage)
         }
         return blocks
@@ -374,7 +378,7 @@ class FlowEngine {
         do {
             count = flows.count { it.started } + flows.count { it.skipped }
             if (flows.filter { it.started }.any { it.output?.isCancelled == true }) {
-                LOG.error { "Execution Failed to Complete!" }
+                listeners.forEach { it.updateReceived(message = "Execution Failed to Complete!", type = MessageType.ERROR) }
                 return false
             }
         } while (count != flows.size || flows.filter { it.started }.any { it.output?.isCompleted != true })

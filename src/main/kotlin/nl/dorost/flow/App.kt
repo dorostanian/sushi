@@ -17,14 +17,14 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.mapNotNull
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
-import nl.dorost.flow.core.Action
-import nl.dorost.flow.core.BlockListener
-import nl.dorost.flow.core.Branch
-import nl.dorost.flow.core.FlowEngine
+import nl.dorost.flow.core.*
 import nl.dorost.flow.utils.ResponseMessage
 import java.io.File
 import java.lang.Exception
@@ -33,14 +33,21 @@ import java.util.*
 
 fun main(args: Array<String>) {
 
+    val channel = Channel<Pair<MessageType, String>>()
+
+
     val flowEngine = FlowEngine()
 
     flowEngine.registerListeners(
         listOf(
-            object : BlockListener{
+            object : BlockListener {
                 val LOG = KotlinLogging.logger("LoggerListener")
-                override fun updateReceived(context: MutableMap<String, Any>?, message: String?) {
-                    LOG.info { "Message: $message, Context: $context" }
+                override fun updateReceived(context: MutableMap<String, Any>?, message: String?, type: MessageType) {
+                    val msg = "Message: $message"
+                    LOG.info { msg }
+                    GlobalScope.launch {
+                        channel.send(type to (message ?: ""))
+                    }
                 }
             }
         )
@@ -56,7 +63,10 @@ fun main(args: Array<String>) {
         routing {
 
             webSocket("/ws") {
-                    outgoing.send(Frame.Text("YOU SAID"))
+                while (true) {
+                    val data = channel.receive()
+                    outgoing.send(Frame.Text(objectMapper.writeValueAsString(data)))
+                }
             }
 
             get("/") {
@@ -155,9 +165,10 @@ fun main(args: Array<String>) {
 
             }
 
-            post("/executeFlow"){
+            post("/executeFlow") {
                 val tomlString = call.receiveText()
                 val blocks = flowEngine.tomlToBlocks(tomlString)
+
                 flowEngine.wire(blocks)
                 flowEngine.executeFlow()
                 call.respond(
