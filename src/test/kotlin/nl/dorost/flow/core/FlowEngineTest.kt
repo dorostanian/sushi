@@ -2,10 +2,6 @@ package nl.dorost.flow.core
 
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
-import jdk.nashorn.internal.objects.Global
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import mu.KotlinLogging
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.Assertions
@@ -27,9 +23,14 @@ internal class FlowEngineTest {
             listOf(
                 object : BlockListener {
                     val LOG = KotlinLogging.logger("TestLogger")
-                    override fun updateReceived(context: MutableMap<String, Any>?, message: String?) {
+                    override fun updateReceived(
+                        context: MutableMap<String, Any>?,
+                        message: String?,
+                        type: MessageType
+                    ) {
                         LOG.info("Message: $message")
                     }
+
                 }
             )
         )
@@ -208,7 +209,7 @@ internal class FlowEngineTest {
     }
 
     @Test
-    fun `Test container registration`(){
+    fun `Test container registration`() {
         val flows = mutableListOf(
             Action().apply {
                 name = "intial"
@@ -230,8 +231,8 @@ internal class FlowEngineTest {
                 type = "container-as-action"
                 firstBlock = "container-1"
                 lastBlock = "container-3"
-                params = mutableMapOf("something" to "some value")
-            },Action().apply {
+                params = listOf("param-1", "param-2")
+            }, Action().apply {
                 name = "cont-1"
                 id = "container-1"
                 type = "log"

@@ -285,8 +285,6 @@ function executeFlow(){
         appendInfo(logOutput);
         drawGraphWithDigraphData(digraphData);
 
-
-
     }).fail(function (xhr, textStatus, errorThrown) {
         appendError(JSON.parse(xhr.responseText).responseLog);
     });

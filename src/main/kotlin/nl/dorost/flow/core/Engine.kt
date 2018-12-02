@@ -1,10 +1,6 @@
 package nl.dorost.flow.core
 
 import com.moandjiezana.toml.Toml
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import nl.dorost.flow.MissingFieldException
 import nl.dorost.flow.NonUniqueIdException
@@ -15,7 +11,6 @@ import nl.dorost.flow.dao.BlocksDaoImpl
 import nl.dorost.flow.dto.ActionDto
 import nl.dorost.flow.dto.InnerActionDto
 import nl.dorost.flow.dto.UserDto
-import org.omg.SendingContext.RunTime
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -109,8 +104,13 @@ class FlowEngine {
             .eachCount()
             .filter { it.value > 1 }
             .map { it.key }
-        if (duplicates.isNotEmpty())
-            throw NonUniqueIdException("All ids must be unique! Duplicate id: ${duplicates.first()}.")
+        if (duplicates.isNotEmpty()) {
+            val msg = "All ids must be unique! Duplicate id: ${duplicates.first()}."
+            listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
+            flows.forEach { LOG.info{"ID: ${it.id}"} }
+
+            throw NonUniqueIdException(msg)
+        }
     }
 
     private fun registerNewContainersAsAction(
@@ -133,8 +133,10 @@ class FlowEngine {
 
         containers.forEach { container ->
             // Then check the DB for registered actions
+            val firstBlock = this@FlowEngine.flows.first { it.id == container.firstBlock }
+            val lastBlock = this@FlowEngine.flows.first { it.id == container.lastBlock }
             val innerBlocks =
-                getActionMap(this@FlowEngine.flows.first { it.id == container.firstBlock }).toMutableList()
+                getActionMap(firstBlock, lastBlock).plus(lastBlock).toMutableList()
 
             (innerBlocks.first { it.id == container.firstBlock } as Action).source = true
             (innerBlocks.first { it.id == container.lastBlock } as Action).returnAfterExec = true
@@ -175,10 +177,20 @@ class FlowEngine {
                             innnerBlocks = innerBlocks
                         }
                     )
-                    listeners.forEach { it.updateReceived(message = "Container of type ${container.type} registered susscfully by user ${user.id}") }
+                    listeners.forEach { it.updateReceived(message = "Container of type ${container.type} registered successfully by user ${user.id}") }
+
+                    // Update the secondary Actions list
+                    this.registerSecondaryActionsFromDB(blocksDaoImpl)
                 }
             } ?: run {
-                TODO("If there is no persistence!?")
+                this.secondaryActions.add(
+                    Action().apply {
+                        type = container.type
+                        params = container.params?.map { it to "" }?.toMap()?.toMutableMap()
+                        innnerBlocks = innerBlocks
+                    }
+                )
+                listeners.forEach { it.updateReceived(message = "Container of type ${container.type} registered successfully!") }
             }
 
 
@@ -187,25 +199,30 @@ class FlowEngine {
     }
 
 
-    fun getActionMap(block: Block): MutableList<Block> {
+    fun getActionMap(firstBlock: Block, lastBlock: Block): MutableList<Block> {
 
         val blocks: MutableList<Block> = mutableListOf()
+
         flows.filter {
-            it.dependencies!!.contains(block.id)
+           when(it){
+               is Action ->  it.nextBlocks.contains(lastBlock.id)
+               is Branch -> it.mapping.values.contains(lastBlock.id)
+               else -> throw RuntimeException("Shouldn't be the case!")
+           }
         }.forEach {
             when (it) {
-                is Action -> if (!it.returnAfterExec) {
+                is Action -> if (it.id!=firstBlock.id) {
                     blocks.add(it)
-                    blocks.addAll(getActionMap(it))
+                    blocks.addAll(getActionMap(firstBlock,it))
                 } else {
                     blocks.add(it)
                     return@forEach
                 }
-                is Branch -> blocks.addAll(getActionMap(it))
-                else -> throw RuntimeException()
+                is Branch -> blocks.addAll(getActionMap(firstBlock, it))
+                else -> throw RuntimeException("Shouldn't be the case!")
             }
         }
-        return blocks.plus(block).toMutableList()
+        return blocks.toMutableList()
     }
 
     fun wire(
@@ -231,7 +248,7 @@ class FlowEngine {
         }
         flows.filter { it is Action }.map { it as Action }.firstOrNull { it.source }
             ?: run {
-                if (flows.size!=0) {
+                if (flows.size != 0) {
                     val msg = "There should be at least one source!"
                     listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
                     throw RuntimeException()
@@ -480,7 +497,7 @@ class FlowEngine {
                     returnAfterExecution = it.returnAfterExec
                 )
             },
-            params = container.params?: listOf()
+            params = container.params ?: listOf()
 
         )
     }

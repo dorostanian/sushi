@@ -201,12 +201,14 @@ fun main(args: Array<String>) {
 
                 flowEngine.wire(blocks, blocksDao, myUser)
                 flowEngine.executeFlow()
+
                 call.respond(
                     HttpStatusCode.OK,
                     objectMapper.writeValueAsString(
                         ResponseMessage(
                             responseLog = "Started flow execution successfully!",
-                            tomlData = tomlString
+                            tomlData = tomlString,
+                            digraphData = flowEngine.blocksToDigraph()
                         )
                     )
 
