@@ -1,37 +1,56 @@
 package nl.dorost.flow
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.auth.oauth2.GoogleCredentials
+import com.natpryce.konfig.*
+import com.natpryce.konfig.ConfigurationProperties.Companion.systemProperties
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.cio.websocket.*
-import io.ktor.http.content.default
+import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
-import io.ktor.request.receive
 import io.ktor.request.receiveText
 import io.ktor.response.respond
 import io.ktor.response.respondFile
-import io.ktor.routing.*
+import io.ktor.routing.get
+import io.ktor.routing.post
+import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.channels.mapNotNull
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
 import nl.dorost.flow.core.*
+import nl.dorost.flow.dao.BlocksDaoImpl
+import nl.dorost.flow.dao.UserDaoImpl
 import nl.dorost.flow.utils.ResponseMessage
 import java.io.File
-import java.lang.Exception
-import java.time.Duration
+import java.io.FileInputStream
 import java.util.*
 
+
+val googleClientId = Key("google.clientId", stringType)
+val googleClientSecret = Key("google.clientSecret", stringType)
+val sessionSecretSignKey = Key("session.secretSignKey", stringType)
+val projectId = Key("project.Id", stringType)
+val blockKind = Key("blocks.kind", stringType)
+val usersKind = Key("users.kind", stringType)
+
+val config = systemProperties() overriding
+        EnvironmentVariables() overriding
+        ConfigurationProperties.fromFile(
+            File(Thread.currentThread().contextClassLoader.getResource("default.properties").path)
+        )
+
 fun main(args: Array<String>) {
+
+    val credentials  = authWithJson(Thread.currentThread().contextClassLoader.getResource("service-account.json").path)
+    val blocksDao = BlocksDaoImpl(credentials, projectId = config[projectId], kind = config[blockKind])
+    val usersDao = UserDaoImpl(credentials, projectId = config[projectId], kind = config[usersKind])
 
     val channel = Channel<Pair<MessageType, String>>()
 
@@ -52,6 +71,8 @@ fun main(args: Array<String>) {
             }
         )
     )
+
+    flowEngine.registerSecondaryActionsFromDB(blocksDao)
 
     val objectMapper = ObjectMapper()
 
@@ -230,3 +251,6 @@ fun main(args: Array<String>) {
     }
     server.start(wait = true)
 }
+
+fun authWithJson(jsonPath: String) = GoogleCredentials.fromStream(FileInputStream(jsonPath))
+    .createScoped(listOf("https://www.googleapis.com/auth/cloud-platform"))

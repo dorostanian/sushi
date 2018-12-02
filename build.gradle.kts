@@ -1,12 +1,16 @@
 import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import kotlin.collections.*
 
 plugins {
     kotlin("jvm") version "1.3.0"
     application
     `maven-publish`
     maven
+    id("com.palantir.docker-run") version "0.20.1"
+
 }
+
 
 application{
     mainClassName = "App"
@@ -29,6 +33,11 @@ dependencies {
 
     compile(kotlin("stdlib-jdk8"))
 
+    compile("com.natpryce:konfig:1.6.10.0")
+    compile("com.google.cloud:google-cloud-datastore:1.54.0")
+    compile("com.google.cloud:google-cloud-storage:1.54.0")
+
+
     compile("com.github.kittinunf.fuel:fuel:1.15.0")
     compile("com.moandjiezana.toml:toml4j:0.7.2")
     compile("io.ktor:ktor-server-netty:$ktor_version")
@@ -43,6 +52,7 @@ dependencies {
     compile("com.fasterxml.jackson.core:jackson-databind:2.7.1-1")
     compile("com.fasterxml.jackson.module:jackson-module-kotlin:2.7.1-2")
     compile("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.1")
+
 
     compile("com.beust:klaxon:3.0.1")
 

@@ -10,6 +10,11 @@ import nl.dorost.flow.NonUniqueIdException
 import nl.dorost.flow.NonUniqueTypeException
 import nl.dorost.flow.TypeNotRegisteredException
 import nl.dorost.flow.actions.elementaryActions
+import nl.dorost.flow.dao.BlocksDaoImpl
+import nl.dorost.flow.dto.ActionDto
+import nl.dorost.flow.dto.InnerActionDto
+import nl.dorost.flow.dto.UserDto
+import org.omg.SendingContext.RunTime
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -26,6 +31,7 @@ class FlowEngine {
     var returnValue: MutableMap<String, Any>? = null
     var returnedBlockId: String? = null
     var registeredActions: MutableList<Action> = mutableListOf()
+    var secondaryActions: MutableList<Action> = mutableListOf()
     var listeners: List<BlockListener> = mutableListOf()
 
     init {
@@ -51,6 +57,22 @@ class FlowEngine {
         }
     }
 
+    fun registerSecondaryActionsFromDB(blocksDaoImpl: BlocksDaoImpl) {
+        this.secondaryActions = blocksDaoImpl.getAllSecondaryActions().map {
+            Action().apply {
+                type = it.type
+                name = it.name
+                description = it.description
+                innnerBlocks = it.innerBlocks.map {
+                    Action().apply {
+                        id = it.id
+                        type = it.type
+                        nextBlocks = it.nextBlocks
+                    }
+                }.toMutableList()
+            }
+        }.toMutableList()
+    }
 
     private fun wireDependencies() {
         flows.forEach { block ->
@@ -63,7 +85,7 @@ class FlowEngine {
         this.flows = flows.map { block ->
             when (block) {
                 is Action -> {
-                    registeredActions.firstOrNull { it.type == block.type }?.let { registeredAction ->
+                    registeredActions.plus(secondaryActions).firstOrNull { it.type == block.type }?.let { registeredAction ->
                         block.apply {
                             act = registeredAction.act
                             listeners = this@FlowEngine.listeners
@@ -88,36 +110,55 @@ class FlowEngine {
             throw NonUniqueIdException("All ids must be unique! Duplicate id: ${duplicates.first()}.")
     }
 
-    private fun registerNewContainersAsAction(containers: List<Container>) {
+    private fun registerNewContainersAsAction(
+        containers: List<Container>,
+        blocksDaoImpl: BlocksDaoImpl? = null,
+        user: UserDto? = null
+    ) {
+
+        // First check elementary actions
         containers.forEach { container ->
             if (container.type in registeredActions.map { it.type }) {
-                val msg = "${container.type} already exists! Can't register new action with this type.\n" +
-                        "Consider adding `update=true` or remove the container definition"
+                val msg =
+                    "${container.type} already exists as elementary action! Can't register new action with this type."
                 listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
-                listeners.forEach { it.updateReceived(message = "Stopping the flow execution!", type = MessageType.ERROR) }
                 throw NonUniqueTypeException(msg)
             }
         }
 
 
-
         containers.forEach { container ->
-            val firstBlock = flows.first { it.id == container.firstBlock }.apply { (this as Action).source = true }
-            val lastBlock =
-                flows.first { it.id == container.lastBlock }.apply { (this as Action).returnAfterExec = true }
+            // Then check the DB for registered actions
+            blocksDaoImpl?.let {
+                it.getActionByType(container.type!!)?.let { alreadyRegisteredAction ->
+                    if (!container.update) {
+                        val msg =
+                            "This action already exists! consider adding `update=true` or remove the container definition for Container type: ${container.type}"
+                        listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
+                        return
+                    } else {
+                        TODO("Check if the user owns this action! If yes update!")
+                    }
 
-
-            val innerBlocksBlocks = getActionMap(firstBlock).plus(firstBlock).toMutableList()
-            registeredActions.add(
-                Action().apply {
-                    type = container.type
-                    params = container.params
-                    innnerBlocks = innerBlocksBlocks
+                } ?: run {
+                    blocksDaoImpl.registerNewAction(container.toActionDto().copy(userId = user!!.id))
+                    val innerBlocks = getActionMap(this@FlowEngine.flows.first { it.id == container.firstBlock })
+                    secondaryActions.add(
+                        Action().apply {
+                            type = container.type
+                            params = container.params
+                            innnerBlocks = innerBlocks
+                        }
+                    )
+                    flows.removeIf {
+                        innerBlocks
+                            .map { it.id }
+                            .contains(it.id)
+                    }
                 }
-            )
-            LOG.info { "Registered container ${container.type}" }
 
-            flows.removeIf { innerBlocksBlocks.map { it.id }.contains(it.id) }
+            }
+
 
         }
 
@@ -142,7 +183,7 @@ class FlowEngine {
                 else -> throw RuntimeException()
             }
         }
-        return blocks
+        return blocks.plus(block).toMutableList()
     }
 
     fun wire(flows: List<Any>) {
@@ -378,12 +419,33 @@ class FlowEngine {
         do {
             count = flows.count { it.started } + flows.count { it.skipped }
             if (flows.filter { it.started }.any { it.output?.isCancelled == true }) {
-                listeners.forEach { it.updateReceived(message = "Execution Failed to Complete!", type = MessageType.ERROR) }
+                listeners.forEach {
+                    it.updateReceived(
+                        message = "Execution Failed to Complete!",
+                        type = MessageType.ERROR
+                    )
+                }
                 return false
             }
         } while (count != flows.size || flows.filter { it.started }.any { it.output?.isCompleted != true })
         return true
     }
 
+    private fun Container.toActionDto(): ActionDto = ActionDto(
+        type = this.type!!,
+        name = this.name!!,
+        description = this.description!!,
+        innerBlocks = getActionMap(this@FlowEngine.flows.first { it.id == this.firstBlock }).map {
+            InnerActionDto(
+                type = it.type!!,
+                id = it.id!!,
+                nextBlocks = (it as Action).nextBlocks
+            )
+        }
+    )
+
+
 }
+
+
 
