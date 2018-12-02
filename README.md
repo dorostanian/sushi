@@ -1,24 +1,25 @@
 # Introduction
 
-**Flow** is a simplistic flow design based on `TOML` config files offering also an UI (WIP) to make it easy to build
+**Sushi** is a simplistic flow design based on `TOML` config files offering also an UI (WIP) to make it easy to build
 complex flows of actions. Flow is highly extensible by allowing you to `register` new `Block`s. There comes also a library
 of commonly used actions.
 
 ## Similar Work and comparison
 Tinder's [State Machine Project](https://github.com/Tinder/StateMachine) is one of the interesting
-implementations for buliding state machines. (tbd)
+implementations for building state machines. (tbd)
 
 
 
 # Motivation
 
-The idea of building **Flow** born in my mind while trying to build a software that contains lots of steps and conditions.
-
+The idea of building **Sushi** born in my mind while trying to build a software that contains lots of steps and conditions.
+In the beginning you start writing the definition of states and their conenctions but eventually it grows to an spaghetti,
+to overcome this issue I started The **Sushi** Project. Sushi helps us to write complicated flows in easy and expressive way.
 
 
 # How it works
 
-Flow is built on top of concept of `Block`s. Every unit is a block and we have three different kinds of blocks which enables
+Sushi is built on top of concept of `Block`s. Every unit is a block and we have three different kinds of blocks which enables
 you to build almost anything with a very explicit and simple data presentation.
 
 * `Action` blocks: These are the smallest units of actions that will be executed in the flow.
@@ -30,7 +31,7 @@ To define your flows, there are two ways. You can define your flows in multiple 
 The other ways is to use the UI to generate these TOML files for you.
 
 ## `Action` block
-This block is the most essential unit in Flow. These blocks are supposed to fulfill a small unit of work and then
+This block is the most essential unit in Sushi. These blocks are supposed to fulfill a small unit of work and then
 point to another block. The field `type` specifies what this block is supposed to do.
 
 ```toml
@@ -60,6 +61,13 @@ useful when you are expecting a user interaction e.g. Rest API.**
 
 You can register listeners for actions to have a callback mechanism after executing each action.
 This helps communicate easily while the engine takes care of running the actions.
+
+
+**You need to make sure that you have at least one block that has `source = true`. This tells the engine where it 
+needs to start the execution. You can have multiple source blocks.**
+
+> If you are writing your flows programmatically it is also possible to inject any object you want to your defined actions.
+
 
 ## `Branch` block
 This block is designed intentionally simple to make it easy for controling the flow of your work.
@@ -119,16 +127,15 @@ You are not allowed to use `returnAfter=true` inside a container.
 
 # Usage
 
-You can use **Flow** in two different ways: as a library to import in your project or launch
+You can use **Sushi** in two different ways: as a library to import in your project or launch
 it as service and get the benefits of graphical UI designer.
 
-There are multiple ways of building flows.
+There are three ways of building flows.
 1. Reading `TOML` files from a directory.
 2. Building the flows programmatically. 
-3. Using the UI. (WIP)
+3. Using the UI.
 
-You need to make sure that you have at least one block that has `source = true`. This tells the engine where it 
-needs to start the execution. You can have multiple source blocks.
+
 
 ```kotlin
 val flowEngine = FlowEngine()
