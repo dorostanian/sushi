@@ -260,7 +260,6 @@ function addActionToGraph(currentActionType) {
             }
         ).fail(function (xhr, textStatus, errorThrown) {
             appendError(JSON.parse(xhr.responseText).responseLog);
-
         });
 
     }).fail(function (xhr, textStatus, errorThrown) {

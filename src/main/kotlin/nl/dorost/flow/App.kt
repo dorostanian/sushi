@@ -27,6 +27,7 @@ import mu.KotlinLogging
 import nl.dorost.flow.core.*
 import nl.dorost.flow.dao.BlocksDaoImpl
 import nl.dorost.flow.dao.UserDaoImpl
+import nl.dorost.flow.dto.UserDto
 import nl.dorost.flow.utils.ResponseMessage
 import java.io.File
 import java.io.FileInputStream
@@ -74,6 +75,11 @@ fun main(args: Array<String>) {
 
     flowEngine.registerSecondaryActionsFromDB(blocksDao)
 
+    val myUser = UserDto(
+        id = 3456789,
+        name = "Amin Dorostanian"
+    )
+
     val objectMapper = ObjectMapper()
 
 
@@ -104,7 +110,7 @@ fun main(args: Array<String>) {
                 try {
                     flowEngine.flows.clear()
                     val blocks = flowEngine.tomlToBlocks(tomlString)
-                    flowEngine.wire(blocks)
+                    flowEngine.wire(blocks, blocksDao, myUser)
                     digraph = flowEngine.blocksToDigraph()
                     call.respond(
                         HttpStatusCode.OK,
@@ -121,10 +127,11 @@ fun main(args: Array<String>) {
                         objectMapper.writeValueAsString(
                             ResponseMessage(
                                 responseLog = e.message
-                                    ?: "Something went wrong in the server side! ${e.localizedMessage}"
+                                    ?: "Something went wrong in the server side! ${e.message}"
                             )
                         )
                     )
+
                 }
 
             }
@@ -160,7 +167,7 @@ fun main(args: Array<String>) {
 
             get("/addAction/{actionType}") {
                 val actionType = call.parameters["actionType"]
-                val registeredBlock = flowEngine.registeredActions.firstOrNull { it.type == actionType }
+                val registeredBlock = flowEngine.registeredActions.plus(flowEngine.secondaryActions).firstOrNull { it.type == actionType }
 
                 registeredBlock?.let { action ->
                     flowEngine.flows.add(
@@ -168,7 +175,9 @@ fun main(args: Array<String>) {
                             id = UUID.randomUUID().toString()
                         }
                     )
-                    flowEngine.wire(flowEngine.flows)
+                    if (flowEngine.flows.size==1)
+                        (flowEngine.flows.first() as Action).source = true
+                    flowEngine.wire(flowEngine.flows, blocksDao, myUser)
                     val toml = flowEngine.blocksToToml(flowEngine.flows)
                     val digraph = flowEngine.blocksToDigraph()
                     call.respond(
@@ -190,7 +199,7 @@ fun main(args: Array<String>) {
                 val tomlString = call.receiveText()
                 val blocks = flowEngine.tomlToBlocks(tomlString)
 
-                flowEngine.wire(blocks)
+                flowEngine.wire(blocks, blocksDao, myUser)
                 flowEngine.executeFlow()
                 call.respond(
                     HttpStatusCode.OK,
@@ -210,7 +219,7 @@ fun main(args: Array<String>) {
                     objectMapper.writeValueAsString(
                         ResponseMessage(
                             responseLog = "Fetched library of registered actions!",
-                            library = flowEngine.registeredActions
+                            library = flowEngine.registeredActions.plus(flowEngine.secondaryActions)
                         )
                     )
                 )

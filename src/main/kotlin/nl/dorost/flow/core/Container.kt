@@ -7,6 +7,6 @@ class Container(
     var firstBlock: String? = null,
     var lastBlock: String? = null,
     var description: String? = null,
-    var params: MutableMap<String, String>? = null,
+    var params: List<String>? = null,
     var update: Boolean = false
 )

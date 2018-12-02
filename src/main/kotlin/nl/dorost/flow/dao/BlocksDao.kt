@@ -3,6 +3,7 @@ package nl.dorost.flow.dao
 import com.google.auth.Credentials
 import com.google.cloud.Timestamp
 import com.google.cloud.datastore.*
+import nl.dorost.flow.MissingFieldException
 import nl.dorost.flow.blockKind
 import nl.dorost.flow.dto.ActionDto
 import nl.dorost.flow.dto.InnerActionDto
@@ -31,15 +32,9 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
 
 
     override fun registerNewAction(action: ActionDto): ActionDto {
-        val entity = Entity.newBuilder(keyFactory.newKey())
-            .set("type", action.type)
-            .set("creation-time", Timestamp.now())
-            .set("description", action.description)
-            .set("user-id", action.userId)
-            .set("innner-blocks", action.innerBlocks.toEntity())
-            .build()
+        val entity = action.toEntity()
         val newId = datastore.add(entity)
-        return action.copy(id= newId.key.id)
+        return action.copy(id = newId.key.id)
     }
 
     override fun getActionByType(type: String): ActionDto? {
@@ -70,6 +65,8 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
         Entity.newBuilder(keyFactory.newKey())
             .set("type", this.type)
             .set("id", this.id)
+            .set("source", this.source)
+            .set("return-after-execution", this.returnAfterExecution)
             .set("next-blocks", this.nextBlocks.map { StringValue.of(it) })
             .build()
 
@@ -81,7 +78,8 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
         type = this.getString("type"),
         name = this.getString("name"),
         description = this.getString("description"),
-        innerBlocks = this.getList<EntityValue>("innner-blocks").toInnerBlocks()
+        innerBlocks = this.getList<EntityValue>("innner-blocks").toInnerBlocks(),
+        params = this.getList<StringValue>("params").map { it.get() }
     )
 
     private fun MutableList<EntityValue>.toInnerBlocks(): List<InnerActionDto> = this.map {
@@ -93,11 +91,27 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
         return InnerActionDto(
             id = entity.getString("id"),
             type = entity.getString("type"),
-            nextBlocks = entity.getList<StringValue>("next-blocks").map { it.get() }
+            nextBlocks = entity.getList<StringValue>("next-blocks").map { it.get() }.toMutableList(),
+            source = entity.getBoolean("source"),
+            returnAfterExecution = entity.getBoolean("return-after-execution")
+
         )
     }
 
+    private fun ActionDto.toEntity(): FullEntity<*>? = Entity.newBuilder(keyFactory.newKey())
+        .set("type", this.type)
+        .set("name", this.name ?: "")
+        .set("creation-time", Timestamp.now())
+        .set("description", this.description ?: "")
+        .set("params", this.params.map {StringValue.of(it) })
+        .set("user-id", this.userId ?: throw MissingFieldException("User ID is missing!"))
+        .set("innner-blocks", this.innerBlocks.toEntity())
+        .build()
+
 }
+
+
+
 
 
 

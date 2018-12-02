@@ -6,6 +6,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import nl.dorost.flow.MissingFieldException
 import nl.dorost.flow.NonUniqueIdException
 import nl.dorost.flow.NonUniqueTypeException
 import nl.dorost.flow.TypeNotRegisteredException
@@ -68,6 +69,8 @@ class FlowEngine {
                         id = it.id
                         type = it.type
                         nextBlocks = it.nextBlocks
+                        source = it.source
+                        returnAfterExec = it.returnAfterExecution
                     }
                 }.toMutableList()
             }
@@ -116,6 +119,7 @@ class FlowEngine {
         user: UserDto? = null
     ) {
 
+        listeners.forEach { it.updateReceived(message = "${containers.size} containers to register!") }
         // First check elementary actions
         containers.forEach { container ->
             if (container.type in registeredActions.map { it.type }) {
@@ -129,34 +133,52 @@ class FlowEngine {
 
         containers.forEach { container ->
             // Then check the DB for registered actions
+            val innerBlocks =
+                getActionMap(this@FlowEngine.flows.first { it.id == container.firstBlock }).toMutableList()
+
+            (innerBlocks.first { it.id == container.firstBlock } as Action).source = true
+            (innerBlocks.first { it.id == container.lastBlock } as Action).returnAfterExec = true
+
+            flows.removeIf {
+                innerBlocks
+                    .map { it.id }
+                    .contains(it.id)
+            }
             blocksDaoImpl?.let {
                 it.getActionByType(container.type!!)?.let { alreadyRegisteredAction ->
-                    if (!container.update) {
-                        val msg =
-                            "This action already exists! consider adding `update=true` or remove the container definition for Container type: ${container.type}"
-                        listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
-                        return
+
+                    if (alreadyRegisteredAction.userId == user!!.id) {
+                        if (!container.update) {
+                            val msg =
+                                "This action already exists! consider adding `update=true` or remove the container definition for Container type: ${container.type}"
+
+                            listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
+                            return
+                        } else {
+                            TODO("Update the action here!")
+                        }
                     } else {
-                        TODO("Check if the user owns this action! If yes update!")
+                        listeners.forEach { it.updateReceived(message = "This container type already exists but you don't own it! Use another `type` for your container.") }
                     }
 
                 } ?: run {
-                    blocksDaoImpl.registerNewAction(container.toActionDto().copy(userId = user!!.id))
-                    val innerBlocks = getActionMap(this@FlowEngine.flows.first { it.id == container.firstBlock })
+                    blocksDaoImpl.registerNewAction(
+                        containerToActionDto(
+                            container,
+                            innerBlocks
+                        ).copy(userId = user!!.id)
+                    )
                     secondaryActions.add(
                         Action().apply {
                             type = container.type
-                            params = container.params
+                            params = container.params?.map { it to "" }?.toMap()?.toMutableMap()
                             innnerBlocks = innerBlocks
                         }
                     )
-                    flows.removeIf {
-                        innerBlocks
-                            .map { it.id }
-                            .contains(it.id)
-                    }
+                    listeners.forEach { it.updateReceived(message = "Container of type ${container.type} registered susscfully by user ${user.id}") }
                 }
-
+            } ?: run {
+                TODO("If there is no persistence!?")
             }
 
 
@@ -186,23 +208,35 @@ class FlowEngine {
         return blocks.plus(block).toMutableList()
     }
 
-    fun wire(flows: List<Any>) {
+    fun wire(
+        flows: List<Any>, blocksDaoImpl: BlocksDaoImpl? = null,
+        user: UserDto? = null
+    ) {
         val containers = flows.filter { it is Container }.map { it as Container }
         this.flows = flows.filter { it is Block }.map { it as Block }.toMutableList()
         checkForFields()
         checkForIdUniqeness()
         wireDependencies()
-        registerNewContainersAsAction(containers)
+        registerNewContainersAsAction(containers, blocksDaoImpl, user)
         wireProperActsToBlocks()
     }
 
     private fun checkForFields() {
         flows.filter { it is Branch }.map { it as Branch }.forEach {
-            if (it.on == null)
-                throw RuntimeException("Branch id ${it.id} doesn't have on attribute!")
+            if (it.on == null) {
+                val msg = "Branch id ${it.id} doesn't have on attribute!"
+                listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
+                throw RuntimeException(msg)
+            }
         }
         flows.filter { it is Action }.map { it as Action }.firstOrNull { it.source }
-            ?: throw RuntimeException("There should be at least one source!")
+            ?: run {
+                if (flows.size!=0) {
+                    val msg = "There should be at least one source!"
+                    listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
+                    throw RuntimeException()
+                }
+            }
     }
 
     private fun findFirstLayer(flows: MutableList<Block>): List<Block> =
@@ -218,12 +252,13 @@ class FlowEngine {
     private fun parseContainers(toml: Toml): List<Container> = toml.toMap()["container"]?.let {
         (it as List<HashMap<String, Any>>).map {
             Container().apply {
-                type = it.getOrDefault("type", "normal") as String
+                type = it["type"] as? String ?: throw MissingFieldException("Type should be defined!")
                 id = it["id"]!! as String
                 firstBlock = it["first"] as String
                 lastBlock = it["last"] as String
                 description = it["description"]?.let { it as String }
                 update = (it["update"] as? Boolean) ?: false
+                params = it["params"] as? List<String>
             }
         }
     } ?: listOf()
@@ -431,18 +466,24 @@ class FlowEngine {
         return true
     }
 
-    private fun Container.toActionDto(): ActionDto = ActionDto(
-        type = this.type!!,
-        name = this.name!!,
-        description = this.description!!,
-        innerBlocks = getActionMap(this@FlowEngine.flows.first { it.id == this.firstBlock }).map {
-            InnerActionDto(
-                type = it.type!!,
-                id = it.id!!,
-                nextBlocks = (it as Action).nextBlocks
-            )
-        }
-    )
+    private fun containerToActionDto(container: Container, innerBlocks: List<Block>): ActionDto {
+        return ActionDto(
+            type = container.type ?: throw MissingFieldException("Type field should be defined for container!"),
+            name = container.name,
+            description = container.description,
+            innerBlocks = innerBlocks.map {
+                InnerActionDto(
+                    type = it.type!!,
+                    id = it.id!!,
+                    nextBlocks = (it as Action).nextBlocks,
+                    source = it.source,
+                    returnAfterExecution = it.returnAfterExec
+                )
+            },
+            params = container.params?: listOf()
+
+        )
+    }
 
 
 }
