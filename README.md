@@ -62,13 +62,12 @@ You can register listeners for actions to have a callback mechanism after execut
 This helps communicate easily while the engine takes care of running the actions.
 
 ## `Branch` block
-This block is desgined intentionally simple to make it easy for controling the flow of your work.
+This block is designed intentionally simple to make it easy for controling the flow of your work.
 ```toml
 [[branch]]
     name = "branch-1"
     id = "4"
-    [branch.params]
-        var-name = "value"
+    on = "value"
     [branch.mapping]
         branch-1 = "5"
         branch-2 = "6"
@@ -139,12 +138,52 @@ flowEngine.wire(flows)
 flowEngine.executeFlow()
 ```
 
+
+## Define Flows Programmatically
+```kotlin
+val flows = mutableListOf(
+    Action().apply {
+        name = "input 1"
+        id = "1"
+        type = "constant"
+        source = true
+        params = mutableMapOf("value" to "5")
+        nextBlocks = mutableListOf("delay-1")
+    }, Action().apply {
+        name = "input 2"
+        id = "2"
+        source = true
+        type = "constant"
+        params = mutableMapOf("value" to "3")
+        nextBlocks = mutableListOf("delay-2")
+    }, Action().apply {
+        name = "Delay 1"
+        id = "delay-1"
+        params = mutableMapOf("seconds" to "2")
+        type = "delay"
+        nextBlocks = mutableListOf("3")
+    }, Action().apply {
+        name = "Delay 2"
+        params = mutableMapOf("seconds" to "2")
+        id = "delay-2"
+        type = "delay"
+        nextBlocks = mutableListOf("3")
+    }, Action().apply {
+        name = "Log the result"
+        id = "3"
+        type = "log"
+    }
+)
+
+flowEngine.wire(flows)
+flowEngine.executeFlow()
+flowEngine.await()
+
+```
+
+
 * You can also register custom action types. Keep in mind that types must be unique for actions.
-`flowEngine.registerActions(customActions)`
 
 * You can build any action based on the elementary actions (no need to further implementation),
  but if you think you need more actions; you can implement and register your own types. 
 
-### Flow Prefixes
-You can add `id_prefix` on top of each toml file, this helps you with assigning `id` for your blocks. The engine will append `id_prefix`
-if it can't find the mentiond ids in the current file.
