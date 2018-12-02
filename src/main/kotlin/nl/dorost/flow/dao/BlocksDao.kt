@@ -1,10 +1,11 @@
 package nl.dorost.flow.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.auth.Credentials
 import com.google.cloud.Timestamp
 import com.google.cloud.datastore.*
 import nl.dorost.flow.MissingFieldException
-import nl.dorost.flow.blockKind
 import nl.dorost.flow.dto.ActionDto
 import nl.dorost.flow.dto.InnerActionDto
 import org.slf4j.LoggerFactory
@@ -20,6 +21,7 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
 
     val logger = LoggerFactory.getLogger(this.javaClass.name)
 
+    val objectMapper = ObjectMapper()
 
     private val datastore: Datastore
     private val keyFactory: KeyFactory
@@ -28,6 +30,7 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
         val options = DatastoreOptions.newBuilder().setCredentials(credentials).setProjectId(projectId).build()
         datastore = options.service
         keyFactory = datastore.newKeyFactory().setKind(kind)
+//        objectMapper.registerKotlinModule()
     }
 
 
@@ -67,6 +70,7 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
             .set("id", this.id)
             .set("source", this.source)
             .set("return-after-execution", this.returnAfterExecution)
+            .set("params", objectMapper.writeValueAsString(this.params))
             .set("next-blocks", this.nextBlocks.map { StringValue.of(it) })
             .build()
 
@@ -83,19 +87,21 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
     )
 
     private fun MutableList<EntityValue>.toInnerBlocks(): List<InnerActionDto> = this.map {
-        it.toInnerBlock()
+        entitytoInnerBlock(it.get())
     }
 
-    private fun EntityValue.toInnerBlock(): InnerActionDto {
-        val entity = this.get()
+
+    private fun entitytoInnerBlock(entity: FullEntity<*>): InnerActionDto {
         return InnerActionDto(
             id = entity.getString("id"),
             type = entity.getString("type"),
             nextBlocks = entity.getList<StringValue>("next-blocks").map { it.get() }.toMutableList(),
             source = entity.getBoolean("source"),
-            returnAfterExecution = entity.getBoolean("return-after-execution")
-
+            returnAfterExecution = entity.getBoolean("return-after-execution"),
+            params = objectMapper.readValue(entity.getString("params"), object :
+                TypeReference<Map<String, String>>() {}) as Map<String, String>
         )
+
     }
 
     private fun ActionDto.toEntity(): FullEntity<*>? = Entity.newBuilder(keyFactory.newKey())
@@ -103,7 +109,7 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
         .set("name", this.name ?: "")
         .set("creation-time", Timestamp.now())
         .set("description", this.description ?: "")
-        .set("params", this.params.map {StringValue.of(it) })
+        .set("params", this.params.map { StringValue.of(it) })
         .set("user-id", this.userId ?: throw MissingFieldException("User ID is missing!"))
         .set("innner-blocks", this.innerBlocks.toEntity())
         .build()

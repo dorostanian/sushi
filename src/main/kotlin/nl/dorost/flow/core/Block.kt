@@ -23,7 +23,7 @@ open class Action(
     var nextBlocks: MutableList<String> = mutableListOf(),
     var returnAfterExec: Boolean = false,
     var source: Boolean = false,
-    var params: MutableMap<String, String>? = null,
+    var params: MutableMap<String, String> = mutableMapOf(),
     var innnerBlocks: MutableList<Block>? = null,
     var act: ((input: MutableMap<String, Any>, action: Action) -> MutableMap<String, Any>)? = null
 ) : Block() {

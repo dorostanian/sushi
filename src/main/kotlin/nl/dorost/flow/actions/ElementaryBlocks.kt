@@ -1,11 +1,7 @@
 package nl.dorost.flow.actions
 
 import com.github.kittinunf.fuel.Fuel
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.consumesAll
 import nl.dorost.flow.core.Action
-import org.slf4j.LoggerFactory
-import java.lang.RuntimeException
 
 
 val elementaryActions = mutableListOf(
@@ -25,7 +21,7 @@ val elementaryActions = mutableListOf(
         act = { input, action ->
             action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
             val constValue =
-                action.params!!["value"] ?: throw UnsatisfiedParamsException("Parameter not found for action Id: ${action.id}")
+                action.params["value"] ?: throw UnsatisfiedParamsException("Parameter not found for action Id: ${action.id}")
             mutableMapOf("value" to constValue)
         }
         params = mutableMapOf("value" to "")
@@ -36,9 +32,9 @@ val elementaryActions = mutableListOf(
         type = "http-post"
         act = { input, action ->
             action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
-            val url = action.params!!["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
-            val contentType = action.params!!["CONTENT_TYPE"] ?: "application/json"
-            val accept = action.params!!["Accept"] ?: "application/json"
+            val url = action.params["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
+            val contentType = action.params["CONTENT_TYPE"] ?: "application/json"
+            val accept = action.params["Accept"] ?: "application/json"
             val body = input["body"] ?: UnsatisfiedParamsException("Missing body in the input!")
 
             val result = Fuel
@@ -56,9 +52,9 @@ val elementaryActions = mutableListOf(
         params = mutableMapOf("url" to "", "Accept" to "application/json", "ContentType" to "", "body" to "")
         act = { input, action ->
             action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
-            val url = action.params!!["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
-            val contentType = action.params!!["CONTENT_TYPE"] ?: "application/json"
-            val accept = action.params!!["Accept"] ?: "application/json"
+            val url = action.params["url"] ?: throw UnsatisfiedParamsException("Parameter url not found!")
+            val contentType = action.params["CONTENT_TYPE"] ?: "application/json"
+            val accept = action.params["Accept"] ?: "application/json"
             val result = Fuel.get(url)
                 .header("ContentType" to contentType, "Accept" to accept)
                 .responseString()
@@ -73,7 +69,7 @@ val elementaryActions = mutableListOf(
         type = "json-in"
         act = { input, action ->
             action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}") }
-            val value = action.params!!["value"] ?: throw UnsatisfiedParamsException("Value not found!")
+            val value = action.params["value"] ?: throw UnsatisfiedParamsException("Value not found!")
             mutableMapOf("body" to value)
         }
     },
@@ -82,7 +78,8 @@ val elementaryActions = mutableListOf(
         params = mutableMapOf("seconds" to "1")
         type = "delay"
         act = { input, action ->
-            Thread.sleep(action.params!!["seconds"]!!.toLong() * 1000)
+            val secondsToWait = action.params["seconds"] ?: throw UnsatisfiedParamsException("Missing seconds param!")
+            Thread.sleep(secondsToWait.toLong() * 1000)
             input
         }
     }
@@ -98,6 +95,5 @@ val elementaryActions = mutableListOf(
 
 
 class UnsatisfiedParamsException(msg: String) : RuntimeException(msg)
-
 class UnsatisfiedInputException(msg: String) : RuntimeException(msg)
 

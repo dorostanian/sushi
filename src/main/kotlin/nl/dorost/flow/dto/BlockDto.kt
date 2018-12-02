@@ -18,6 +18,7 @@ data class InnerActionDto(
     val type: String,
     val source: Boolean = false,
     val returnAfterExecution: Boolean= false,
+    val params: Map<String, String> = mapOf(),
     val nextBlocks: MutableList<String>
 
 )

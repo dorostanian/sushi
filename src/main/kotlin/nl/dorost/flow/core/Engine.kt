@@ -65,6 +65,7 @@ class FlowEngine {
                         type = it.type
                         nextBlocks = it.nextBlocks
                         source = it.source
+                        params = it.params.toMutableMap()
                         returnAfterExec = it.returnAfterExecution
                     }
                 }.toMutableList()
@@ -173,7 +174,7 @@ class FlowEngine {
                     secondaryActions.add(
                         Action().apply {
                             type = container.type
-                            params = container.params?.map { it to "" }?.toMap()?.toMutableMap()
+                            params = container.params.map { it to "" }.toMap().toMutableMap()
                             innnerBlocks = innerBlocks
                         }
                     )
@@ -186,7 +187,7 @@ class FlowEngine {
                 this.secondaryActions.add(
                     Action().apply {
                         type = container.type
-                        params = container.params?.map { it to "" }?.toMap()?.toMutableMap()
+                        params = container.params.map { it to "" }.toMap().toMutableMap()
                         innnerBlocks = innerBlocks
                     }
                 )
@@ -275,7 +276,7 @@ class FlowEngine {
                 lastBlock = it["last"] as String
                 description = it["description"]?.let { it as String }
                 update = (it["update"] as? Boolean) ?: false
-                params = it["params"] as? List<String>
+                params = it["params"] as? List<String> ?:  listOf()
             }
         }
     } ?: listOf()
@@ -494,10 +495,11 @@ class FlowEngine {
                     id = it.id!!,
                     nextBlocks = (it as Action).nextBlocks,
                     source = it.source,
+                    params = it.params,
                     returnAfterExecution = it.returnAfterExec
                 )
             },
-            params = container.params ?: listOf()
+            params = container.params
 
         )
     }
