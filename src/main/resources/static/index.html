@@ -278,7 +278,7 @@ id = "cont-3"
                 <hr>
                 <b>Name: </b>
                 <input class="form-control form-control-sm" type="text" :value="action.name"
-                       id="modal-action-name">
+                       id="modal-edit-action-name">
                 <hr>
                 <h4>Action Params:</h4>
 
@@ -289,7 +289,7 @@ id = "cont-3"
                             {{key}}
                         </td>
                         <td>
-                            <input class="form-control form-control-sm" type="text" v-bind:value="value"></td>
+                            <input class="form-control form-control-sm" type="text" v-bind:value="value" v-bind:id="'param_'+key"></td>
                         <td>
                     </tr>
 
@@ -321,7 +321,7 @@ id = "cont-3"
                     </div>
                     <div class="radio">
                         <label><input id="modal-action-none" class="form-check-input" type="radio" name="optionsRadios"
-                                      value="None">
+                                      value="None" checked="checked">
                             None</label>
                     </div>
                 </div>

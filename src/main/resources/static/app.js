@@ -219,6 +219,7 @@ function bindActions() {
             var currentId = strIdsplits.slice(0, strIdsplits.length - 1).join('-');
             appendInfo("Request: Editing the block: \"" + currentId + "\" , fetching info...");
             getAction(currentId);
+            $('#modal-action-none').prop('checked', true);
             $('#block-modal').modal('show');
         }
     );
@@ -268,6 +269,63 @@ function addActionToGraph(currentActionType) {
 }
 
 
+function updateAction() {
+    var allParams = $('[id^=param_]');
+
+    for (let param of allParams ) {
+        var strIdsplits = param.id.split('_');
+        var currentParam = strIdsplits.slice(1, strIdsplits.length).join('_');
+
+        blockEditModal.action.params[currentParam] = param.value;
+    }
+
+    blockEditModal.action.name = $('#modal-edit-action-name').val();
+    blockEditModal.action.source = $('#modal-action-first').is(':checked');
+    blockEditModal.action.returnAfterExec =  $('#modal-action-return').is(':checked');
+    if ( $('#modal-action-none').is(':checked')) {
+        blockEditModal.action.source = false;
+        blockEditModal.action.returnAfterExec = false;
+    }
+
+
+    console.log('Source = ' + blockEditModal.action.source);
+    console.log('Return = ' + blockEditModal.action.returnAfterExec);
+
+
+    appendInfo("Request: Edit Block!");
+    $.ajax({
+        type: "PUT",
+        url: "/editBlock",
+        data: JSON.stringify({
+            id: blockEditModal.action.id,
+            name: blockEditModal.action.name,
+            params: blockEditModal.action.params,
+            source: blockEditModal.action.source,
+            returnAfterExec: blockEditModal.action.returnAfterExec
+        }),
+        crossDomain: true,
+        contentType: "application/json"
+
+    }).done(function (data) {
+
+        var responseJson = JSON.parse(data);
+        var logOutput = responseJson.responseLog;
+        var digraphData = responseJson.digraphData;
+        var tomlData = responseJson.tomlData;
+
+        appendInfo(logOutput);
+        editor.setValue(tomlData, -1);
+
+        drawGraphWithDigraphData(digraphData);
+
+        $('#block-modal').modal('hide');
+
+    }).fail(function (xhr, textStatus, errorThrown) {
+        appendError(JSON.parse(xhr.responseText).responseLog);
+    });
+}
+
+
 function executeFlow(){
     appendInfo("Request: executing the flow...")
     $.ajax({
@@ -275,6 +333,10 @@ function executeFlow(){
         url: "/executeFlow",
         data: editor.getValue() + '\n' + editorContainers.getValue(),
         crossDomain: true,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
 
     }).done(function (data) {
 

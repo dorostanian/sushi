@@ -15,6 +15,7 @@ import io.ktor.response.respond
 import io.ktor.response.respondFile
 import io.ktor.routing.get
 import io.ktor.routing.post
+import io.ktor.routing.put
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -27,6 +28,7 @@ import mu.KotlinLogging
 import nl.dorost.flow.core.*
 import nl.dorost.flow.dao.BlocksDaoImpl
 import nl.dorost.flow.dao.UserDaoImpl
+import nl.dorost.flow.dto.ActionDto
 import nl.dorost.flow.dto.UserDto
 import nl.dorost.flow.utils.ResponseMessage
 import java.io.File
@@ -134,6 +136,29 @@ fun main(args: Array<String>) {
 
                 }
 
+            }
+
+            put("/editBlock"){
+                val actionStr = call.receiveText()
+                val actionToUpdate = objectMapper.readValue(actionStr, Action::class.java)
+                (flowEngine.flows.first{ it.id==actionToUpdate.id.toString()} as Action).apply {
+                    name = actionToUpdate.name
+                    params = actionToUpdate.params
+                    source = actionToUpdate.source
+                    returnAfterExec = actionToUpdate.returnAfterExec
+                }
+                val toml = flowEngine.blocksToToml(flowEngine.flows)
+                val digraph = flowEngine.blocksToDigraph()
+                call.respond(
+                    HttpStatusCode.OK,
+                    objectMapper.writeValueAsString(
+                        ResponseMessage(
+                            responseLog = "Successfully edited action in the flow!",
+                            tomlData = toml,
+                            digraphData = digraph
+                        )
+                    )
+                )
             }
 
 

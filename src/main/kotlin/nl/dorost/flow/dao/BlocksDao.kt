@@ -14,6 +14,7 @@ interface BlocksDao {
     fun registerNewAction(action: ActionDto): ActionDto
     fun getActionByType(type: String): ActionDto?
     fun getAllSecondaryActions(): List<ActionDto>
+//    fun updateContainer(action: ActionDto): Boolean
 }
 
 
