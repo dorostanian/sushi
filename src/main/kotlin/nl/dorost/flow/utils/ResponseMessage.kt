@@ -8,5 +8,6 @@ data class ResponseMessage(
     val digraphData: String? = null,
     val blockInfo: Block? = null,
     val tomlData: String? = null,
+    val blocksIds: List<String>? = null,
     val library: List<Action>? = null
 )

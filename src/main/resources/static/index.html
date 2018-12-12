@@ -206,7 +206,7 @@ id = "cont-3"
 
         <td class="table-dark">
             <div class="text-center">
-                <button type="button" class="btn btn-warning btn-block text-center">
+                <button type="button" class="btn btn-warning btn-block text-center" onclick="addBranch()">
                     Add Branch
                 </button>
             </div>
@@ -298,9 +298,9 @@ id = "cont-3"
                 <hr>
                 <h4>Action Output Keys:</h4>
                 <table class="table table-secondary" id="modal-action-output-keys">
-                    <tr>
+                    <tr v-for="key in action.outputKeys">
                         <td>
-                            Key Name
+                            {{key}}
                         </td>
                     </tr>
                 </table>
@@ -324,6 +324,13 @@ id = "cont-3"
                                       value="None" checked="checked">
                             None</label>
                     </div>
+                </div>
+
+
+                <div class="form-check">
+                    <label>Next Blocks:</label>
+                    <input id="nextBlocks" class="form-control btn-block" data-multiple onkeyup="bindToNextBlock(this.value)"/>
+
                 </div>
 
             </div>

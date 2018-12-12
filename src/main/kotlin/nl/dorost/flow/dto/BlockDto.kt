@@ -2,7 +2,7 @@ package nl.dorost.flow.dto
 
 import com.google.cloud.Timestamp
 
-data class ActionDto(
+data class ContainerDto(
     val id: Long? = null,
     val name: String?,
     val description: String?,
@@ -10,7 +10,9 @@ data class ActionDto(
     val innerBlocks: List<InnerActionDto>,
     val params: List<String>,
     val userId: Long? = null,
-    val creationTime: Timestamp? = null
+    val creationTime: Timestamp? = null,
+    val outputKeys: List<String> = listOf(),
+    val public: Boolean
 )
 
 data class InnerActionDto(

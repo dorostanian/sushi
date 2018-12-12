@@ -24,6 +24,7 @@ open class Action(
     var returnAfterExec: Boolean = false,
     var source: Boolean = false,
     var params: MutableMap<String, String> = mutableMapOf(),
+    var outputKeys: List<String> = listOf(),
     var innnerBlocks: MutableList<Block>? = null,
     var act: ((input: MutableMap<String, Any>, action: Action) -> MutableMap<String, Any>)? = null
 ) : Block() {

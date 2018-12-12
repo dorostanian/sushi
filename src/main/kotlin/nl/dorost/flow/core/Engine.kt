@@ -8,7 +8,7 @@ import nl.dorost.flow.NonUniqueTypeException
 import nl.dorost.flow.TypeNotRegisteredException
 import nl.dorost.flow.actions.elementaryActions
 import nl.dorost.flow.dao.BlocksDaoImpl
-import nl.dorost.flow.dto.ActionDto
+import nl.dorost.flow.dto.ContainerDto
 import nl.dorost.flow.dto.InnerActionDto
 import nl.dorost.flow.dto.UserDto
 import java.nio.file.Files
@@ -277,6 +277,7 @@ class FlowEngine {
                 description = it["description"]?.let { it as String }
                 update = (it["update"] as? Boolean) ?: false
                 params = it["params"] as? List<String> ?:  listOf()
+                outputKeys = it["output-keys"] as? List<String> ?: listOf()
             }
         }
     } ?: listOf()
@@ -484,8 +485,8 @@ class FlowEngine {
         return true
     }
 
-    private fun containerToActionDto(container: Container, innerBlocks: List<Block>): ActionDto {
-        return ActionDto(
+    private fun containerToActionDto(container: Container, innerBlocks: List<Block>): ContainerDto {
+        return ContainerDto(
             type = container.type ?: throw MissingFieldException("Type field should be defined for container!"),
             name = container.name,
             description = container.description,
@@ -499,8 +500,9 @@ class FlowEngine {
                     returnAfterExecution = it.returnAfterExec
                 )
             },
-            params = container.params
-
+            params = container.params,
+            outputKeys = container.outputKeys,
+            public = container.public
         )
     }
 

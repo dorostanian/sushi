@@ -8,5 +8,7 @@ class Container(
     var lastBlock: String? = null,
     var description: String? = null,
     var params: List<String> = listOf(),
-    var update: Boolean = false
+    var update: Boolean = false,
+    var outputKeys: List<String> = listOf(),
+    var public: Boolean = false
 )

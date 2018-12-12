@@ -6,15 +6,15 @@ import com.google.auth.Credentials
 import com.google.cloud.Timestamp
 import com.google.cloud.datastore.*
 import nl.dorost.flow.MissingFieldException
-import nl.dorost.flow.dto.ActionDto
+import nl.dorost.flow.dto.ContainerDto
 import nl.dorost.flow.dto.InnerActionDto
 import org.slf4j.LoggerFactory
 
 interface BlocksDao {
-    fun registerNewAction(action: ActionDto): ActionDto
-    fun getActionByType(type: String): ActionDto?
-    fun getAllSecondaryActions(): List<ActionDto>
-//    fun updateContainer(action: ActionDto): Boolean
+    fun registerNewAction(container: ContainerDto): ContainerDto
+    fun getActionByType(type: String): ContainerDto?
+    fun getAllSecondaryActions(): List<ContainerDto>
+//    fun updateContainer(action: ContainerDto): Boolean
 }
 
 
@@ -35,13 +35,13 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
     }
 
 
-    override fun registerNewAction(action: ActionDto): ActionDto {
-        val entity = action.toEntity()
+    override fun registerNewAction(container: ContainerDto): ContainerDto {
+        val entity = container.toEntity()
         val newId = datastore.add(entity)
-        return action.copy(id = newId.key.id)
+        return container.copy(id = newId.key.id)
     }
 
-    override fun getActionByType(type: String): ActionDto? {
+    override fun getActionByType(type: String): ContainerDto? {
         val query = Query.newEntityQueryBuilder()
             .setFilter(StructuredQuery.PropertyFilter.eq("type", type))
             .setKind(kind)
@@ -49,17 +49,17 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
             .build()
         val resultList = datastore.run(query)
         return if (resultList.hasNext())
-            resultList.next().toAction()
+            resultList.next().toContainerDto()
         else
             null
     }
 
-    override fun getAllSecondaryActions(): List<ActionDto> {
+    override fun getAllSecondaryActions(): List<ContainerDto> {
         val query = Query.newEntityQueryBuilder()
             .setKind(kind)
             .build()
         val resultList = datastore.run(query)
-        return resultList.iterator().asSequence().map { it.toAction() }.toList()
+        return resultList.iterator().asSequence().map { it.toContainerDto() }.toList()
     }
 
     private fun List<InnerActionDto>.toEntity(): List<EntityValue> =
@@ -76,7 +76,7 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
             .build()
 
 
-    private fun Entity.toAction() = ActionDto(
+    private fun Entity.toContainerDto() = ContainerDto(
         id = this.key.id,
         userId = this.getLong("user-id"),
         creationTime = this.getTimestamp("creation-time"),
@@ -84,7 +84,9 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
         name = this.getString("name"),
         description = this.getString("description"),
         innerBlocks = this.getList<EntityValue>("innner-blocks").toInnerBlocks(),
-        params = this.getList<StringValue>("params").map { it.get() }
+        params = this.getList<StringValue>("params").map { it.get() },
+        outputKeys = this.getList<StringValue>("output-keys").map { it.get() },
+        public = this.getBoolean("public")
     )
 
     private fun MutableList<EntityValue>.toInnerBlocks(): List<InnerActionDto> = this.map {
@@ -105,7 +107,7 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
 
     }
 
-    private fun ActionDto.toEntity(): FullEntity<*>? = Entity.newBuilder(keyFactory.newKey())
+    private fun ContainerDto.toEntity(): FullEntity<*>? = Entity.newBuilder(keyFactory.newKey())
         .set("type", this.type)
         .set("name", this.name ?: "")
         .set("creation-time", Timestamp.now())
@@ -113,6 +115,8 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
         .set("params", this.params.map { StringValue.of(it) })
         .set("user-id", this.userId ?: throw MissingFieldException("User ID is missing!"))
         .set("innner-blocks", this.innerBlocks.toEntity())
+        .set("output-keys", this.outputKeys.map { StringValue.of(it) })
+        .set("public", this.public)
         .build()
 
 }

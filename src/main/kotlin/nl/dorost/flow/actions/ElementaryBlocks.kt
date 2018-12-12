@@ -13,6 +13,7 @@ val elementaryActions = mutableListOf(
             action.listeners.forEach { it.updateReceived(message = "LOG: Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
             input
         }
+        outputKeys = listOf()
     },
     Action().apply {
         name = "Constant Producer"
@@ -22,9 +23,10 @@ val elementaryActions = mutableListOf(
             action.listeners.forEach { it.updateReceived(message = "Action id '${action.id}': ${action.name}. Input Value: ${input}, params: ${action.params}") }
             val constValue =
                 action.params["value"] ?: throw UnsatisfiedParamsException("Parameter not found for action Id: ${action.id}")
-            mutableMapOf("value" to constValue)
+            input.plus(mutableMapOf("value" to constValue)).toMutableMap()
         }
         params = mutableMapOf("value" to "")
+        outputKeys = listOf("value")
     },
     Action().apply {
         name = "Makes http POST call"
@@ -44,6 +46,8 @@ val elementaryActions = mutableListOf(
                 .responseString()
             mutableMapOf("response" to String(result.second.data))
         }
+        outputKeys = listOf("response")
+
     },
     Action().apply {
         name = "Makes http GET call"
@@ -60,6 +64,8 @@ val elementaryActions = mutableListOf(
                 .responseString()
             mutableMapOf("response" to String(result.second.data))
         }
+        outputKeys = listOf("response")
+
     },
     Action().apply {
         name = "JSON Input"
@@ -72,6 +78,7 @@ val elementaryActions = mutableListOf(
             val value = action.params["value"] ?: throw UnsatisfiedParamsException("Value not found!")
             mutableMapOf("body" to value)
         }
+        outputKeys = listOf("body")
     },
     Action().apply {
         name = "Delay"

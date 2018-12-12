@@ -28,7 +28,6 @@ import mu.KotlinLogging
 import nl.dorost.flow.core.*
 import nl.dorost.flow.dao.BlocksDaoImpl
 import nl.dorost.flow.dao.UserDaoImpl
-import nl.dorost.flow.dto.ActionDto
 import nl.dorost.flow.dto.UserDto
 import nl.dorost.flow.utils.ResponseMessage
 import java.io.File
@@ -119,7 +118,8 @@ fun main(args: Array<String>) {
                         objectMapper.writeValueAsString(
                             ResponseMessage(
                                 responseLog = "Successfully converted TOML to Digraph.",
-                                digraphData = digraph
+                                digraphData = digraph,
+                                blocksIds = flowEngine.flows.map { it.id!! }
                             )
                         )
                     )
@@ -155,7 +155,8 @@ fun main(args: Array<String>) {
                         ResponseMessage(
                             responseLog = "Successfully edited action in the flow!",
                             tomlData = toml,
-                            digraphData = digraph
+                            digraphData = digraph,
+                            blocksIds = flowEngine.flows.map { it.id!! }
                         )
                     )
                 )
@@ -211,12 +212,39 @@ fun main(args: Array<String>) {
                             ResponseMessage(
                                 responseLog = "Successfully added new action to flow!",
                                 tomlData = toml,
-                                digraphData = digraph
+                                digraphData = digraph,
+                                blocksIds = flowEngine.flows.map { it.id!! }
                             )
                         )
                     )
                 }
 
+
+            }
+
+
+            get("/addBranch"){
+                flowEngine.flows.add(
+                    Branch().apply {
+                        name = "New Branch"
+                        id = UUID.randomUUID().toString()
+                        on = "{specify-variable-name}"
+                    }
+                )
+                flowEngine.wire(flowEngine.flows)
+                val toml = flowEngine.blocksToToml(flowEngine.flows)
+                val digraph = flowEngine.blocksToDigraph()
+                call.respond(
+                    HttpStatusCode.OK,
+                    objectMapper.writeValueAsString(
+                        ResponseMessage(
+                            responseLog = "Successfully added new action to flow!",
+                            tomlData = toml,
+                            digraphData = digraph,
+                            blocksIds = flowEngine.flows.map { it.id!! }
+                        )
+                    )
+                )
 
             }
 
@@ -276,7 +304,8 @@ fun main(args: Array<String>) {
                         ResponseMessage(
                             responseLog = "Action Removed successfully!",
                             digraphData = digraph,
-                            tomlData = tomlText
+                            tomlData = tomlText,
+                            blocksIds = flowEngine.flows.map { it.id!! }
                         )
                     )
                 )

@@ -6,17 +6,18 @@ var g;
 
 var awesomplete;
 var actions;
+var blocksIds;
 
 var addedActionContainer = new Vue({
-        el: '#added-action-container',
-        data: {
-            action: {
-                type: "",
-                name: "",
-                docs: ""
-            }
+    el: '#added-action-container',
+    data: {
+        action: {
+            type: "",
+            name: "",
+            docs: ""
         }
-    });
+    }
+});
 
 var blockEditModal = new Vue({
     el: '#block-modal',
@@ -32,7 +33,25 @@ var blockEditModal = new Vue({
 
 
 var input = document.getElementById("actionsDir");
+var nextBlocks = document.getElementById("nextBlocks");
 awesomplete = new Awesomplete(input);
+awesomplete_Ids = new Awesomplete(nextBlocks,
+    {
+        filter: function (text, input) {
+            return Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);
+        },
+
+        item: function (text, input) {
+            return Awesomplete.ITEM(text, input.match(/[^,]*$/)[0]);
+        },
+
+        replace: function (text) {
+            var before = this.input.value.match(/^.+,\s*|/)[0];
+            this.input.value = before + text + ", ";
+        }
+    }
+);
+
 
 input.addEventListener("awesomplete-select", function (selection) {
     var action = actions.find(obj => obj.type == selection.text);
@@ -76,7 +95,7 @@ function clearAction(val) {
 function populateActionsList() {
     $.ajax({
         type: "GET",
-        url: "http://localhost:8080/getLibrary/",
+        url: "/getLibrary/",
         crossDomain: true,
 
     }).done(function (data) {
@@ -99,6 +118,20 @@ function setupDagre() {
         });
     zoom.transform(svg, d3.zoomIdentity);
     svg.call(zoom);
+
+    svg.selectAll("rect").append("rect")
+        .attr("y", 10)
+        .attr("x", 10)
+        .attr("height", 5)
+        .attr("width", 5)
+        .on("click", function (d, i) {
+            console.log(" clicked!");
+        })
+        .on("contextmenu", function (d, i) {
+            d3.event.preventDefault();
+            // react on right-clicking
+            console.log("Doubly clicked!");
+        });
 }
 
 
@@ -116,10 +149,13 @@ function drawGraph() {
         var responseJson = JSON.parse(data);
         var logOutput = responseJson.responseLog;
         var digraphData = responseJson.digraphData;
+        blocksIds = responseJson.blocksIds;
+        awesomplete_Ids.list = blocksIds;
 
         appendInfo(logOutput);
 
         drawGraphWithDigraphData(digraphData);
+
 
     }).fail(function (xhr, textStatus, errorThrown) {
         appendError(JSON.parse(xhr.responseText).responseLog);
@@ -172,7 +208,8 @@ function deleteAction(currentActionId) {
             var logOutput = responseJson.responseLog;
             var digraphData = responseJson.digraphData;
             var tomlText = responseJson.tomlData;
-            // console.log(tomlText);
+            blocksIds = responseJson.blocksIds;
+            awesomplete_Ids.list = blocksIds;
             editor.setValue(tomlText, -1);
             appendInfo(logOutput);
 
@@ -185,7 +222,7 @@ function deleteAction(currentActionId) {
 function getAction(currentActionId) {
     $.ajax({
         type: "GET",
-        url: "http://localhost:8080/getAction/" + currentActionId,
+        url: "/getAction/" + currentActionId,
         crossDomain: true
     }).done(
         function (data) {
@@ -254,6 +291,8 @@ function addActionToGraph(currentActionType) {
                 var logOutput = responseJson.responseLog;
                 var tomlData = responseJson.tomlData;
                 var digraphData = responseJson.digraphData;
+                blocksIds = responseJson.blocksIds;
+                awesomplete_Ids.list = blocksIds;
                 appendInfo(logOutput);
                 editor.setValue(tomlData, -1);
                 drawGraphWithDigraphData(digraphData);
@@ -272,7 +311,7 @@ function addActionToGraph(currentActionType) {
 function updateAction() {
     var allParams = $('[id^=param_]');
 
-    for (let param of allParams ) {
+    for (let param of allParams) {
         var strIdsplits = param.id.split('_');
         var currentParam = strIdsplits.slice(1, strIdsplits.length).join('_');
 
@@ -281,8 +320,8 @@ function updateAction() {
 
     blockEditModal.action.name = $('#modal-edit-action-name').val();
     blockEditModal.action.source = $('#modal-action-first').is(':checked');
-    blockEditModal.action.returnAfterExec =  $('#modal-action-return').is(':checked');
-    if ( $('#modal-action-none').is(':checked')) {
+    blockEditModal.action.returnAfterExec = $('#modal-action-return').is(':checked');
+    if ($('#modal-action-none').is(':checked')) {
         blockEditModal.action.source = false;
         blockEditModal.action.returnAfterExec = false;
     }
@@ -312,6 +351,8 @@ function updateAction() {
         var logOutput = responseJson.responseLog;
         var digraphData = responseJson.digraphData;
         var tomlData = responseJson.tomlData;
+        blocksIds = responseJson.blocksIds;
+        awesomplete_Ids.list = blocksIds;
 
         appendInfo(logOutput);
         editor.setValue(tomlData, -1);
@@ -325,8 +366,50 @@ function updateAction() {
     });
 }
 
+function addBranch(){
+    appendInfo("Requesting TOML to Digraph conversion!");
+    setupDagre();
+    $.ajax({
+        type: "POST",
+        url: "/tomlToDigraph",
+        data: editor.getValue() + '\n' + editorContainers.getValue(),
+        crossDomain: true,
 
-function executeFlow(){
+    }).done(function (data) {
+
+        var responseJson = JSON.parse(data);
+        var logOutput = responseJson.responseLog;
+        var digraphData = responseJson.digraphData;
+
+        appendInfo(logOutput);
+
+        drawGraphWithDigraphData(digraphData);
+
+        $.ajax({
+            type: "GET",
+            url: "/addBranch",
+            crossDomain: true
+        }).done(function (data) {
+                var responseJson = JSON.parse(data);
+                var logOutput = responseJson.responseLog;
+                var tomlData = responseJson.tomlData;
+                var digraphData = responseJson.digraphData;
+                appendInfo(logOutput);
+                editor.setValue(tomlData, -1);
+                drawGraphWithDigraphData(digraphData);
+
+            }
+        ).fail(function (xhr, textStatus, errorThrown) {
+            appendError(JSON.parse(xhr.responseText).responseLog);
+        });
+
+    }).fail(function (xhr, textStatus, errorThrown) {
+        appendError(JSON.parse(xhr.responseText).responseLog);
+    });
+}
+
+
+function executeFlow() {
     appendInfo("Request: executing the flow...")
     $.ajax({
         type: "POST",
@@ -353,16 +436,16 @@ function executeFlow(){
 }
 
 var ws = new WebSocket('ws://localhost:8080/ws');
-ws.onopen = function() {
+ws.onopen = function () {
     appendInfo('Connected to backend!');
 };
-ws.onclose = function() {
+ws.onclose = function () {
     appendError('Disconnected from backend!');
 };
 
-ws.onmessage = function(event) {
+ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
-    if (data.first=='ERROR')
+    if (data.first == 'ERROR')
         appendError(data.second)
     else
         appendInfo(data.second);

@@ -13,7 +13,7 @@ implementations for building state machines. (tbd)
 # Motivation
 
 The idea of building **Sushi** born in my mind while trying to build a software that contains lots of steps and conditions.
-In the beginning you start writing the definition of states and their conenctions but eventually it grows to an spaghetti,
+In the beginning you start writing the definition of states and their conections but eventually it grows to an spaghetti,
 to overcome this issue I started The **Sushi** Project. Sushi helps us to write complicated flows in easy and expressive way.
 
 
