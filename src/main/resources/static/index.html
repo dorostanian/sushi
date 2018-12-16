@@ -55,7 +55,7 @@
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#"><span class="text-info">Sushi</span>  Flow Design Tool</a>
+    <a class="navbar-brand" href="#"><span class="text-info">Sushi</span> Flow Design Tool</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
             aria-controls="navbarColor01"
             aria-expanded="false" aria-label="Toggle navigation">
@@ -84,8 +84,7 @@
     <colgroup>
         <col width="22.5%">
         <col width="22.5%">
-        <col width="5%">
-        <col width="40%">
+        <col width="45%">
         <col width="10%">
     </colgroup>
 
@@ -93,65 +92,65 @@
         <td>
             <h3>Main Flow</h3>
             <div id="editor">
-[[action]]
-name = "intial action"
-source = true
-type = "http-get"
-id = "initial-action"
-next = ["new-defined-action"]
-[action.params]
-url = "https://postman-echo.com/get?foo1=bar1&foo2=bar2"
+                [[action]]
+                name = "intial action"
+                source = true
+                type = "http-get"
+                id = "initial-action"
+                next = ["new-defined-action"]
+                [action.params]
+                url = "https://postman-echo.com/get?foo1=bar1&foo2=bar2"
 
 
-[[action]]
-name = "new defined action"
-type = "constant"
-id = "new-defined-action"
-next = ["4"]
-[action.params]
-value = "branch-2"
+                [[action]]
+                name = "new defined action"
+                type = "constant"
+                id = "new-defined-action"
+                next = ["4"]
+                [action.params]
+                value = "branch-2"
 
-[[branch]]
-name = "branch-1"
-id = "4"
-on = "value"
-[branch.mapping]
-branch-1 = "5"
-branch-2 = "6"
-branch-3 = "7"
+                [[branch]]
+                name = "branch-1"
+                id = "4"
+                on = "value"
+                [branch.mapping]
+                branch-1 = "5"
+                branch-2 = "6"
+                branch-3 = "7"
 
-[[action]]
-name = "action-3"
-type = "constant"
-id = "5"
-next = ["7"]
-[action.params]
-param-4 = "value-4"
-
-
-[[action]]
-name = "Branch eventually came here!"
-type = "constant"
-id = "6"
-returnAfter = false
-next = ["new-action-id"]
-[action.params]
-    value = "value-5"
+                [[action]]
+                name = "action-3"
+                type = "constant"
+                id = "5"
+                next = ["7"]
+                [action.params]
+                param-4 = "value-4"
 
 
-[[action]]
-name = "action-5"
-type = "constant"
-id = "7"
-output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
-[action.params]
-param-6 = "value-6"
+                [[action]]
+                name = "Branch eventually came here!"
+                type = "constant"
+                id = "6"
+                returnAfter = false
+                next = ["new-action-id"]
+                [action.params]
+                value = "value-5"
 
 
-[[action]]
-name = "Use New Registered Action Here"
-type = "new-action"
-id = "new-action-id"
+                [[action]]
+                name = "action-5"
+                type = "constant"
+                id = "7"
+                output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
+                [action.params]
+                param-6 = "value-6"
+
+
+                [[action]]
+                name = "Use New Registered Action Here"
+                type = "new-action"
+                id = "new-action-id"
 
             </div>
 
@@ -161,43 +160,35 @@ id = "new-action-id"
             <h3>Containers </h3>
 
             <div id="editor-containers">
-[[container]]
-name = "My Container"
-id = "my-container"
-type = "new-action"
-description = "This new action does a simple task"
-first = "cont-1"
-last = "cont-3"
+                [[container]]
+                name = "My Container"
+                id = "my-container"
+                type = "new-action"
+                description = "This new action does a simple task"
+                first = "cont-1"
+                last = "cont-3"
 
 
-[[action]]
-name = "Inside container 1"
-type = "log"
-id = "cont-1"
-next = ["cont-2"]
+                [[action]]
+                name = "Inside container 1"
+                type = "log"
+                id = "cont-1"
+                next = ["cont-2"]
 
-[[action]]
-name = "Inside container 2"
-type = "delay"
-id = "cont-2"
-next = ["cont-3"]
-[action.params]
-seconds = "3"
+                [[action]]
+                name = "Inside container 2"
+                type = "delay"
+                id = "cont-2"
+                next = ["cont-3"]
+                [action.params]
+                seconds = "3"
 
-[[action]]
-name = "Inside container 3"
-type = "log"
-id = "cont-3"
+                [[action]]
+                name = "Inside container 3"
+                type = "log"
+                id = "cont-3"
 
             </div>
-        </td>
-        <td class="table-dark">
-            <button type="button" class="btn btn-info btn-block" id="tomlToDigraph" onclick="drawGraph()">
-
-                <h3>&#8250;</h3>
-            </button>
-            <br>
-
         </td>
         <td class="table-dark">
             <svg>
@@ -207,6 +198,10 @@ id = "cont-3"
 
         <td class="table-dark">
             <div class="text-center">
+                <button type="button" class="btn btn-info btn-block" id="tomlToDigraph" onclick="drawGraph()">
+                    Draw Graph
+                </button>
+
                 <button type="button" class="btn btn-warning btn-block text-center" onclick="addBranch()">
                     Add Branch
                 </button>
@@ -232,21 +227,16 @@ id = "cont-3"
             </div>
 
 
+            <button type="button" class="btn btn-success btn-block" id="executeFlow" onclick="executeFlow()">
+                Execute Flow
+            </button>
+
         </td>
 
 
     </tr>
 
     <tr>
-        <td>
-            <button hidden=true type="button" class="btn btn-warning btn-block">
-                <h5>Save Flow</h5>
-            </button>
-            <button type="button" class="btn btn-success btn-block" id="executeFlow" onclick="executeFlow()">
-                <h5>Execute Flow</h5>
-            </button>
-
-        </td>
         <td colspan="5">
 
             <div class="shell-wrap" id="shell-emulator-container">
@@ -290,11 +280,19 @@ id = "cont-3"
                             {{key}}
                         </td>
                         <td>
-                            <input class="form-control form-control-sm" type="text" v-bind:value="value" v-bind:id="'param_'+key"></td>
+                            <input class="form-control form-control-sm" type="text" v-bind:value="value"
+                                   v-bind:id="'param_'+key"></td>
                         <td>
+                        <td>
+                        <button class="badge bagde-danger badge-pill">delete</button>
+
+                    </td>
                     </tr>
 
                 </table>
+
+
+                <button class="badge bagde-info badge-pill" onclick="addMoreParam()">Add More Param</button>
 
                 <hr>
                 <h4>Action Output Keys:</h4>
@@ -327,11 +325,9 @@ id = "cont-3"
                     </div>
                 </div>
 
-
+                <label>Next Blocks:</label>
                 <div class="form-check">
-                    <label>Next Blocks:</label>
-                    <input id="nextBlocks" class="form-control btn-block" data-multiple onkeyup="bindToNextBlock(this.value)"/>
-
+                    <input id="nextBlocks" class="form-control btn-block" v-bind:value="joinNextBlocksString(action.nextBlocks)"/>
                 </div>
 
             </div>
@@ -339,7 +335,7 @@ id = "cont-3"
                 <button id="modal-action-save" type="button" class="btn btn-success" onclick="updateAction()">Save
                     changes
                 </button>
-                <button id="modal-action-cancel" type=" button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                <button id="modal-action-cancel" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
                 </button>
             </div>
         </div>

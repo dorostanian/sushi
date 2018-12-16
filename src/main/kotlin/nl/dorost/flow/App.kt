@@ -45,6 +45,7 @@ import nl.dorost.flow.utils.ResponseMessage
 import java.io.File
 import java.io.FileInputStream
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 
 val googleClientId = Key("google.clientId", stringType)
@@ -84,24 +85,7 @@ fun main(args: Array<String>) {
 
     val channel = Channel<Pair<MessageType, String>>()
 
-    val flowEngine = FlowEngine()
-
-    flowEngine.registerListeners(
-        listOf(
-            object : BlockListener {
-                val LOG = KotlinLogging.logger("LoggerListener")
-                override fun updateReceived(context: MutableMap<String, Any>?, message: String?, type: MessageType) {
-                    val msg = "Message: $message"
-                    LOG.info { msg }
-                    GlobalScope.launch {
-                        channel.send(type to (message ?: ""))
-                    }
-                }
-            }
-        )
-    )
-
-    flowEngine.registerSecondaryActionsFromDB(blocksDao)
+    val usersFlows: ConcurrentHashMap<String, FlowEngine> = ConcurrentHashMap<String, FlowEngine>()
 
     val objectMapper = ObjectMapper()
 
@@ -155,13 +139,14 @@ fun main(args: Array<String>) {
                 call.respondFile(File(getFilePath("static/sign-in.html")))
             }
             post("/tomlToDigraph") {
-                call.sessions.get<SushiSession>()?.let {
+                call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    val flowEngine = usersFlows[sushiSession.userId]!!
                     val tomlString = call.receiveText()
                     val digraph: String?
                     try {
                         flowEngine.flows.clear()
                         val blocks = flowEngine.tomlToBlocks(tomlString)
-                        val currentUser = usersDao.getUserBySessionId(it.userId)
+                        val currentUser = usersDao.getUserBySessionId(sushiSession.userId)
 
                         flowEngine.wire(blocks, blocksDao, currentUser)
                         digraph = flowEngine.blocksToDigraph()
@@ -191,7 +176,8 @@ fun main(args: Array<String>) {
             }
 
             put("/editBlock") {
-                call.sessions.get<SushiSession>()?.let {
+                call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    val flowEngine = usersFlows[sushiSession.userId]!!
 
                     val actionStr = call.receiveText()
                     val actionToUpdate = objectMapper.readValue(actionStr, Action::class.java)
@@ -200,6 +186,7 @@ fun main(args: Array<String>) {
                         params = actionToUpdate.params
                         source = actionToUpdate.source
                         returnAfterExec = actionToUpdate.returnAfterExec
+                        nextBlocks = actionToUpdate.nextBlocks
                     }
                     val toml = flowEngine.blocksToToml(flowEngine.flows)
                     val digraph = flowEngine.blocksToDigraph()
@@ -219,7 +206,9 @@ fun main(args: Array<String>) {
 
 
             get("/getAction/{actionId}") {
-                call.sessions.get<SushiSession>()?.let {
+                call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    val flowEngine = usersFlows[sushiSession.userId]!!
+
 
                     val actionId = call.parameters["actionId"]
                     val action = flowEngine.flows.firstOrNull { it.id == actionId }
@@ -250,8 +239,8 @@ fun main(args: Array<String>) {
 
 
             get("/addAction/{actionType}") {
-                call.sessions.get<SushiSession>()?.let {
-
+                call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    val flowEngine = usersFlows[sushiSession.userId]!!
                     val actionType = call.parameters["actionType"]
                     val registeredBlock =
                         flowEngine.registeredActions.plus(flowEngine.secondaryActions)
@@ -266,7 +255,7 @@ fun main(args: Array<String>) {
                         if (flowEngine.flows.size == 1)
                             (flowEngine.flows.first() as Action).source = true
 
-                        val currentUser = usersDao.getUserBySessionId(it.userId)
+                        val currentUser = usersDao.getUserBySessionId(sushiSession.userId)
 
                         flowEngine.wire(flowEngine.flows, blocksDao, currentUser)
                         val toml = flowEngine.blocksToToml(flowEngine.flows)
@@ -289,7 +278,8 @@ fun main(args: Array<String>) {
 
 
             get("/addBranch") {
-                call.sessions.get<SushiSession>()?.let {
+                call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    val flowEngine = usersFlows[sushiSession.userId]!!
 
                     flowEngine.flows.add(
                         Branch().apply {
@@ -317,12 +307,13 @@ fun main(args: Array<String>) {
             }
 
             post("/executeFlow") {
-                call.sessions.get<SushiSession>()?.let {
+                call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    val flowEngine = usersFlows[sushiSession.userId]!!
 
                     val tomlString = call.receiveText()
                     val blocks = flowEngine.tomlToBlocks(tomlString)
 
-                    val currentUser = usersDao.getUserBySessionId(it.userId)
+                    val currentUser = usersDao.getUserBySessionId(sushiSession.userId)
                     flowEngine.wire(blocks, blocksDao, currentUser)
                     flowEngine.executeFlow()
 
@@ -342,7 +333,34 @@ fun main(args: Array<String>) {
             }
 
             get("/getLibrary") {
-                call.sessions.get<SushiSession>()?.let {
+                call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    var flowEngine = usersFlows.get(sushiSession.userId)
+                    if (flowEngine==null){
+                        flowEngine = FlowEngine()
+
+                        flowEngine.registerListeners(
+                            listOf(
+                                object : BlockListener {
+                                    val LOG = KotlinLogging.logger("LoggerListener")
+                                    override fun updateReceived(
+                                        context: MutableMap<String, Any>?,
+                                        message: String?,
+                                        type: MessageType
+                                    ) {
+                                        val msg = "Message: $message"
+                                        LOG.info { msg }
+                                        GlobalScope.launch {
+                                            channel.send(type to (message ?: ""))
+                                        }
+                                    }
+                                }
+                            )
+                        )
+
+                        flowEngine.registerSecondaryActionsFromDB(blocksDao)
+
+                        usersFlows[sushiSession.userId] = flowEngine
+                    }
 
                     call.respond(
                         HttpStatusCode.OK,
@@ -357,7 +375,8 @@ fun main(args: Array<String>) {
             }
 
             get("/deleteBlock/{blockId}") {
-                call.sessions.get<SushiSession>()?.let {
+                call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    val flowEngine = usersFlows[sushiSession.userId]!!
 
                     val actionId = call.parameters["blockId"]
 
@@ -441,6 +460,33 @@ fun main(args: Array<String>) {
                                 )
                             )
                         }
+
+
+                        val flowEngine = FlowEngine()
+
+                        flowEngine.registerListeners(
+                            listOf(
+                                object : BlockListener {
+                                    val LOG = KotlinLogging.logger("LoggerListener")
+                                    override fun updateReceived(
+                                        context: MutableMap<String, Any>?,
+                                        message: String?,
+                                        type: MessageType
+                                    ) {
+                                        val msg = "Message: $message"
+                                        LOG.info { msg }
+                                        GlobalScope.launch {
+                                            channel.send(type to (message ?: ""))
+                                        }
+                                    }
+                                }
+                            )
+                        )
+
+                        flowEngine.registerSecondaryActionsFromDB(blocksDao)
+
+                        usersFlows[sessionId] = flowEngine
+
                         call.respondRedirect("/")
                     }
                 }

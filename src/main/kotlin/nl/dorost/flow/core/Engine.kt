@@ -358,13 +358,18 @@ class FlowEngine {
         digraph += "node [rx=5 ry=5 labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
         digraph += "edge [labelStyle=\"font: 300 14px 'Helvetica Neue', Helvetica\"]\n"
 
-        val actionInnerHtml = "<label style='color:rgb(0,0,0);'> Action: <b>%s</b>  </label>" +
+        val actionInnerHtml = "<label style='color:rgb(0,0,0);font-size: 10px;'> Action: <b>%s</b>  </label>" +
+                "<label style='color:rgb(0,0,0);font-size: 8px;'> ID:  %s  </label>" +
+                "<label style='color:rgb(0,0,0);font-size: 8px;'> Type: %s  </label>" +
+
                 "<button class='badge badge-info badge-pill' id='%s-edit'>edit</button>" +
                 "<button class='badge badge-danger badge-pill' id='%s-remove'>remove</button>"
 
         val sourceActionInnerHtml =
             "<img src='http://www.icons101.com/icon_ico/id_81542/Start.ico' alt='Source Action' height='18' width='18'>" +
-                    "<label style='color:rgb(0,0,0);'> Action: <b>%s</b>  </label>" +
+                    "<label style='color:rgb(0,0,0);font-size: 10px;'> Name: <b>%s</b>  </label>" +
+                    "<label style='color:rgb(0,0,0);font-size: 8px;'> ID:  %s  </label>" +
+                    "<label style='color:rgb(0,0,0);font-size: 8px;'> Type: %s  </label>" +
                     "<button class='badge badge-info badge-pill' id='%s-edit'>edit</button>" +
                     "<button class='badge badge-danger badge-pill' id='%s-remove'>remove</button>"
 
@@ -389,6 +394,8 @@ class FlowEngine {
                 String.format(
                     if (action.source) sourceActionInnerHtml else actionInnerHtml,
                     action.name,
+                    action.id,
+                    action.type,
                     action.id,
                     action.id
                 )

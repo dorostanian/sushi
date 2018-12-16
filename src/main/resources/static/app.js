@@ -28,7 +28,18 @@ var blockEditModal = new Vue({
             name: "",
             docs: ""
         }
-    }
+    },
+
+    methods: {
+            joinNextBlocksString:
+                function (blocks) {
+                console.log("CALLED THIS!");
+                if (!blocks)
+                    return '';
+                else
+                    return blocks.join(';');
+                }
+        }
 });
 
 
@@ -47,7 +58,7 @@ awesomplete_Ids = new Awesomplete(nextBlocks,
 
         replace: function (text) {
             var before = this.input.value.match(/^.+,\s*|/)[0];
-            this.input.value = before + text + ", ";
+            this.input.value = before + text + "; ";
         }
     }
 );
@@ -321,6 +332,15 @@ function updateAction() {
     blockEditModal.action.name = $('#modal-edit-action-name').val();
     blockEditModal.action.source = $('#modal-action-first').is(':checked');
     blockEditModal.action.returnAfterExec = $('#modal-action-return').is(':checked');
+
+
+    var nextBlocksUpdated = $('#nextBlocks').val().split(';');
+    blockEditModal.action.nextBlocks = [];
+    for (let blockId of nextBlocksUpdated){
+        console.log("NExt Block " + blockId);
+         blockEditModal.action.nextBlocks.push(blockId);
+    }
+
     if ($('#modal-action-none').is(':checked')) {
         blockEditModal.action.source = false;
         blockEditModal.action.returnAfterExec = false;
@@ -340,7 +360,8 @@ function updateAction() {
             name: blockEditModal.action.name,
             params: blockEditModal.action.params,
             source: blockEditModal.action.source,
-            returnAfterExec: blockEditModal.action.returnAfterExec
+            returnAfterExec: blockEditModal.action.returnAfterExec,
+            nextBlocks: blockEditModal.action.nextBlocks
         }),
         crossDomain: true,
         contentType: "application/json"
@@ -429,6 +450,13 @@ function signOut(){
     }).fail(function (xhr, textStatus, errorThrown) {
     });
 
+}
+
+
+
+function addMoreParam(){
+   console.log("Adding more param");
+   blockEditModal.action.params["new-param"] = 'new-value';
 }
 
 function executeFlow() {
