@@ -42,6 +42,8 @@ dependencies {
     compile("com.moandjiezana.toml:toml4j:0.7.2")
     compile("io.ktor:ktor-server-netty:$ktor_version")
     compile("io.ktor:ktor-websockets:$ktor_version")
+    compile("io.ktor:ktor-auth:$ktor_version")
+    compile("io.ktor:ktor-client-apache:$ktor_version")
 
     compile("org.apache.commons:commons-text:1.6")
     compile("io.github.microutils:kotlin-logging:1.6.20")
