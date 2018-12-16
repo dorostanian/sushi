@@ -14,11 +14,12 @@ interface BlocksDao {
     fun registerNewAction(container: ContainerDto): ContainerDto
     fun getActionByType(type: String): ContainerDto?
     fun getAllSecondaryActions(): List<ContainerDto>
-//    fun updateContainer(action: ContainerDto): Boolean
+    fun updateContainer(container: ContainerDto)
 }
 
 
 class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kind: String) : BlocksDao {
+
 
     val logger = LoggerFactory.getLogger(this.javaClass.name)
 
@@ -103,6 +104,23 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
             returnAfterExecution = entity.getBoolean("return-after-execution"),
             params = objectMapper.readValue(entity.getString("params"), object :
                 TypeReference<Map<String, String>>() {}) as Map<String, String>
+        )
+
+    }
+
+    override fun updateContainer(container: ContainerDto) {
+        datastore.update(
+            Entity.newBuilder(keyFactory.newKey(container.id!!))
+                .set("type", container.type)
+                .set("name", container.name ?: "")
+                .set("creation-time", Timestamp.now())
+                .set("description", container.description ?: "")
+                .set("params", container.params.map { StringValue.of(it) })
+                .set("user-id", container.userId ?: throw MissingFieldException("User ID is missing!"))
+                .set("innner-blocks", container.innerBlocks.toEntity())
+                .set("output-keys", container.outputKeys.map { StringValue.of(it) })
+                .set("public", container.public)
+                .build()
         )
 
     }

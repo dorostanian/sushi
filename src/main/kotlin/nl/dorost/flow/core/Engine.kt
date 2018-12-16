@@ -158,8 +158,24 @@ class FlowEngine {
                             listeners.forEach { it.updateReceived(message = msg, type = MessageType.ERROR) }
                             return
                         } else {
-                            TODO("Update the action here!")
-                        }
+                            val existingContainer = blocksDaoImpl.getActionByType(container.type!!)
+                            blocksDaoImpl.updateContainer(
+                                containerToActionDto(
+                                    container,
+                                    innerBlocks
+                                ).copy(userId = user.id, id = existingContainer!!.id)
+                            )
+                            secondaryActions.add(
+                                Action().apply {
+                                    type = container.type
+                                    params = container.params.map { it to "" }.toMap().toMutableMap()
+                                    innnerBlocks = innerBlocks
+                                }
+                            )
+                            listeners.forEach { it.updateReceived(message = "Container of type ${container.type} updated successfully by user ${user.id}") }
+
+                            // Update the secondary Actions list
+                            this.registerSecondaryActionsFromDB(blocksDaoImpl)                        }
                     } else {
                         listeners.forEach { it.updateReceived(message = "This container type already exists but you don't own it! Use another `type` for your container.") }
                     }

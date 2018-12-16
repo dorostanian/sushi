@@ -140,6 +140,7 @@ fun main(args: Array<String>) {
             }
             post("/tomlToDigraph") {
                 call.sessions.get<SushiSession>()?.let { sushiSession ->
+                    appLogger.info { "Session ID is ${sushiSession.userId}" }
                     val flowEngine = usersFlows[sushiSession.userId]!!
                     val tomlString = call.receiveText()
                     val digraph: String?
