@@ -409,6 +409,28 @@ function addBranch(){
 }
 
 
+function signOut(){
+    $.ajax({
+        type: "GET",
+        url: "/signOut",
+        crossDomain: true,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
+
+    }).done(function (data) {
+        console.log(data);
+        if (data == 'OK') {
+            console.log("redirecting...");
+            location.reload();
+        }
+
+    }).fail(function (xhr, textStatus, errorThrown) {
+    });
+
+}
+
 function executeFlow() {
     appendInfo("Request: executing the flow...")
     $.ajax({

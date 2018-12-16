@@ -28,6 +28,8 @@ data class InnerActionDto(
 
 
 data class UserDto(
-    val name: String,
-    val id: Long
+    val id: Long?,
+    val name: String? = null,
+    val sessionId: String,
+    val email: String
 )
