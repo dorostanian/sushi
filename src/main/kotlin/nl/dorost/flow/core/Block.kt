@@ -24,6 +24,7 @@ open class Action(
     var returnAfterExec: Boolean = false,
     var source: Boolean = false,
     var params: MutableMap<String, String> = mutableMapOf(),
+    var inputKeys: List<String> = listOf(),
     var outputKeys: List<String> = listOf(),
     var innnerBlocks: MutableList<Block>? = null,
     var act: ((input: MutableMap<String, Any>, action: Action) -> MutableMap<String, Any>)? = null
@@ -53,6 +54,9 @@ open class Action(
             innerEngine.await()
             this@Action.output = async { innerEngine.returnValue!! }
         } ?: run {
+            // Check here for input and params consistency
+            if (!this@Action.inputKeys.all { input.containsKey(it) || this@Action.params.containsKey(it) })
+                throw RuntimeException("Couldn't find all the input keys required from input and params for block id ${this@Action.id}")
             this@Action.output = GlobalScope.async { act!!.invoke(input, this@Action) }
         }
 
