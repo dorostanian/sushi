@@ -399,7 +399,7 @@ fun main(args: Array<String>) {
                         HttpStatusCode.OK,
                         objectMapper.writeValueAsString(
                             ResponseMessage(
-                                responseLog = "Action Removed successfully!",
+                                responseLog = "Block Removed successfully!",
                                 digraphData = digraph,
                                 tomlData = tomlText,
                                 blocksIds = flowEngine.flows.map { it.id!! }

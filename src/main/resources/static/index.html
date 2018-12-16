@@ -251,6 +251,67 @@
 </table>
 
 
+<div class="modal" id="branch-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Branch</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="branch-modal-body">
+                <small id="branch-action-id">ID: {{branch.id}}</small>
+                <hr>
+                <b>Name: </b>
+                <input class="form-control form-control-sm" type="text" :value="branch.name"
+                       id="modal-edit-branch-name">
+                <hr>
+                <h4>Mapping:</h4>
+
+                <table class="table table-secondary" id="modal-branch-mappings">
+
+                    <tr v-for="(value, key) in branch.mapping">
+                        <td>
+                            <input class="form-control form-control-sm" type="text" v-bind:value="key"
+                                   v-bind:id="'mappingkey_'+key"></td>
+                        </td>
+                        <td>
+                            <input class="form-control form-control-sm" type="text" v-bind:value="value"
+                                   v-bind:id="'mappingvalue_'+key"></td>
+                        <td>
+                        <td>
+                        <button class="badge bagde-danger badge-pill">delete</button>
+
+                    </td>
+                    </tr>
+
+                </table>
+                <button class="badge bagde-info badge-pill" onclick="addMoreMapping()">Add More Mapping</button>
+
+
+                <label>On:</label>
+                <input class="form-control form-control-sm" type="text" v-bind:value="branch.on"></td>
+
+
+                <hr>
+
+            </div>
+            <div class="modal-footer">
+                <button id="modal-branch-save" type="button" class="btn btn-success" onclick="updateBranch()">Save
+                    changes
+                </button>
+                <button id="modal-branch-cancel" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
 <div class="modal" id="block-modal">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -284,9 +345,9 @@
                                    v-bind:id="'param_'+key"></td>
                         <td>
                         <td>
-                        <button class="badge bagde-danger badge-pill">delete</button>
+                            <button class="badge bagde-danger badge-pill">delete</button>
 
-                    </td>
+                        </td>
                     </tr>
 
                 </table>
@@ -341,6 +402,7 @@
         </div>
     </div>
 </div>
+
 
 
 <script src="./app.js"></script>

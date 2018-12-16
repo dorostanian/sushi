@@ -362,7 +362,7 @@ class FlowEngine {
                 "<label style='color:rgb(0,0,0);font-size: 8px;'> ID:  %s  </label>" +
                 "<label style='color:rgb(0,0,0);font-size: 8px;'> Type: %s  </label>" +
 
-                "<button class='badge badge-info badge-pill' id='%s-edit'>edit</button>" +
+                "<button class='badge badge-Success badge-pill' id='%s-edit'>edit</button>" +
                 "<button class='badge badge-danger badge-pill' id='%s-remove'>remove</button>"
 
         val sourceActionInnerHtml =
@@ -370,20 +370,20 @@ class FlowEngine {
                     "<label style='color:rgb(0,0,0);font-size: 10px;'> Name: <b>%s</b>  </label>" +
                     "<label style='color:rgb(0,0,0);font-size: 8px;'> ID:  %s  </label>" +
                     "<label style='color:rgb(0,0,0);font-size: 8px;'> Type: %s  </label>" +
-                    "<button class='badge badge-info badge-pill' id='%s-edit'>edit</button>" +
+                    "<button class='badge badge-Success badge-pill' id='%s-edit'>edit</button>" +
                     "<button class='badge badge-danger badge-pill' id='%s-remove'>remove</button>"
 
         val branchInnerHtml = "<label style='color:rgb(0,0,0);'> Branch: <b>%s</b>  </label>" +
                 "<label style='color:rgb(0,0,0);'> on: <b>%s</b>  </label>" +
-                "<button class='badge badge-info badge-pill'  id='%s-edit'>edit</button>" +
-                "<button class='badge badge-danger badge-pill id='%s-remove'>remove</button>"
+                "<button class='badge badge-Success badge-pill'  id='%s-edit'>edit</button>" +
+                "<button class='badge badge-danger badge-pill' id='%s-remove'>remove</button>"
 
         val normalEdgeHtml =
             "\"%s\" -> \"%s\" [style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
         val branchEdgeHtml =
             "\"%s\" -> \"%s\" [label=\"%s\" labelStyle=\"fill: #55f; font-weight: bold;\" style=\"stroke: #404040; stroke-width: 3px;\" arrowheadStyle=\"fill: #404040\"];\n"
 
-        val normalNode = "\"%s\" [labelType=\"html\" label=\"%s\" style=\"fill: #E0E0E0;\"];\n"
+        val normalNode = "\"%s\" [labelType=\"html\" label=\"%s\" style=\"fill: #D8F4FF;\"];\n"
         val branchNode = "\"%s\" [labelType=\"html\" label=\"%s\" style=\"fill: #FFCCCC;\"];\n"
 
         // add nodes

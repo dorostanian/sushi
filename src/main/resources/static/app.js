@@ -22,18 +22,43 @@ var addedActionContainer = new Vue({
 var blockEditModal = new Vue({
     el: '#block-modal',
     data: {
+        blockType: "",
         action: {
             id: "",
             type: "",
             name: "",
             docs: ""
+        },
+        branch: {
+            id: "",
+            on: ""
         }
     },
 
     methods: {
             joinNextBlocksString:
                 function (blocks) {
-                console.log("CALLED THIS!");
+                if (!blocks)
+                    return '';
+                else
+                    return blocks.join(';');
+                }
+        }
+});
+
+
+var branchEditModal = new Vue({
+    el: '#branch-modal',
+    data: {
+        branch: {
+            id: "",
+            on: ""
+        }
+    },
+
+    methods: {
+            joinNextBlocksString:
+                function (blocks) {
                 if (!blocks)
                     return '';
                 else
@@ -239,10 +264,17 @@ function getAction(currentActionId) {
         function (data) {
             var responseJson = JSON.parse(data);
             var logOutput = responseJson.responseLog;
-            var action = responseJson.blockInfo;
+            var block = responseJson.blockInfo;
             appendInfo(logOutput);
 
-            blockEditModal.action = action;
+            if (block.mapping){
+                branchEditModal.branch = block;
+                $('#branch-modal').modal('show');
+            }else{
+                blockEditModal.action = block;
+                $('#modal-action-none').prop('checked', true);
+                $('#block-modal').modal('show');
+            }
 
         }
     ).fail(function (xhr, textStatus, errorThrown) {
@@ -267,8 +299,7 @@ function bindActions() {
             var currentId = strIdsplits.slice(0, strIdsplits.length - 1).join('-');
             appendInfo("Request: Editing the block: \"" + currentId + "\" , fetching info...");
             getAction(currentId);
-            $('#modal-action-none').prop('checked', true);
-            $('#block-modal').modal('show');
+
         }
     );
 }
@@ -337,7 +368,6 @@ function updateAction() {
     var nextBlocksUpdated = $('#nextBlocks').val().split(';');
     blockEditModal.action.nextBlocks = [];
     for (let blockId of nextBlocksUpdated){
-        console.log("NExt Block " + blockId);
          blockEditModal.action.nextBlocks.push(blockId);
     }
 
