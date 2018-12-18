@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/dorost/flow.svg?style=svg)](https://circleci.com/gh/dorost/flow)
+
 # Introduction
 
 **Sushi** is a simplistic flow design based on `TOML` config files offering also an UI (WIP) to make it easy to build
@@ -145,7 +147,6 @@ flowEngine.wire(flows)
 flowEngine.executeFlow()
 ```
 
-
 ## Define Flows Programmatically
 ```kotlin
 val flows = mutableListOf(
@@ -193,4 +194,5 @@ flowEngine.await()
 
 * You can build any action based on the elementary actions (no need to further implementation),
  but if you think you need more actions; you can implement and register your own types. 
+
 
