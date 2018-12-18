@@ -2,19 +2,26 @@
 
 # Introduction
 
-**Flow** is a simplistic flow design based on `TOML` config files offering also an UI (WIP) to make it easy to build
+**Sushi** is a simplistic flow design based on `TOML` config files offering also an UI (WIP) to make it easy to build
 complex flows of actions. Flow is highly extensible by allowing you to `register` new `Block`s. There comes also a library
 of commonly used actions.
 
+## Similar Work and comparison
+Tinder's [State Machine Project](https://github.com/Tinder/StateMachine) is one of the interesting
+implementations for building state machines. (tbd)
+
+
+
 # Motivation
 
-The idea of building **Flow** born in my mind while trying to build a software that contains lots of steps and conditions.
-
+The idea of building **Sushi** born in my mind while trying to build a software that contains lots of steps and conditions.
+In the beginning you start writing the definition of states and their conections but eventually it grows to an spaghetti,
+to overcome this issue I started The **Sushi** Project. Sushi helps us to write complicated flows in easy and expressive way.
 
 
 # How it works
 
-Flow is built on top of concept of `Block`s. Every unit is a block and we have three different kinds of blocks which enables
+Sushi is built on top of concept of `Block`s. Every unit is a block and we have three different kinds of blocks which enables
 you to build almost anything with a very explicit and simple data presentation.
 
 * `Action` blocks: These are the smallest units of actions that will be executed in the flow.
@@ -26,7 +33,7 @@ To define your flows, there are two ways. You can define your flows in multiple 
 The other ways is to use the UI to generate these TOML files for you.
 
 ## `Action` block
-This block is the most essential unit in Flow. These blocks are supposed to fulfill a small unit of work and then
+This block is the most essential unit in Sushi. These blocks are supposed to fulfill a small unit of work and then
 point to another block. The field `type` specifies what this block is supposed to do.
 
 ```toml
@@ -54,14 +61,23 @@ rest of the flow automatically you can put `returnAfter = true`. This tells the 
 output of this block after execution and `id` of it to keep tracks of the flow. **This is mostly
 useful when you are expecting a user interaction e.g. Rest API.**
 
+You can register listeners for actions to have a callback mechanism after executing each action.
+This helps communicate easily while the engine takes care of running the actions.
+
+
+**You need to make sure that you have at least one block that has `source = true`. This tells the engine where it 
+needs to start the execution. You can have multiple source blocks.**
+
+> If you are writing your flows programmatically it is also possible to inject any object you want to your defined actions.
+
+
 ## `Branch` block
-This block is desgined intentionally simple to make it easy for controling the flow of your work.
+This block is designed intentionally simple to make it easy for controling the flow of your work.
 ```toml
 [[branch]]
     name = "branch-1"
     id = "4"
-    [branch.params]
-        var-name = "value"
+    on = "value"
     [branch.mapping]
         branch-1 = "5"
         branch-2 = "6"
@@ -107,15 +123,21 @@ first and last respectively.
 **NOTE:**
 You are not allowed to use `returnAfter=true` inside a container.
 
+
+## Programmatical Definition (DSL)
+(tbd)
+
 # Usage
 
-There are multiple ways of building flows.
+You can use **Sushi** in two different ways: as a library to import in your project or launch
+it as service and get the benefits of graphical UI designer.
+
+There are three ways of building flows.
 1. Reading `TOML` files from a directory.
 2. Building the flows programmatically. 
-3. Using the UI. (WIP)
+3. Using the UI.
 
-You need to make sure that you have at least one block that has `source = true`. This tells the engine where it 
-needs to start the execution. You can have multiple source blocks.
+
 
 ```kotlin
 val flowEngine = FlowEngine()
@@ -125,9 +147,52 @@ flowEngine.wire(flows)
 flowEngine.executeFlow()
 ```
 
-You can also register custom action types. Keep in mind that types must be unique for actions.
-`flowEngine.registerActions(customActions)`
+## Define Flows Programmatically
+```kotlin
+val flows = mutableListOf(
+    Action().apply {
+        name = "input 1"
+        id = "1"
+        type = "constant"
+        source = true
+        params = mutableMapOf("value" to "5")
+        nextBlocks = mutableListOf("delay-1")
+    }, Action().apply {
+        name = "input 2"
+        id = "2"
+        source = true
+        type = "constant"
+        params = mutableMapOf("value" to "3")
+        nextBlocks = mutableListOf("delay-2")
+    }, Action().apply {
+        name = "Delay 1"
+        id = "delay-1"
+        params = mutableMapOf("seconds" to "2")
+        type = "delay"
+        nextBlocks = mutableListOf("3")
+    }, Action().apply {
+        name = "Delay 2"
+        params = mutableMapOf("seconds" to "2")
+        id = "delay-2"
+        type = "delay"
+        nextBlocks = mutableListOf("3")
+    }, Action().apply {
+        name = "Log the result"
+        id = "3"
+        type = "log"
+    }
+)
 
-### Flow Prefixes
-You can add `id_prefix` on top of each toml file, this helps you with assigning `id` for your blocks. The engine will append `id_prefix`
-if it can't find the mentiond ids in the current file.
+flowEngine.wire(flows)
+flowEngine.executeFlow()
+flowEngine.await()
+
+```
+
+
+* You can also register custom action types. Keep in mind that types must be unique for actions.
+
+* You can build any action based on the elementary actions (no need to further implementation),
+ but if you think you need more actions; you can implement and register your own types. 
+
+

@@ -1,7 +1,3 @@
-[flow]
-name = "example for container definition"
-id_prefix = "container_"
-
 [[container]]
     name = "container-block"
     id = "my-container"

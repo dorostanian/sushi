@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Sushi Flow Design Tool</title>
+
+    <!--Bootstrap CSS-->
+    <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.3/slate/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-ywjdn7N8uoxzIfGl7jlEBlqw2BNicOSzZDgo7A2ffvbM24Ct9plRp7KwtaIqZ33j" crossorigin="anonymous">
+
+    <!--Social Icons-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/5.1.1/bootstrap-social.css"/>
+
+    <!--Font Awesome-->
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+          integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+    <!--Jquery-->
+    <script src="https://code.jquery.com/jquery-3.3.1.js"
+            integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+            crossorigin="anonymous"></script>
+
+    <!--Bootstrap JS-->
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+
+
+    <!--Ace editor-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js"></script>
+
+    <!--D3.js-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.13.0/d3.js"></script>
+
+    <!--Dagre-->
+    <script src="./graphlib-dot.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.js"></script>
+
+    <!--Autocomlete-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.3/awesomplete.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.3/awesomplete.js"></script>
+
+    <!--Vue.js-->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+
+
+    <!--override all styles-->
+    <link rel="stylesheet" type="text/css" href="./app.css">
+
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#"><span class="text-info">Sushi</span> Flow Design Tool</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01"
+            aria-controls="navbarColor01"
+            aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="http://dorost.nl">About</a>
+            </li>
+        </ul>
+
+        <ul class="navbar-nav mr-sm-2">
+            <a class="btn btn-social-icon btn-github btn-lg" href="http://github.com/dorost/sushi">
+                <span class="fa fa-github"></span>
+            </a>
+        </ul>
+        <button class="btn btn-danger my-2 my-sm-0" onclick="signOut()">Sign Out</button>
+
+    </div>
+</nav>
+
+
+<table width="100%" class="table table-bordered table-dark table-striped">
+    <colgroup>
+        <col width="22.5%">
+        <col width="22.5%">
+        <col width="45%">
+        <col width="10%">
+    </colgroup>
+
+    <tr>
+        <td>
+            <h3>Main Flow</h3>
+            <div id="editor">
+                [[action]]
+                name = "intial action"
+                source = true
+                type = "http-get"
+                id = "initial-action"
+                next = ["new-defined-action"]
+                [action.params]
+                url = "https://postman-echo.com/get?foo1=bar1&foo2=bar2"
+
+
+                [[action]]
+                name = "new defined action"
+                type = "constant"
+                id = "new-defined-action"
+                next = ["4"]
+                [action.params]
+                value = "branch-2"
+
+                [[branch]]
+                name = "branch-1"
+                id = "4"
+                on = "value"
+                [branch.mapping]
+                branch-1 = "5"
+                branch-2 = "6"
+                branch-3 = "7"
+
+                [[action]]
+                name = "action-3"
+                type = "constant"
+                id = "5"
+                next = ["7"]
+                [action.params]
+                param-4 = "value-4"
+
+
+                [[action]]
+                name = "Branch eventually came here!"
+                type = "constant"
+                id = "6"
+                returnAfter = false
+                next = ["new-action-id"]
+                [action.params]
+                value = "value-5"
+
+
+                [[action]]
+                name = "action-5"
+                type = "constant"
+                id = "7"
+                output-names = ["something-to-pass"] # if you dont specify this field it will pass all the data it has.
+                [action.params]
+                param-6 = "value-6"
+
+
+                [[action]]
+                name = "Use New Registered Action Here"
+                type = "new-action"
+                id = "new-action-id"
+
+            </div>
+
+
+        </td>
+        <td>
+            <h3>Containers </h3>
+
+            <div id="editor-containers">
+                [[container]]
+                name = "My Container"
+                id = "my-container"
+                type = "new-action"
+                description = "This new action does a simple task"
+                first = "cont-1"
+                last = "cont-3"
+
+
+                [[action]]
+                name = "Inside container 1"
+                type = "log"
+                id = "cont-1"
+                next = ["cont-2"]
+
+                [[action]]
+                name = "Inside container 2"
+                type = "delay"
+                id = "cont-2"
+                next = ["cont-3"]
+                [action.params]
+                seconds = "3"
+
+                [[action]]
+                name = "Inside container 3"
+                type = "log"
+                id = "cont-3"
+
+            </div>
+        </td>
+        <td class="table-dark">
+            <svg>
+                <g></g>
+            </svg>
+        </td>
+
+        <td class="table-dark">
+            <div class="text-center">
+                <button type="button" class="btn btn-info btn-block" id="tomlToDigraph" onclick="drawGraph()">
+                    Draw Graph
+                </button>
+
+                <button type="button" class="btn btn-warning btn-block text-center" onclick="addBranch()">
+                    Add Branch
+                </button>
+            </div>
+            <hr>
+
+            <div class="list-group-item list-group-item-action flex-column align-items-start active"
+                 id="added-action-container" v-if="action.type">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1" id="added-action-type">{{action.type}}</h5>
+                </div>
+                <p class="mb-1" id="added-action-description">{{action.name}}</p>
+                <small id="added-action-outputs">{{action.docs}}</small>
+                <br>
+                <button class="badge badge-info badge-pill" v-bind:id="action.type" onclick="addActionToGraph(this.id)">
+                    add this action
+                </button>
+            </div>
+
+            <div class="form-group" id="addActions">
+                <label>Add Action</label>
+                <input id="actionsDir" class="form-control btn-block" onkeyup="clearAction(this.value)"/>
+            </div>
+
+
+            <button type="button" class="btn btn-success btn-block" id="executeFlow" onclick="executeFlow()">
+                Execute Flow
+            </button>
+
+        </td>
+
+
+    </tr>
+
+    <tr>
+        <td colspan="5">
+
+            <div class="shell-wrap" id="shell-emulator-container">
+                <p class="shell-top-bar">Execution Output From Server</p>
+                <ul class="shell-body" id="shell-emulator">
+                </ul>
+            </div>
+
+        </td>
+    </tr>
+
+</table>
+
+
+<div class="modal" id="branch-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Branch</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="branch-modal-body">
+                <small id="branch-action-id">ID: {{branch.id}}</small>
+                <hr>
+                <b>Name: </b>
+                <input class="form-control form-control-sm" type="text" :value="branch.name"
+                       id="modal-edit-branch-name">
+                <hr>
+                <h4>Mapping:</h4>
+
+                <table class="table table-secondary" id="modal-branch-mappings">
+
+                    <tr v-for="(value, key) in branch.mapping">
+                        <td>
+                            <input class="form-control form-control-sm" type="text" v-bind:value="key"
+                                   v-bind:id="'mappingkey_'+key"></td>
+                        </td>
+                        <td>
+                            <input class="form-control form-control-sm" type="text" v-bind:value="value"
+                                   v-bind:id="'mappingvalue_'+key"></td>
+                        <td>
+                        <td>
+                        <button class="badge bagde-danger badge-pill">delete</button>
+
+                    </td>
+                    </tr>
+
+                </table>
+                <button class="badge bagde-info badge-pill" onclick="addMoreMapping()">Add More Mapping</button>
+
+
+                <label>On:</label>
+                <input class="form-control form-control-sm" type="text" v-bind:value="branch.on"></td>
+
+
+                <hr>
+
+            </div>
+            <div class="modal-footer">
+                <button id="modal-branch-save" type="button" class="btn btn-success" onclick="updateBranch()">Save
+                    changes
+                </button>
+                <button id="modal-branch-cancel" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="modal" id="block-modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="model-title">Edit Block</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="action-modal-body">
+                <small id="modal-action-id">ID: {{action.id}}</small>
+                <br>
+                <small id="modal-action-type">Type: {{action.type}}</small>
+                <br>
+                <small id="modal-action-description">Description: {{action.description}}</small>
+                <hr>
+                <b>Name: </b>
+                <input class="form-control form-control-sm" type="text" :value="action.name"
+                       id="modal-edit-action-name">
+                <hr>
+                <h4>Action Params:</h4>
+
+                <table class="table table-secondary" id="modal-action-params">
+
+                    <tr v-for="(value, key) in action.params">
+                        <td>
+                            {{key}}
+                        </td>
+                        <td>
+                            <input class="form-control form-control-sm" type="text" v-bind:value="value"
+                                   v-bind:id="'param_'+key"></td>
+                        <td>
+                        <td>
+                            <button class="badge bagde-danger badge-pill">delete</button>
+
+                        </td>
+                    </tr>
+
+                </table>
+
+
+                <button class="badge bagde-info badge-pill" onclick="addMoreParam()">Add More Param</button>
+
+                <hr>
+                <h4>Action Output Keys:</h4>
+                <table class="table table-secondary" id="modal-action-output-keys">
+                    <tr v-for="key in action.outputKeys">
+                        <td>
+                            {{key}}
+                        </td>
+                    </tr>
+                </table>
+                <hr>
+                <h4>Flow Related Config:</h4>
+                <div class="form-check">
+                    <div class="radio">
+                        <label><input id="modal-action-first" class="form-check-input" type="radio" name="optionsRadios"
+                                      value="First Action">
+                            First
+                            Action</label>
+                    </div>
+                    <div class="radio">
+                        <label><input id="modal-action-return" class="form-check-input" type="radio"
+                                      name="optionsRadios" value="Return After">
+                            Return
+                            After</label>
+                    </div>
+                    <div class="radio">
+                        <label><input id="modal-action-none" class="form-check-input" type="radio" name="optionsRadios"
+                                      value="None" checked="checked">
+                            None</label>
+                    </div>
+                </div>
+
+                <label>Next Blocks:</label>
+                <div class="form-check">
+                    <input id="nextBlocks" class="form-control btn-block" v-bind:value="joinNextBlocksString(action.nextBlocks)"/>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button id="modal-action-save" type="button" class="btn btn-success" onclick="updateAction()">Save
+                    changes
+                </button>
+                <button id="modal-action-cancel" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="./app.js"></script>
+
+
+</body>
+
+</html>
