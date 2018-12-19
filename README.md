@@ -6,9 +6,9 @@
 complex flows of actions. Flow is highly extensible by allowing you to `register` new `Block`s. There comes also a library
 of commonly used actions.
 
-## Similar Work and comparison
+## Similar Work 
 Tinder's [State Machine Project](https://github.com/Tinder/StateMachine) is one of the interesting
-implementations for building state machines. (tbd)
+implementations for building state machines. 
 
 
 
@@ -123,9 +123,6 @@ first and last respectively.
 **NOTE:**
 You are not allowed to use `returnAfter=true` inside a container.
 
-
-## Programmatical Definition (DSL)
-(tbd)
 
 # Usage
 
