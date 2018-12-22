@@ -1,6 +1,5 @@
-src/main/resources/static/v2
-
 # compiled output
+src/main/resources/static/v2
 /tmp
 /out-tsc
 
