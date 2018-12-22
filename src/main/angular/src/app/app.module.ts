@@ -6,6 +6,8 @@ import { CodeEditorComponent } from './components/code-editor/code-editor.compon
 import { GraphEditorComponent } from './components/graph-editor/graph-editor.component';
 import { ShellOutputComponent } from './components/shell-output/shell-output.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
+import { NavbarComponent } from './components/navbar/navbar.component';
+import { NgbCollapseModule } from "@ng-bootstrap/ng-bootstrap";
 
 @NgModule({
   declarations: [
@@ -13,10 +15,12 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
     CodeEditorComponent,
     GraphEditorComponent,
     ShellOutputComponent,
-    ToolbarComponent
+    ToolbarComponent,
+    NavbarComponent
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    NgbCollapseModule
   ],
   providers: [],
   bootstrap: [AppComponent]

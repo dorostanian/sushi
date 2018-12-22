@@ -256,6 +256,12 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
+"@ng-bootstrap/ng-bootstrap@^4.0.1":
+  version "4.0.1"
+  resolved "https://artifactory.tools.bol.com:443/artifactory/api/npm/npm-bol/@ng-bootstrap/ng-bootstrap/-/ng-bootstrap-4.0.1.tgz#75a6b881b24d869624caa5b5f8a4070650ad5bc4"
+  dependencies:
+    tslib "^1.9.0"
+
 "@ngtools/webpack@7.1.4":
   version "7.1.4"
   resolved "https://artifactory.tools.bol.com:443/artifactory/api/npm/npm-bol/@ngtools/webpack/-/webpack-7.1.4.tgz#632ece6ed8e05fe743554cc935be36a653376f01"
@@ -933,6 +939,10 @@ bonjour@^3.5.0:
     dns-txt "^2.0.2"
     multicast-dns "^6.0.1"
     multicast-dns-service-types "^1.1.0"
+
+bootstrap@^4.2.1:
+  version "4.2.1"
+  resolved "https://artifactory.tools.bol.com:443/artifactory/api/npm/npm-bol/bootstrap/-/bootstrap-4.2.1.tgz#8f8bdca024dbf0e8644da32e918c8a03a90a5757"
 
 brace-expansion@^1.1.7:
   version "1.1.11"
@@ -2368,6 +2378,10 @@ follow-redirects@^1.0.0:
   resolved "https://artifactory.tools.bol.com:443/artifactory/api/npm/npm-bol/follow-redirects/-/follow-redirects-1.5.10.tgz#7b7a9f9aea2fdff36786a94ff643ed07f4ff5e2a"
   dependencies:
     debug "=3.1.0"
+
+font-awesome@^4.7.0:
+  version "4.7.0"
+  resolved "https://artifactory.tools.bol.com:443/artifactory/api/npm/npm-bol/font-awesome/-/font-awesome-4.7.0.tgz#8fa8cf0411a1a31afd07b06d2902bb9fc815a133"
 
 for-in@^0.1.3:
   version "0.1.8"
