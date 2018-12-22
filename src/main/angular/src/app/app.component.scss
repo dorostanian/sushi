@@ -1,9 +1,24 @@
+$page-margin: 20px;
+$menu-height: 64px;
+$console-height: 120px;
+
 .page-block {
   background-color: #fff;
   border: 1px solid #333;
   border-radius: 10px;
-  margin: 20px;
-  padding: 20px;
+  margin: $page-margin;
+  overflow-y: auto;
+}
+
+.editor {
+  margin-top: calc(#{$page-margin + $menu-height});
+  width: calc(100% - 2 * #{$page-margin});
+  height: calc(100% - #{$console-height} - #{$menu-height} - 3 * #{$page-margin});
+}
+
+.shell-output {
+  width: calc(100% - 2 * #{$page-margin});
+  height: #{$console-height};
 }
 
 .code-editor-container {
