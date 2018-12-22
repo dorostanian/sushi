@@ -1,9 +1,9 @@
 <app-navbar></app-navbar>
 
-<div class="editor page-block">
+<div class="editor-with-toolbar page-block">
   <app-toolbar></app-toolbar>
-  <div>
-    <div class="code-editor-container">
+  <div class="editor">
+    <div class="code-editor-container" [ngClass]="codeEditorContainerClass">
       <app-code-editor></app-code-editor>
     </div>
     <div class="graph-editor-container">

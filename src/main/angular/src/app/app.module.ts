@@ -7,7 +7,8 @@ import { GraphEditorComponent } from './components/graph-editor/graph-editor.com
 import { ShellOutputComponent } from './components/shell-output/shell-output.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
-import { NgbCollapseModule } from "@ng-bootstrap/ng-bootstrap";
+import {NgbButtonsModule, NgbCollapseModule, NgbTabsetModule} from "@ng-bootstrap/ng-bootstrap";
+import {FormsModule} from "@angular/forms";
 
 @NgModule({
   declarations: [
@@ -20,7 +21,9 @@ import { NgbCollapseModule } from "@ng-bootstrap/ng-bootstrap";
   ],
   imports: [
     BrowserModule,
-    NgbCollapseModule
+    NgbCollapseModule,
+    NgbButtonsModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

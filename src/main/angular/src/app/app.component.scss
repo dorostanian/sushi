@@ -1,3 +1,6 @@
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+
 $page-margin: 20px;
 $menu-height: 64px;
 $console-height: 120px;
@@ -5,15 +8,50 @@ $console-height: 120px;
 .page-block {
   background-color: #fff;
   border: 1px solid #333;
-  border-radius: 10px;
+  border-radius: $border-radius;
   margin: $page-margin;
   overflow-y: auto;
 }
 
-.editor {
+.editor-with-toolbar {
   margin-top: calc(#{$page-margin + $menu-height});
   width: calc(100% - 2 * #{$page-margin});
   height: calc(100% - #{$console-height} - #{$menu-height} - 3 * #{$page-margin});
+}
+
+.editor {
+  position: relative;
+  height: 100%;
+}
+
+.code-editor-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30%;
+  height: 100%;
+  display: inline-block;
+  padding: 20px;
+  overflow: hidden;
+  border-right: 1px solid $blue;
+  background-color: #fff;
+  transition: width .6s, padding-left .6s, padding-right .6s;
+  white-space: nowrap;
+
+  &.full {
+    width: 100%;
+  }
+
+  &.closed {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.graph-editor-container {
+  width: 100%;
+  padding: 20px 20px 20px 30%;
 }
 
 .shell-output {
@@ -21,10 +59,3 @@ $console-height: 120px;
   height: #{$console-height};
 }
 
-.code-editor-container {
-  width: 30%;
-}
-
-.graph-editor-container {
-  width: 70%;
-}
