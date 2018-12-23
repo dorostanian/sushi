@@ -30,7 +30,11 @@
               "src/styles.scss",
               "node_modules/font-awesome/css/font-awesome.min.css"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/ace-builds/src-min/ace.js",
+              "node_modules/ace-builds/src-min/mode-toml.js",
+              "node_modules/ace-builds/src-min/theme-monokai.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -87,7 +91,11 @@
               "src/styles.scss",
               "node_modules/font-awesome/css/font-awesome.min.css"
             ],
-            "scripts": [],
+            "scripts": [
+              "node_modules/ace-builds/src-min/ace.js",
+              "node_modules/ace-builds/src-min/mode-toml.js",
+              "node_modules/ace-builds/src-min/theme-monokai.js"
+            ],
             "assets": [
               "src/favicon.ico",
               "src/assets"

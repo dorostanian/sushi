@@ -9,6 +9,7 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import {NgbButtonsModule, NgbCollapseModule, NgbTabsetModule} from "@ng-bootstrap/ng-bootstrap";
 import {FormsModule} from "@angular/forms";
+import {AceEditorModule} from "ng2-ace-editor";
 
 @NgModule({
   declarations: [
@@ -21,9 +22,10 @@ import {FormsModule} from "@angular/forms";
   ],
   imports: [
     BrowserModule,
+    FormsModule,
     NgbCollapseModule,
     NgbButtonsModule,
-    FormsModule
+    AceEditorModule
   ],
   providers: [],
   bootstrap: [AppComponent]
