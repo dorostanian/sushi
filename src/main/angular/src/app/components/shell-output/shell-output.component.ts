@@ -1,15 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import {ShellOutputService} from "../../services/shell-output.service";
 
 @Component({
   selector: 'app-shell-output',
   templateUrl: './shell-output.component.html',
   styleUrls: ['./shell-output.component.scss']
 })
-export class ShellOutputComponent implements OnInit {
+export class ShellOutputComponent {
 
-  constructor() { }
+  public output = '';
 
-  ngOnInit() {
+  constructor(shellOutputService: ShellOutputService) {
+    shellOutputService.getShellOutput().subscribe(message => {
+      this.output += message;
+    });
   }
 
 }
