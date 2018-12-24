@@ -1,0 +1,59 @@
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+
+$page-margin: 20px;
+$menu-height: 64px;
+$toolbar-height: 42px;
+$console-height: 120px;
+
+.page-block {
+  background-color: #fff;
+  border: 1px solid #333;
+  border-radius: $border-radius;
+  margin: $page-margin;
+  overflow-y: auto;
+}
+
+.editor-with-toolbar {
+  margin-top: calc(#{$page-margin + $menu-height});
+  width: calc(100% - 2 * #{$page-margin});
+  height: calc(100% - #{$console-height} - #{$menu-height} - 3 * #{$page-margin});
+  overflow: hidden;
+}
+
+.editor {
+  position: relative;
+  height: calc(100% - #{$toolbar-height});
+}
+
+.code-editor-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  display: inline-block;
+  overflow: hidden;
+  background-color: #fff;
+  transition: width .6s;
+  white-space: nowrap;
+
+  &.full {
+    width: 100%;
+  }
+
+  &.closed {
+    width: 0;
+  }
+}
+
+.graph-editor-container {
+  width: 100%;
+  padding: 20px 20px 20px 50%;
+}
+
+.shell-output {
+  width: calc(100% - 2 * #{$page-margin});
+  height: #{$console-height};
+}
+

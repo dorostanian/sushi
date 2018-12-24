@@ -1,0 +1,14 @@
+<div class="tab-heads">
+  <div class="tab-head"
+       *ngFor="let tab of tabs"
+       [class.selected]="tab.title === selectedTab.title"
+       (click)="selectTab(tab)">{{tab.title}}</div>
+</div>
+<div *ngIf="selectedTab !== null"
+     class="code-editor"
+     ace-editor
+     [(text)]="selectedTab.text"
+     mode="toml"
+     theme="monokai"
+     [options]="{printMargin: false}"
+></div>

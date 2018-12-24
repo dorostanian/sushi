@@ -1,0 +1,13 @@
+<div class="toolbar-container">
+  <div class="btn-group btn-group-toggle" ngbRadioGroup name="radioBasic" [(ngModel)]="editorMode" (change)="editorModeChanged()">
+    <label ngbButtonLabel class="btn-outline-primary btn-sm">
+      <input ngbButton type="radio" value="both" /> Both
+    </label>
+    <label ngbButtonLabel class="btn-outline-primary btn-sm">
+      <input ngbButton type="radio" value="graph" /> Graph
+    </label>
+    <label ngbButtonLabel class="btn-outline-primary btn-sm">
+      <input ngbButton type="radio" value="code" /> Code
+    </label>
+  </div>
+</div>

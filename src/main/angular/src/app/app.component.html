@@ -1,0 +1,16 @@
+<app-navbar></app-navbar>
+
+<div class="editor-with-toolbar page-block">
+  <app-toolbar></app-toolbar>
+  <div class="editor">
+    <div class="code-editor-container" [ngClass]="codeEditorContainerClass">
+      <app-code-editor></app-code-editor>
+    </div>
+    <div class="graph-editor-container">
+      <app-graph-editor></app-graph-editor>
+    </div>
+  </div>
+</div>
+<div class="shell-output page-block">
+  <app-shell-output></app-shell-output>
+</div>

@@ -1,0 +1,31 @@
+$tabs-height: 35px;
+
+.tab-heads {
+  height: $tabs-height;
+  padding-top: 5px;
+  padding-left: 50px;
+  background-color: #272822;
+  border-bottom: 1px solid #aaa;
+
+  .tab-head {
+    display: inline-block;
+    padding: 3px 10px;
+    color: #fff;
+    cursor: pointer;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+
+    &.selected {
+      border: 1px solid #aaa;
+    }
+  }
+}
+
+.code-editor {
+  height: calc(100% - #{$tabs-height});
+  padding: 20px 0;
+}
+
+.ace_scrollbar {
+  display: none !important;
+}
