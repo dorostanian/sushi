@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {BehaviorSubject, Observable} from "rxjs";
 import {EditorConfig} from "../models/EditorConfig";
 
-import {clone} from 'lodash';
+import {cloneDeep} from 'lodash';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class EditorConfigService {
     editorMode: 'both'
   };
 
-  private editorConfigSubject = new BehaviorSubject<EditorConfig>(clone(this.editorConfig));
+  private editorConfigSubject = new BehaviorSubject<EditorConfig>(cloneDeep(this.editorConfig));
 
   public getEditorConfig(): Observable<EditorConfig> {
     return this.editorConfigSubject.asObservable();
@@ -24,6 +24,6 @@ export class EditorConfigService {
   }
 
   private publishConfig() {
-    this.editorConfigSubject.next(clone(this.editorConfig));
+    this.editorConfigSubject.next(cloneDeep(this.editorConfig));
   }
 }
