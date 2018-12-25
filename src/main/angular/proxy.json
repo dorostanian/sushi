@@ -1,0 +1,8 @@
+{
+  "/api/*": {
+    "target": "http://sushi.dorost.nl:8080",
+    "secure": false,
+    "logLevel": "debug",
+    "changeOrigin": true
+  }
+}
