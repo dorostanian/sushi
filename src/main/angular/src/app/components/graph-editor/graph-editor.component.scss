@@ -8,4 +8,14 @@
     stroke-width: 5;
     stroke-linejoin: round;
   }
+
+  path.edge {
+    stroke-width: 5;
+    stroke: #666;
+    fill: none;
+  }
+
+  path.edge-arrow {
+    fill: #666;
+  }
 }

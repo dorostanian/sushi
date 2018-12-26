@@ -1,11 +1,9 @@
 import {Component, ElementRef, OnInit} from '@angular/core';
 import {ActionBlock, Block, StateMachine} from "../../models/StateMachine";
-import {graphlib, layout} from "dagre";
+import {GraphEdge, graphlib, layout} from "dagre";
 import Graph = graphlib.Graph;
 import * as d3 from 'd3';
 import { range } from 'lodash';
-
-type BlockSelection = d3.Selection<SVGGElement, Block, any, any>;
 
 @Component({
   selector: 'app-graph-editor',
@@ -25,6 +23,11 @@ export class GraphEditorComponent implements OnInit {
 
   private blockRenderData: { [blockId: string]: BlockRenderData } = {};
   private svg: SVGElement;
+
+  private edgeLineFn = d3.line<Point>()
+    .x((d: any) => d.x + 50)
+    .y((d: any) => d.y + 50)
+    .curve(d3.curveLinear);
 
   constructor(private elementRef: ElementRef) {}
 
@@ -55,6 +58,15 @@ export class GraphEditorComponent implements OnInit {
     const frame = d3.select(this.svg)
       .append('g');
 
+    const edges = graph.edges().map(e => graph.edge(e));
+    frame.selectAll('path.edge')
+      .data(edges)
+      .enter()
+      .append('path')
+      .attr('class', 'edge')
+      .attr('d', (edge: GraphEdge) => this.edgeLineFn(edge.points))
+      .attr('marker-end', 'url(#edge-arrow)');
+
     const blocks = frame.selectAll('g.block')
       .data(stateMachine.blocks);
 
@@ -69,7 +81,6 @@ export class GraphEditorComponent implements OnInit {
       .attr('class', 'block')
       .attr('width', (b: Block) => blockRenderData[b.id].width)
       .attr('height', (b: Block) => blockRenderData[b.id].height);
-
 
     enteringBlocks
       .each(function(b: Block) {
@@ -88,11 +99,9 @@ export class GraphEditorComponent implements OnInit {
       .append('text')
       .attr('text-anchor', 'middle')
       .attr('alignment-baseline', 'middle')
-      .attr('dx', (b: Block) => this.blockRenderData[b.id].width / 2)
-      .attr('dy', (b: Block) => this.blockRenderData[b.id].height / 2)
+      .attr('dx', (b: Block) => blockRenderData[b.id].width / 2)
+      .attr('dy', (b: Block) => blockRenderData[b.id].height / 2)
       .text((b: Block) => b.name);
-
-    console.log(this.blockRenderData);
   }
 
   private updateBlockRenderData(stateMachine: StateMachine, connectionPointConfig: ConnectionPointConfig) {
@@ -134,6 +143,10 @@ export class GraphEditorComponent implements OnInit {
     }
     return config.padding + pointNr * (totalSize - 2 * config.padding) / (config.pointsPerSide - 1);
   }
+
+  private drawEdge(b: Block) {
+
+  }
 }
 
 interface ConnectionPointConfig {
@@ -150,8 +163,11 @@ interface BlockRenderData {
   connectionPoints: ConnectionPoint[];
 }
 
-interface ConnectionPoint {
+interface Point {
   x: number;
   y: number;
+}
+
+interface ConnectionPoint extends Point {
   r: number;
 }
