@@ -9,7 +9,7 @@ import {cloneDeep} from 'lodash';
 })
 export class EditorConfigService {
   private editorConfig: EditorConfig = {
-    editorMode: 'both'
+    editorMode: 'graph'
   };
 
   private editorConfigSubject = new BehaviorSubject<EditorConfig>(cloneDeep(this.editorConfig));

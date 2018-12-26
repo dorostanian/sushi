@@ -48,8 +48,9 @@ $console-height: 120px;
 }
 
 .graph-editor-container {
+  position: relative;
   width: 100%;
-  padding: 20px 20px 20px 50%;
+  height: 100%;
 }
 
 .shell-output {
