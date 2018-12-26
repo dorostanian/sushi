@@ -22,17 +22,25 @@ export class GraphEditorComponent implements OnInit {
   };
 
   private blockRenderData: { [blockId: string]: BlockRenderData } = {};
-  private svg: SVGElement;
+  private svg: d3.Selection<SVGElement, any, any, any>;
+  private frame: d3.Selection<SVGGElement, any, any, any>;
 
   private edgeLineFn = d3.line<Point>()
     .x((d: any) => d.x + 50)
     .y((d: any) => d.y + 50)
-    .curve(d3.curveLinear);
+    .curve(d3.curveMonotoneY);
+
+  private zoom = d3.zoom()
+    .scaleExtent([.5, 3])
+    .on("zoom", () => this.zoomed());
 
   constructor(private elementRef: ElementRef) {}
 
   ngOnInit(): void {
-    this.svg = (this.elementRef.nativeElement as HTMLDivElement).getElementsByTagName('svg').item(0);
+    const svg = (this.elementRef.nativeElement as HTMLDivElement).getElementsByTagName('svg').item(0);
+    this.svg = d3.select(svg);
+    this.svg.call(this.zoom);
+    this.frame = this.svg.append('g');
     this.render(this.stateMachine);
   }
 
@@ -55,11 +63,8 @@ export class GraphEditorComponent implements OnInit {
 
     layout(graph);
 
-    const frame = d3.select(this.svg)
-      .append('g');
-
     const edges = graph.edges().map(e => graph.edge(e));
-    frame.selectAll('path.edge')
+    this.frame.selectAll('path.edge')
       .data(edges)
       .enter()
       .append('path')
@@ -67,7 +72,7 @@ export class GraphEditorComponent implements OnInit {
       .attr('d', (edge: GraphEdge) => this.edgeLineFn(edge.points))
       .attr('marker-end', 'url(#edge-arrow)');
 
-    const blocks = frame.selectAll('g.block')
+    const blocks = this.frame.selectAll('g.block')
       .data(stateMachine.blocks);
 
     const enteringBlocks = blocks.enter()
@@ -102,6 +107,11 @@ export class GraphEditorComponent implements OnInit {
       .attr('dx', (b: Block) => blockRenderData[b.id].width / 2)
       .attr('dy', (b: Block) => blockRenderData[b.id].height / 2)
       .text((b: Block) => b.name);
+  }
+
+  private zoomed() {
+    this.frame.attr('transform',
+      `translate(${d3.event.transform.x},${d3.event.transform.y})scale(${d3.event.transform.k})`);
   }
 
   private updateBlockRenderData(stateMachine: StateMachine, connectionPointConfig: ConnectionPointConfig) {
