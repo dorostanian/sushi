@@ -34,13 +34,15 @@ export class GraphEditorComponent implements OnInit {
   }
 
   private render(stateMachine: StateMachine) {
-    this.updateBlockRenderData(stateMachine);
+    this.updateBlockRenderData(stateMachine, {pointsPerSide: 3, padding: 20, radius: 4});
+
+    const blockRenderData = this.blockRenderData;
 
     const graph: Graph = new graphlib.Graph();
     graph.setGraph({});
     graph.setDefaultEdgeLabel(function() { return {}; });
     stateMachine.blocks.forEach(block => {
-      graph.setNode(block.id, this.blockRenderData[block.id]);
+      graph.setNode(block.id, blockRenderData[block.id]);
     });
     stateMachine.blocks.forEach(block => {
       (block as ActionBlock).nextBlocks.forEach(nextBlock => {
@@ -60,16 +62,27 @@ export class GraphEditorComponent implements OnInit {
       .append('g')
       .attr('class', 'block')
       .attr('transform', (b: Block) =>
-        `translate(${this.blockRenderData[b.id].x},${this.blockRenderData[b.id].y})`)
+        `translate(${blockRenderData[b.id].x},${blockRenderData[b.id].y})`);
 
     enteringBlocks
       .append('rect')
       .attr('class', 'block')
-      .attr('width', (b: Block) => this.blockRenderData[b.id].width)
-      .attr('height', (b: Block) => this.blockRenderData[b.id].height);
+      .attr('width', (b: Block) => blockRenderData[b.id].width)
+      .attr('height', (b: Block) => blockRenderData[b.id].height);
 
-    this.appendHConnectionPoints(enteringBlocks, 3, 20, 5);
-    this.appendVConnectionPoints(enteringBlocks, 3, 20, 5);
+
+    enteringBlocks
+      .each(function(b: Block) {
+        d3.select(this)
+          .selectAll('circle.connection-point')
+          .data(blockRenderData[b.id].connectionPoints)
+          .enter()
+          .append('circle')
+          .attr('class', 'connection-point')
+          .attr('cx', (p: ConnectionPoint) => p.x)
+          .attr('cy', (p: ConnectionPoint) => p.y)
+          .attr('r', (p: ConnectionPoint) => p.r)
+      });
 
     enteringBlocks
       .append('text')
@@ -82,54 +95,51 @@ export class GraphEditorComponent implements OnInit {
     console.log(this.blockRenderData);
   }
 
-  private updateBlockRenderData(stateMachine: StateMachine) {
+  private updateBlockRenderData(stateMachine: StateMachine, connectionPointConfig: ConnectionPointConfig) {
     stateMachine.blocks.forEach(block => {
       if (!(block.id in this.blockRenderData)) {
-        this.blockRenderData[block.id] = {
-          width: 100,
-          height: 100,
-          x: 0,
-          y: 0
-        };
+        const width = 100;
+        const height = 100;
+        const connectionPoints: ConnectionPoint[] = [];
+        range(connectionPointConfig.pointsPerSide).forEach(i => {
+          connectionPoints.push({
+            x: this.pointPosition(connectionPointConfig, height, i),
+            y: 0,
+            r: connectionPointConfig.radius
+          });
+          connectionPoints.push({
+            x: this.pointPosition(connectionPointConfig, height, i),
+            y: width,
+            r: connectionPointConfig.radius
+          });
+          connectionPoints.push({
+            x: 0,
+            y: this.pointPosition(connectionPointConfig, width, i),
+            r: connectionPointConfig.radius
+          });
+          connectionPoints.push({
+            x: height,
+            y: this.pointPosition(connectionPointConfig, width, i),
+            r: connectionPointConfig.radius
+          });
+        });
+        this.blockRenderData[block.id] = { width, height, x: 0, y: 0, connectionPoints };
       }
     });
   }
 
-  private appendHConnectionPoints(d3Blocks: BlockSelection, numberOfPoints: number, padding: number, radius: number) {
-    range(numberOfPoints).forEach(i => {
-      this.appendConnectionPoint(d3Blocks, radius)
-        .attr('cx', (b: Block) => this.pointPosition(padding, numberOfPoints, this.blockRenderData[b.id].height, i))
-        .attr('cy', 0);
-      this.appendConnectionPoint(d3Blocks, radius)
-        .attr('cx', (b: Block) => this.pointPosition(padding, numberOfPoints, this.blockRenderData[b.id].height, i))
-        .attr('cy', (b: Block) => this.blockRenderData[b.id].width);
-    });
-  }
-
-  private appendVConnectionPoints(d3Blocks: BlockSelection, numberOfPoints: number, padding: number, radius: number) {
-    range(numberOfPoints).forEach(i => {
-      this.appendConnectionPoint(d3Blocks, radius)
-        .attr('cx', 0)
-        .attr('cy', (b: Block) => this.pointPosition(padding, numberOfPoints, this.blockRenderData[b.id].width, i));
-      this.appendConnectionPoint(d3Blocks, radius)
-        .attr('cx', (b: Block) => this.blockRenderData[b.id].height)
-        .attr('cy', (b: Block) => this.pointPosition(padding, numberOfPoints, this.blockRenderData[b.id].width, i));
-    });
-  }
-
-  private pointPosition(padding: number, numberOfPoints: number, totalSize: number, pointNr: number) {
-    if (numberOfPoints === 1) {
+  private pointPosition(config: ConnectionPointConfig, totalSize: number, pointNr: number) {
+    if (config.pointsPerSide === 1) {
       return totalSize / 2;
     }
-    return padding + pointNr * (totalSize - 2 * padding) / (numberOfPoints - 1);
+    return config.padding + pointNr * (totalSize - 2 * config.padding) / (config.pointsPerSide - 1);
   }
+}
 
-  private appendConnectionPoint(d3Blocks: BlockSelection, radius: number): BlockSelection {
-    return d3Blocks
-      .append('circle')
-      .attr('class', 'connection-point')
-      .attr('r', radius);
-  }
+interface ConnectionPointConfig {
+  pointsPerSide: number;
+  padding: number;
+  radius: number;
 }
 
 interface BlockRenderData {
@@ -137,4 +147,11 @@ interface BlockRenderData {
   height: number;
   x: number;
   y: number;
+  connectionPoints: ConnectionPoint[];
+}
+
+interface ConnectionPoint {
+  x: number;
+  y: number;
+  r: number;
 }
