@@ -4,6 +4,7 @@ import {GraphEdge, graphlib, layout} from "dagre";
 import Graph = graphlib.Graph;
 import * as d3 from 'd3';
 import { range } from 'lodash';
+import {ContainerElement} from "d3";
 
 @Component({
   selector: 'app-graph-editor',
@@ -30,9 +31,16 @@ export class GraphEditorComponent implements OnInit {
     .y((d: any) => d.y + 50)
     .curve(d3.curveMonotoneY);
 
+  private dragBlock = d3.drag()
+    .on("start", () => this.blockDragStart())
+    .on("drag", () => this.blockDrag());
+    //.on("dragend", () => this.blockDragEnd());
+
   private zoom = d3.zoom()
     .scaleExtent([.5, 3])
     .on("zoom", () => this.zoomed());
+
+  private blockDragStartPoint: Point;
 
   constructor(private elementRef: ElementRef) {}
 
@@ -77,15 +85,14 @@ export class GraphEditorComponent implements OnInit {
 
     const enteringBlocks = blocks.enter()
       .append('g')
-      .attr('class', 'block')
-      .attr('transform', (b: Block) =>
-        `translate(${blockRenderData[b.id].x},${blockRenderData[b.id].y})`);
+      .attr('class', 'block');
 
     enteringBlocks
       .append('rect')
       .attr('class', 'block')
       .attr('width', (b: Block) => blockRenderData[b.id].width)
-      .attr('height', (b: Block) => blockRenderData[b.id].height);
+      .attr('height', (b: Block) => blockRenderData[b.id].height)
+      .call(this.dragBlock);
 
     enteringBlocks
       .each(function(b: Block) {
@@ -106,12 +113,37 @@ export class GraphEditorComponent implements OnInit {
       .attr('alignment-baseline', 'middle')
       .attr('dx', (b: Block) => blockRenderData[b.id].width / 2)
       .attr('dy', (b: Block) => blockRenderData[b.id].height / 2)
-      .text((b: Block) => b.name);
+      .text((b: Block) => b.name)
+      .call(this.dragBlock);
+
+    this.updateBlockPositions();
+  }
+
+  private updateBlockPositions() {
+    this.frame.selectAll('g.block')
+      .attr('transform', (b: Block) => `translate(${this.blockRenderData[b.id].x},${this.blockRenderData[b.id].y})`);
   }
 
   private zoomed() {
     this.frame.attr('transform',
       `translate(${d3.event.transform.x},${d3.event.transform.y})scale(${d3.event.transform.k})`);
+  }
+
+  private blockDragStart() {
+    const block: Block = d3.event.subject;
+    const renderData: BlockRenderData = this.blockRenderData[block.id];
+    const mouse = d3.mouse(this.svg.node() as ContainerElement);
+    this.blockDragStartPoint = {x: mouse[0] - renderData.x, y: mouse[1] - renderData.y};
+  }
+
+  private blockDrag() {
+    // console.log('>>> d3.event: ', d3.event);
+    console.log('>>> d3.event.x: ', d3.event.x);
+    const mouse = d3.mouse(this.svg.node() as ContainerElement);
+    const block: Block = d3.event.subject;
+    this.blockRenderData[block.id].x = mouse[0] - this.blockDragStartPoint.x;
+    this.blockRenderData[block.id].y = mouse[1] - this.blockDragStartPoint.y;
+    this.updateBlockPositions();
   }
 
   private updateBlockRenderData(stateMachine: StateMachine, connectionPointConfig: ConnectionPointConfig) {
