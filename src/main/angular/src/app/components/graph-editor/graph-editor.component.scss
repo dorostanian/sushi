@@ -14,6 +14,10 @@
     text {
       cursor: move;
     }
+
+    circle.connection-point {
+      fill: #333;
+    }
   }
 
   path.edge {

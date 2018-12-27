@@ -1,9 +1,9 @@
 import {Component, ElementRef, OnInit} from '@angular/core';
 import {ActionBlock, Block, StateMachine} from "../../models/StateMachine";
-import {GraphEdge, graphlib, layout} from "dagre";
+import {Edge, GraphEdge, graphlib, layout} from "dagre";
 import Graph = graphlib.Graph;
 import * as d3 from 'd3';
-import { range } from 'lodash';
+import { range, minBy } from 'lodash';
 import {ContainerElement} from "d3";
 
 @Component({
@@ -22,19 +22,20 @@ export class GraphEditorComponent implements OnInit {
     ]
   };
 
+  private graph: Graph = new graphlib.Graph();
+
   private blockRenderData: { [blockId: string]: BlockRenderData } = {};
   private svg: d3.Selection<SVGElement, any, any, any>;
   private frame: d3.Selection<SVGGElement, any, any, any>;
 
   private edgeLineFn = d3.line<Point>()
-    .x((d: any) => d.x + 50)
-    .y((d: any) => d.y + 50)
+    .x((d: any) => d.x)
+    .y((d: any) => d.y)
     .curve(d3.curveMonotoneY);
 
   private dragBlock = d3.drag()
     .on("start", () => this.blockDragStart())
     .on("drag", () => this.blockDrag());
-    //.on("dragend", () => this.blockDragEnd());
 
   private zoom = d3.zoom()
     .scaleExtent([.5, 3])
@@ -49,6 +50,10 @@ export class GraphEditorComponent implements OnInit {
     this.svg = d3.select(svg);
     this.svg.call(this.zoom);
     this.frame = this.svg.append('g');
+
+    this.graph.setGraph({});
+    this.graph.setDefaultEdgeLabel(function() { return {}; });
+
     this.render(this.stateMachine);
   }
 
@@ -57,28 +62,18 @@ export class GraphEditorComponent implements OnInit {
 
     const blockRenderData = this.blockRenderData;
 
-    const graph: Graph = new graphlib.Graph();
-    graph.setGraph({});
-    graph.setDefaultEdgeLabel(function() { return {}; });
     stateMachine.blocks.forEach(block => {
-      graph.setNode(block.id, blockRenderData[block.id]);
+      this.graph.setNode(block.id, blockRenderData[block.id]);
     });
     stateMachine.blocks.forEach(block => {
       (block as ActionBlock).nextBlocks.forEach(nextBlock => {
-        graph.setEdge(block.id, nextBlock);
+        this.graph.setEdge(block.id, nextBlock);
       });
     });
 
-    layout(graph);
+    layout(this.graph);
 
-    const edges = graph.edges().map(e => graph.edge(e));
-    this.frame.selectAll('path.edge')
-      .data(edges)
-      .enter()
-      .append('path')
-      .attr('class', 'edge')
-      .attr('d', (edge: GraphEdge) => this.edgeLineFn(edge.points))
-      .attr('marker-end', 'url(#edge-arrow)');
+    this.updateEdges();
 
     const blocks = this.frame.selectAll('g.block')
       .data(stateMachine.blocks);
@@ -119,6 +114,21 @@ export class GraphEditorComponent implements OnInit {
     this.updateBlockPositions();
   }
 
+  private updateEdges() {
+    const edges = this.graph.edges().map((edge: Edge) =>
+      this.getEdge(this.blockRenderData[edge.v], this.blockRenderData[edge.w]));
+
+    this.frame.selectAll('path.edge')
+      .data(edges)
+      .enter()
+      .append('path')
+      .attr('class', 'edge')
+      .attr('marker-end', 'url(#edge-arrow)');
+
+    this.frame.selectAll('path.edge')
+      .attr('d', (points: Point[]) => this.edgeLineFn(points));
+  }
+
   private updateBlockPositions() {
     this.frame.selectAll('g.block')
       .attr('transform', (b: Block) => `translate(${this.blockRenderData[b.id].x},${this.blockRenderData[b.id].y})`);
@@ -132,18 +142,17 @@ export class GraphEditorComponent implements OnInit {
   private blockDragStart() {
     const block: Block = d3.event.subject;
     const renderData: BlockRenderData = this.blockRenderData[block.id];
-    const mouse = d3.mouse(this.svg.node() as ContainerElement);
-    this.blockDragStartPoint = {x: mouse[0] - renderData.x, y: mouse[1] - renderData.y};
+    const mouse = this.mouse();
+    this.blockDragStartPoint = {x: mouse.x - renderData.x, y: mouse.y - renderData.y};
   }
 
   private blockDrag() {
-    // console.log('>>> d3.event: ', d3.event);
-    console.log('>>> d3.event.x: ', d3.event.x);
-    const mouse = d3.mouse(this.svg.node() as ContainerElement);
+    const mouse = this.mouse();
     const block: Block = d3.event.subject;
-    this.blockRenderData[block.id].x = mouse[0] - this.blockDragStartPoint.x;
-    this.blockRenderData[block.id].y = mouse[1] - this.blockDragStartPoint.y;
+    this.blockRenderData[block.id].x = mouse.x - this.blockDragStartPoint.x;
+    this.blockRenderData[block.id].y = mouse.y - this.blockDragStartPoint.y;
     this.updateBlockPositions();
+    this.updateEdges();
   }
 
   private updateBlockRenderData(stateMachine: StateMachine, connectionPointConfig: ConnectionPointConfig) {
@@ -153,26 +162,27 @@ export class GraphEditorComponent implements OnInit {
         const height = 100;
         const connectionPoints: ConnectionPoint[] = [];
         range(connectionPointConfig.pointsPerSide).forEach(i => {
-          connectionPoints.push({
+          [{
             x: this.pointPosition(connectionPointConfig, height, i),
             y: 0,
-            r: connectionPointConfig.radius
-          });
-          connectionPoints.push({
+          }, {
             x: this.pointPosition(connectionPointConfig, height, i),
             y: width,
-            r: connectionPointConfig.radius
-          });
-          connectionPoints.push({
+          }, {
             x: 0,
             y: this.pointPosition(connectionPointConfig, width, i),
-            r: connectionPointConfig.radius
-          });
-          connectionPoints.push({
+          }, {
             x: height,
             y: this.pointPosition(connectionPointConfig, width, i),
-            r: connectionPointConfig.radius
+          }].forEach(p => {
+            connectionPoints.push({
+              x: p.x,
+              y: p.y,
+              r: connectionPointConfig.radius,
+              priority: p.x === width / 2 || p.y === height / 2 // priority point if point in middle
+            });
           });
+
         });
         this.blockRenderData[block.id] = { width, height, x: 0, y: 0, connectionPoints };
       }
@@ -186,8 +196,49 @@ export class GraphEditorComponent implements OnInit {
     return config.padding + pointNr * (totalSize - 2 * config.padding) / (config.pointsPerSide - 1);
   }
 
-  private drawEdge(b: Block) {
+  private mouse(): Point {
+    const mouse = d3.mouse(this.svg.node() as ContainerElement);
+    return { x: mouse[0], y: mouse[1] };
+  }
 
+  private getEdge(from: BlockRenderData, to: BlockRenderData): Point[] {
+    const absPointsFrom: ConnectionPoint[] = from.connectionPoints
+      .map(p => ({x: from.x + p.x, y: from.y + p.y, r: p.r, priority: p.priority }));
+      //.filter(p => !this.blockContainsPoint(to, p, 0));
+
+    const absPointsTo: ConnectionPoint[] = to.connectionPoints
+      .map(p => ({x: to.x + p.x, y: to.y + p.y, r: p.r, priority: p.priority }));
+      //.filter(p => !this.blockContainsPoint(from, p, 0));
+
+    const possiblePairs: ConnectionPointPair[] = [];
+    absPointsFrom.forEach(from => {
+      absPointsTo.forEach(to => {
+        possiblePairs.push({from, to});
+      });
+    });
+
+    const minPair = minBy(possiblePairs, pair => this.connectionPointDistance(pair.from, pair.to));
+    return [minPair.from, minPair.to];
+  }
+
+  private blockContainsPoint(b: BlockRenderData, p: Point, padding: number): boolean {
+    // padding enlarges the rectangle
+    return p.x >= b.x - padding &&
+      p.x <= b.x + padding &&
+      p.y >= b.y - padding &&
+      p.y <= b.y + padding;
+  }
+
+  // Computes the distance between connection points, giving preference to middle points
+  private connectionPointDistance(from: ConnectionPoint, to: ConnectionPoint): number {
+    const distance = this.euclideanDistance(from, to);
+
+    // 10% bonus for every priority point
+    return distance - (from.priority ? .1 * distance : 0) - (to.priority ? .1 * distance : 0);
+  }
+
+  private euclideanDistance(from: Point, to: Point): number {
+    return Math.sqrt(Math.pow(to.x - from.x, 2) + Math.pow(to.y - from.y, 2));
   }
 }
 
@@ -212,4 +263,10 @@ interface Point {
 
 interface ConnectionPoint extends Point {
   r: number;
+  priority: boolean;
+}
+
+interface ConnectionPointPair {
+  from: ConnectionPoint;
+  to: ConnectionPoint;
 }
