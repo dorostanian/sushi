@@ -8,15 +8,6 @@
       stroke: #666;
       stroke-width: 5;
       stroke-linejoin: round;
-      cursor: move;
-    }
-
-    text {
-      cursor: move;
-    }
-
-    circle.connection-point {
-      fill: #333;
     }
   }
 
@@ -26,7 +17,7 @@
     fill: none;
   }
 
-  path.edge-arrow {
+  path.edge-arrow-tip {
     fill: #666;
   }
 }
