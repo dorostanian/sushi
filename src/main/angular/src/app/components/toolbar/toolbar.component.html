@@ -11,12 +11,7 @@
     </label>
   </div>
   <div class="pull-right">
-    <button ngbButtonLabel class="btn-outline-primary btn-sm" (click)="addBlock()">Add block</button>
-    <div class="btn-group btn-group-toggle">
-      <label ngbButtonLabel class="btn-outline-primary btn-sm">
-        <input type="checkbox" ngbButton [(ngModel)]="editorConfig.addingEdge" (change)="addingEdgeChanged()" />
-        Add edge
-      </label>
-    </div>
+    <button ngbButtonLabel class="btn-primary btn-sm" (click)="addBlock()">Add block</button>&nbsp;
+    <button ngbButtonLabel class="btn-primary btn-sm" (click)="addEdge()">Add edge</button>
   </div>
 </div>

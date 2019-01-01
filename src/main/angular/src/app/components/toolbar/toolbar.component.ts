@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
 import {EditorConfigService} from "../../services/editor-config.service";
 import {EditorConfig} from "../../models/EditorConfig";
+import {EditorEventsService} from "../../services/editor-events.service";
 
 @Component({
   selector: 'app-toolbar',
@@ -10,7 +11,8 @@ import {EditorConfig} from "../../models/EditorConfig";
 export class ToolbarComponent {
   public editorConfig: EditorConfig;
 
-  constructor(private editorConfigService: EditorConfigService) {
+  constructor(private editorConfigService: EditorConfigService,
+              private editorEventsService: EditorEventsService) {
     editorConfigService.getEditorConfig().subscribe(config => {
       this.editorConfig = config;
     });
@@ -20,11 +22,11 @@ export class ToolbarComponent {
     this.editorConfigService.setEditorMode(this.editorConfig.editorMode);
   }
 
-  public addingEdgeChanged() {
-    this.editorConfigService.setAddingEdge(this.editorConfig.addingEdge);
+  public addBlock() {
+    this.editorEventsService.emit('ADD_BLOCK');
   }
 
-  public addBlock() {
-    this.editorConfigService.addBlock();
+  public addEdge() {
+    this.editorEventsService.emit('ADD_EDGE');
   }
 }

@@ -6,6 +6,7 @@ import {ContainerElement} from 'd3';
 import Graph = graphlib.Graph;
 import {EditorConfig} from "../../models/EditorConfig";
 import {EditorConfigService} from "../../services/editor-config.service";
+import {EditorEventsService} from "../../services/editor-events.service";
 
 @Component({
   selector: 'app-graph-editor',
@@ -41,15 +42,24 @@ export class GraphEditorComponent implements OnInit {
     .scaleExtent([.5, 3])
     .on("zoom", () => this.zoomed());
 
-  constructor(private editorConfigService: EditorConfigService, private elementRef: ElementRef) {
+  constructor(private editorConfigService: EditorConfigService,
+              private editorEventsService: EditorEventsService,
+              private elementRef: ElementRef) {
     editorConfigService.getEditorConfig().subscribe(config => {
       this.editorConfig = config;
     });
 
-    editorConfigService.getAddBlockObservable().subscribe(() => {
-      this.stateMachine.blocks.push(new ActionBlock('' + this.id++, 'New block'));
-      this.setStateMachine(this.stateMachine);
-      this.render();
+    this.editorEventsService.events().subscribe(e => {
+      switch(e) {
+        case 'ADD_BLOCK':
+          this.stateMachine.blocks.push(new ActionBlock('' + this.id++, 'New block'));
+          this.setStateMachine(this.stateMachine);
+          this.render();
+          break;
+        case 'ADD_EDGE':
+          console.log('>>> TO IMPLEMENT: Adding edge');
+          break;
+      }
     });
   }
 
