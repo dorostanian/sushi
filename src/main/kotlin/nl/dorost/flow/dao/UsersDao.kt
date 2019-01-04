@@ -4,12 +4,26 @@ import com.google.auth.Credentials
 import com.google.cloud.datastore.*
 import nl.dorost.flow.dto.UserDto
 import org.slf4j.LoggerFactory
+import java.util.*
 
 interface UsersDao {
     fun createUser(userDto: UserDto): UserDto
     fun getUserBySessionId(id: String): UserDto?
 }
 
+class UserMemoryDaoImpl: UsersDao{
+
+    val users: MutableList<UserDto> = mutableListOf()
+    override fun createUser(userDto: UserDto): UserDto {
+        users.add(userDto.copy(id = Random().nextLong()))
+        return userDto.copy(id = Random().nextLong())
+    }
+
+    override fun getUserBySessionId(id: String): UserDto? {
+        return users.first { it.sessionId==id }
+    }
+
+}
 
 class UserDaoImpl(credentials: Credentials, val projectId: String, val kind: String) : UsersDao {
 

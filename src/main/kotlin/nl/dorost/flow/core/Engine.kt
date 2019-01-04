@@ -7,7 +7,7 @@ import nl.dorost.flow.NonUniqueIdException
 import nl.dorost.flow.NonUniqueTypeException
 import nl.dorost.flow.TypeNotRegisteredException
 import nl.dorost.flow.actions.elementaryActions
-import nl.dorost.flow.dao.BlocksDaoImpl
+import nl.dorost.flow.dao.BlocksDao
 import nl.dorost.flow.dto.ContainerDto
 import nl.dorost.flow.dto.InnerActionDto
 import nl.dorost.flow.dto.UserDto
@@ -53,7 +53,7 @@ class FlowEngine {
         }
     }
 
-    fun registerSecondaryActionsFromDB(blocksDaoImpl: BlocksDaoImpl) {
+    fun registerSecondaryActionsFromDB(blocksDaoImpl: BlocksDao) {
         this.secondaryActions = blocksDaoImpl.getAllSecondaryActions().map {
             Action().apply {
                 type = it.type
@@ -116,7 +116,7 @@ class FlowEngine {
 
     private fun registerNewContainersAsAction(
         containers: List<Container>,
-        blocksDaoImpl: BlocksDaoImpl? = null,
+        blocksDaoImpl: BlocksDao? = null,
         user: UserDto? = null
     ) {
 
@@ -243,7 +243,7 @@ class FlowEngine {
     }
 
     fun wire(
-        flows: List<Any>, blocksDaoImpl: BlocksDaoImpl? = null,
+        flows: List<Any>, blocksDao: BlocksDao? = null,
         user: UserDto? = null
     ) {
         val containers = flows.filter { it is Container }.map { it as Container }
@@ -251,7 +251,7 @@ class FlowEngine {
         checkForFields()
         checkForIdUniqeness()
         wireDependencies()
-        registerNewContainersAsAction(containers, blocksDaoImpl, user)
+        registerNewContainersAsAction(containers, blocksDao, user)
         wireProperActsToBlocks()
     }
 

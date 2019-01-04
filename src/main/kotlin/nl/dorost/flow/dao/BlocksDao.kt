@@ -9,12 +9,35 @@ import nl.dorost.flow.MissingFieldException
 import nl.dorost.flow.dto.ContainerDto
 import nl.dorost.flow.dto.InnerActionDto
 import org.slf4j.LoggerFactory
+import java.util.*
 
 interface BlocksDao {
     fun registerNewAction(container: ContainerDto): ContainerDto
     fun getActionByType(type: String): ContainerDto?
     fun getAllSecondaryActions(): List<ContainerDto>
     fun updateContainer(container: ContainerDto)
+}
+
+class BlocksMemoryDaoImpl: BlocksDao{
+    val containers: MutableList<ContainerDto> = mutableListOf()
+    override fun registerNewAction(container: ContainerDto): ContainerDto {
+        containers.add(container.copy(id = Random().nextLong()))
+        return container.copy(id = Random().nextLong())
+    }
+
+    override fun getActionByType(type: String): ContainerDto? {
+        return containers.first { it.type==type }
+    }
+
+    override fun getAllSecondaryActions(): List<ContainerDto> {
+        return containers
+    }
+
+    override fun updateContainer(container: ContainerDto) {
+        var contInd = containers.indexOfFirst { it.id==container.id }
+        containers.set(contInd, container)
+    }
+
 }
 
 
@@ -138,11 +161,3 @@ class BlocksDaoImpl(val credentials: Credentials, val projectId: String, val kin
         .build()
 
 }
-
-
-
-
-
-
-
-
