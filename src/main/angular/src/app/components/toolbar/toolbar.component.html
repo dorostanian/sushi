@@ -1,5 +1,5 @@
 <div class="toolbar-container">
-  <div class="btn-group btn-group-toggle" ngbRadioGroup name="radioBasic" [(ngModel)]="editorMode" (change)="editorModeChanged()">
+  <div class="btn-group btn-group-toggle" ngbRadioGroup name="radioBasic" [(ngModel)]="editorConfig.editorMode" (change)="editorModeChanged()">
     <label ngbButtonLabel class="btn-outline-primary btn-sm">
       <input ngbButton type="radio" value="both" /> Both
     </label>
@@ -9,5 +9,9 @@
     <label ngbButtonLabel class="btn-outline-primary btn-sm">
       <input ngbButton type="radio" value="code" /> Code
     </label>
+  </div>
+  <div class="pull-right">
+    <button ngbButtonLabel class="btn-primary btn-sm" (click)="addBlock()">Add block</button>&nbsp;
+    <button ngbButtonLabel class="btn-primary btn-sm" (click)="addEdge()">Add edge</button>
   </div>
 </div>

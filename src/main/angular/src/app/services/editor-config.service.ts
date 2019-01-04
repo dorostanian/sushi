@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {BehaviorSubject, Observable} from "rxjs";
 import {EditorConfig} from "../models/EditorConfig";
 
@@ -9,7 +9,7 @@ import {cloneDeep} from 'lodash';
 })
 export class EditorConfigService {
   private editorConfig: EditorConfig = {
-    editorMode: 'both'
+    editorMode: 'graph'
   };
 
   private editorConfigSubject = new BehaviorSubject<EditorConfig>(cloneDeep(this.editorConfig));

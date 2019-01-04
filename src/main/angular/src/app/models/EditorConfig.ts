@@ -1,3 +1,3 @@
 export interface EditorConfig {
-  editorMode: 'code' | 'graph' | 'both'
+  editorMode: 'code' | 'graph' | 'both';
 }

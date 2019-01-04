@@ -1,5 +1,7 @@
 import {Component} from '@angular/core';
 import {EditorConfigService} from "../../services/editor-config.service";
+import {EditorConfig} from "../../models/EditorConfig";
+import {EditorEventsService} from "../../services/editor-events.service";
 
 @Component({
   selector: 'app-toolbar',
@@ -7,15 +9,24 @@ import {EditorConfigService} from "../../services/editor-config.service";
   styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent {
-  public editorMode: 'code' | 'graph' | 'both';
+  public editorConfig: EditorConfig;
 
-  constructor(private editorConfigService: EditorConfigService) {
+  constructor(private editorConfigService: EditorConfigService,
+              private editorEventsService: EditorEventsService) {
     editorConfigService.getEditorConfig().subscribe(config => {
-      this.editorMode = config.editorMode;
+      this.editorConfig = config;
     });
   }
 
   public editorModeChanged() {
-    this.editorConfigService.setEditorMode(this.editorMode);
+    this.editorConfigService.setEditorMode(this.editorConfig.editorMode);
+  }
+
+  public addBlock() {
+    this.editorEventsService.emit('ADD_BLOCK');
+  }
+
+  public addEdge() {
+    this.editorEventsService.emit('ADD_EDGE');
   }
 }
