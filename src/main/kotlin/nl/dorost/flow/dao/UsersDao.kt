@@ -20,7 +20,7 @@ class UserMemoryDaoImpl: UsersDao{
     }
 
     override fun getUserBySessionId(id: String): UserDto? {
-        return users.first { it.sessionId==id }
+        return users.firstOrNull { it.sessionId==id }
     }
 
 }

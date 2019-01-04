@@ -26,7 +26,7 @@ class BlocksMemoryDaoImpl: BlocksDao{
     }
 
     override fun getActionByType(type: String): ContainerDto? {
-        return containers.first { it.type==type }
+        return containers.firstOrNull { it.type==type }
     }
 
     override fun getAllSecondaryActions(): List<ContainerDto> {

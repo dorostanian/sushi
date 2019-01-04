@@ -778,50 +778,49 @@ fun main(args: Array<String>) {
                     }
                 }
             } ?: run {
-                handle {
-                    appLogger.info { "Logging in without a google provider!" }
 
-                    usersDao!!.getUserBySessionId(staticUserId!!)?.let {
-                        appLogger.info { "User ${it.email} logged in!" }
-                    } ?: kotlin.run {
-                        usersDao!!.createUser(
-                            UserDto(
-                                id = null,
-                                sessionId = staticUserId,
-                                name = "anonymous",
-                                email = ""
-                            )
-                        )
-                    }
+                appLogger.info { "Logging in without a google provider!" }
 
-
-                    val flowEngine = FlowEngine()
-
-                    flowEngine.registerListeners(
-                        listOf(
-                            object : BlockListener {
-                                val LOG = KotlinLogging.logger("LoggerListener")
-                                override fun updateReceived(
-                                    context: MutableMap<String, Any>?,
-                                    message: String?,
-                                    type: MessageType
-                                ) {
-                                    val msg = "Message: $message"
-                                    LOG.info { msg }
-                                    GlobalScope.launch {
-                                        channel.send(type to (message ?: ""))
-                                    }
-                                }
-                            }
+                usersDao!!.getUserBySessionId(staticUserId)?.let {
+                    appLogger.info { "User ${it.email} logged in!" }
+                } ?: run {
+                    appLogger.info { "Creating user!" }
+                    usersDao!!.createUser(
+                        UserDto(
+                            id = null,
+                            sessionId = staticUserId,
+                            name = "anonymous",
+                            email = ""
                         )
                     )
-
-                    flowEngine.registerSecondaryActionsFromDB(blocksDao!!)
-
-                    usersFlows[staticUserId] = flowEngine
-
-                    call.respondRedirect("/")
                 }
+
+
+                val flowEngine = FlowEngine()
+
+                flowEngine.registerListeners(
+                    listOf(
+                        object : BlockListener {
+                            val LOG = KotlinLogging.logger("LoggerListener")
+                            override fun updateReceived(
+                                context: MutableMap<String, Any>?,
+                                message: String?,
+                                type: MessageType
+                            ) {
+                                val msg = "Message: $message"
+                                LOG.info { msg }
+                                GlobalScope.launch {
+                                    channel.send(type to (message ?: ""))
+                                }
+                            }
+                        }
+                    )
+                )
+
+                flowEngine.registerSecondaryActionsFromDB(blocksDao!!)
+
+                usersFlows[staticUserId] = flowEngine
+
             }
         }
     }
