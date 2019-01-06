@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/dorost/flow.svg?style=svg)](https://circleci.com/gh/dorost/flow)
+[![CircleCI](https://circleci.com/gh/dorost/sushi.svg?style=svg)](https://circleci.com/gh/dorost/sushi)
 
 # Introduction
 
